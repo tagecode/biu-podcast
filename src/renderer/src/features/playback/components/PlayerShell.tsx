@@ -1,0 +1,129 @@
+import { Maximize2, Pause, Play } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+
+import { bindAudioEvents, usePlaybackStore } from '../store'
+import { formatDuration } from '@/features/episode/lib/format'
+import { useEffect } from 'react'
+
+export function MiniPlayer(): React.JSX.Element | null {
+  const currentEpisode = usePlaybackStore((state) => state.currentEpisode)
+  const currentPodcast = usePlaybackStore((state) => state.currentPodcast)
+  const isPlaying = usePlaybackStore((state) => state.isPlaying)
+  const currentTimeSec = usePlaybackStore((state) => state.currentTimeSec)
+  const durationSec = usePlaybackStore((state) => state.durationSec)
+  const togglePlay = usePlaybackStore((state) => state.togglePlay)
+  const openFullPlayer = usePlaybackStore((state) => state.openFullPlayer)
+
+  useEffect(() => bindAudioEvents(), [])
+
+  if (!currentEpisode || !currentPodcast) return null
+
+  const progress = durationSec > 0 ? (currentTimeSec / durationSec) * 100 : 0
+
+  return (
+    <div className="relative shrink-0 border-t border-line bg-surface">
+      <div className="absolute inset-x-0 top-0 h-0.5 bg-line">
+        <div className="h-full bg-amber-600 transition-all" style={{ width: `${progress}%` }} />
+      </div>
+      <div className="flex h-[72px] items-center gap-4 px-6">
+        <div className="size-12 shrink-0 overflow-hidden rounded-md bg-line">
+          {currentPodcast.coverUrl ? (
+            <img
+              src={currentPodcast.coverUrl}
+              alt={currentPodcast.title}
+              className="size-full object-cover"
+            />
+          ) : (
+            <div className="flex size-full items-center justify-center bg-amber-100 text-lg font-semibold text-muted">
+              {currentPodcast.title.charAt(0)}
+            </div>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-medium text-ink">{currentEpisode.title}</div>
+          <div className="truncate text-xs text-muted">{currentPodcast.title}</div>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full bg-amber-600 hover:bg-amber-500"
+          onClick={togglePlay}
+        >
+          {isPlaying ? <Pause className="size-4 text-ink" /> : <Play className="size-4 text-ink" />}
+        </Button>
+        <div className="font-mono text-xs text-muted">
+          {formatDuration(currentTimeSec)} / {formatDuration(durationSec)}
+        </div>
+        <Button variant="ghost" size="icon" onClick={openFullPlayer} aria-label="展开播放器">
+          <Maximize2 className="size-4" />
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+export function FullScreenPlayer(): React.JSX.Element | null {
+  const currentEpisode = usePlaybackStore((state) => state.currentEpisode)
+  const currentPodcast = usePlaybackStore((state) => state.currentPodcast)
+  const isPlaying = usePlaybackStore((state) => state.isPlaying)
+  const currentTimeSec = usePlaybackStore((state) => state.currentTimeSec)
+  const durationSec = usePlaybackStore((state) => state.durationSec)
+  const view = usePlaybackStore((state) => state.view)
+  const togglePlay = usePlaybackStore((state) => state.togglePlay)
+  const seek = usePlaybackStore((state) => state.seek)
+  const closeFullPlayer = usePlaybackStore((state) => state.closeFullPlayer)
+
+  if (!currentEpisode || !currentPodcast || view !== 'full') return null
+
+  return (
+    <div className="absolute inset-0 z-40 flex flex-col bg-paper">
+      <div className="flex items-center px-6 py-4">
+        <button
+          type="button"
+          className="text-sm text-muted hover:text-ink"
+          onClick={closeFullPlayer}
+        >
+          收起播放器
+        </button>
+      </div>
+      <div className="flex flex-1 flex-col items-center justify-center px-6 pb-12">
+        <div className="mb-8 size-[280px] overflow-hidden rounded-lg bg-line shadow-md">
+          {currentPodcast.coverUrl ? (
+            <img
+              src={currentPodcast.coverUrl}
+              alt={currentPodcast.title}
+              className="size-full object-cover"
+            />
+          ) : (
+            <div className="flex size-full items-center justify-center bg-gradient-to-br from-amber-100 to-line text-7xl font-semibold text-muted">
+              {currentPodcast.title.charAt(0)}
+            </div>
+          )}
+        </div>
+        <h1 className="max-w-2xl text-center text-2xl font-semibold text-ink">
+          {currentEpisode.title}
+        </h1>
+        <p className="mt-2 text-base text-muted">{currentPodcast.title}</p>
+        <div className="mt-8 w-full max-w-xl">
+          <input
+            type="range"
+            min={0}
+            max={Math.max(durationSec, 1)}
+            value={currentTimeSec}
+            className="w-full accent-amber-600"
+            onChange={(event) => seek(Number(event.target.value))}
+          />
+          <div className="mt-2 flex justify-between font-mono text-xs text-muted">
+            <span>{formatDuration(currentTimeSec)}</span>
+            <span>{formatDuration(durationSec)}</span>
+          </div>
+        </div>
+        <Button size="lg" className={cn('mt-6 size-16 rounded-full p-0')} onClick={togglePlay}>
+          {isPlaying ? <Pause className="size-6" /> : <Play className="size-6" />}
+        </Button>
+      </div>
+    </div>
+  )
+}

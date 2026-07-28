@@ -1,73 +1,83 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <title>08 — 设置与数据</title>
-  <link rel="stylesheet" href="_shared.css">
-</head>
-<body>
-  <div class="window">
-    <div class="titlebar">
-      <div class="titlebar-dots"><span></span><span></span><span></span></div>
-      <div class="titlebar-title">博播 BiuPodcast — 设置</div>
-    </div>
-    <div class="app-body">
-      <div class="settings-layout">
-        <nav class="settings-nav">
-          <div class="settings-nav-item">播放</div>
-          <div class="settings-nav-item">下载</div>
-          <div class="settings-nav-item active">数据管理</div>
-          <div class="settings-nav-item">外观</div>
-          <div class="settings-nav-item">关于</div>
-        </nav>
-        <div class="settings-content">
-          <div class="settings-section">
-            <h2 class="settings-section-title">数据导出与导入</h2>
-            <div class="settings-row">
-              <div>
-                <div class="settings-row-label">导出全部数据</div>
-                <div class="settings-row-desc">导出订阅、播放进度、已听状态等到单个 JSON 文件</div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>08 — 设置与数据</title>
+    <link rel="stylesheet" href="_shared.css" />
+  </head>
+  <body>
+    <div class="window">
+      <div class="titlebar">
+        <div class="titlebar-dots"><span></span><span></span><span></span></div>
+        <div class="titlebar-title">博播 BiuPodcast — 设置</div>
+      </div>
+      <div class="app-body">
+        <div class="settings-layout">
+          <nav class="settings-nav">
+            <div class="settings-nav-item">播放</div>
+            <div class="settings-nav-item">下载</div>
+            <div class="settings-nav-item active">数据管理</div>
+            <div class="settings-nav-item">外观</div>
+            <div class="settings-nav-item">关于</div>
+          </nav>
+          <div class="settings-content">
+            <div class="settings-section">
+              <h2 class="settings-section-title">数据导出与导入</h2>
+              <div class="settings-row">
+                <div>
+                  <div class="settings-row-label">导出全部数据</div>
+                  <div class="settings-row-desc">
+                    导出订阅、播放进度、已听状态等到单个 JSON 文件
+                  </div>
+                </div>
+                <button class="btn btn-secondary">导出…</button>
               </div>
-              <button class="btn btn-secondary">导出…</button>
+              <div class="settings-row">
+                <div>
+                  <div class="settings-row-label">导入数据</div>
+                  <div class="settings-row-desc">
+                    从备份文件恢复订阅与播放记录，导入前将预览变更
+                  </div>
+                </div>
+                <button class="btn btn-secondary">导入…</button>
+              </div>
             </div>
-            <div class="settings-row">
-              <div>
-                <div class="settings-row-label">导入数据</div>
-                <div class="settings-row-desc">从备份文件恢复订阅与播放记录，导入前将预览变更</div>
+            <div class="settings-section">
+              <h2 class="settings-section-title">存储</h2>
+              <div class="settings-row">
+                <div>
+                  <div class="settings-row-label">已下载音频</div>
+                  <div class="settings-row-desc">
+                    4.2 GB · 共 128 集 · 存储于 ~/Documents/BiuPodcast
+                  </div>
+                </div>
+                <button class="btn btn-secondary">更改路径</button>
               </div>
-              <button class="btn btn-secondary">导入…</button>
+              <div class="settings-row">
+                <div>
+                  <div class="settings-row-label">清除缓存</div>
+                  <div class="settings-row-desc">清除封面图片与临时文件，不影响订阅与下载</div>
+                </div>
+                <button class="btn btn-secondary">清除</button>
+              </div>
             </div>
-          </div>
-          <div class="settings-section">
-            <h2 class="settings-section-title">存储</h2>
-            <div class="settings-row">
-              <div>
-                <div class="settings-row-label">已下载音频</div>
-                <div class="settings-row-desc">4.2 GB · 共 128 集 · 存储于 ~/Documents/BiuPodcast</div>
+            <div class="settings-section">
+              <h2 class="settings-section-title">危险操作</h2>
+              <div class="settings-row">
+                <div>
+                  <div class="settings-row-label" style="color: var(--danger)">清除全部数据</div>
+                  <div class="settings-row-desc">
+                    将删除所有订阅、播放记录、笔记与下载文件，此操作不可撤销
+                  </div>
+                </div>
+                <button class="btn" style="background: var(--danger); color: #fff">
+                  清除全部数据
+                </button>
               </div>
-              <button class="btn btn-secondary">更改路径</button>
-            </div>
-            <div class="settings-row">
-              <div>
-                <div class="settings-row-label">清除缓存</div>
-                <div class="settings-row-desc">清除封面图片与临时文件，不影响订阅与下载</div>
-              </div>
-              <button class="btn btn-secondary">清除</button>
-            </div>
-          </div>
-          <div class="settings-section">
-            <h2 class="settings-section-title">危险操作</h2>
-            <div class="settings-row">
-              <div>
-                <div class="settings-row-label" style="color:var(--danger);">清除全部数据</div>
-                <div class="settings-row-desc">将删除所有订阅、播放记录、笔记与下载文件，此操作不可撤销</div>
-              </div>
-              <button class="btn" style="background:var(--danger);color:#fff;">清除全部数据</button>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</body>
+  </body>
 </html>

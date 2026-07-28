@@ -1,13 +1,13 @@
 # 博播（BiuPodcast）- MVP 开发任务拆解
 
-| 项目 | 内容 |
-|---|---|
-| 产品名称 | 博播 BiuPodcast（`biu-podcast`） |
-| 文档版本 | v1.0 |
-| 更新日期 | 2026-07-28 |
-| 状态 | Draft — 待评审 |
+| 项目     | 内容                                                                                                                                                                        |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 产品名称 | 博播 BiuPodcast（`biu-podcast`）                                                                                                                                            |
+| 文档版本 | v1.0                                                                                                                                                                        |
+| 更新日期 | 2026-07-28                                                                                                                                                                  |
+| 状态     | Draft — 待评审                                                                                                                                                              |
 | 关联文档 | [`mdocs/Prd.md`](./Prd.md)（需求来源，§5.1 P0 范围）、[`mdocs/Feature.md`](./Feature.md)（功能条目对照）、[`mdocs/Arch.md`](./Arch.md)（技术方案，任务的目录结构/分层依据） |
-| 文档定位 | 把 PRD §5.1 的 MVP 范围拆解为**可独立开发、可独立验收**的任务清单，供排期与逐项验收使用 |
+| 文档定位 | 把 PRD §5.1 的 MVP 范围拆解为**可独立开发、可独立验收**的任务清单，供排期与逐项验收使用                                                                                     |
 
 ---
 
@@ -46,18 +46,18 @@ OPML 导入导出、播放列表、变速播放、睡眠定时器、系统托盘
 
 MVP 拆分为 10 个 Epic，按依赖关系大致分为三个阶段：**地基（E0-E2）→ 核心功能（E3-E6）→ 收尾与发布（E7-E9）**。Epic 内的任务允许并行开发，但 Epic 之间存在强依赖，见第 3 章顺序图。
 
-| Epic | 名称 | 任务数 | 依赖 | 对应 Arch.md 章节 |
-|---|---|---|---|---|
-| E0 | 工程基础设施 | 6 | 无 | §3, §17 |
-| E1 | 数据层基座 | 5 | E0 | §9 |
-| E2 | IPC 契约与安全基线 | 4 | E0, E1 | §7.2, §8 |
-| E3 | 订阅管理 | 6 | E1, E2 | §7.1（Subscription Service） |
-| E4 | 播客内容浏览 | 4 | E3 | §7.1（Episode Service） |
-| E5 | 音频播放 | 6 | E4 | §7.1（Playback Service） |
-| E6 | 离线下载 | 7 | E4 | §7.4（下载队列子系统） |
-| E7 | 本地数据可迁移 | 3 | E3-E6 | §9.4 |
-| E8 | 桌面基础与错误恢复 | 6 | E1-E6 | §7.1（Window/Tray/Menu）, §12.6 |
-| E9 | 安全基线与发布验收 | 4 | 全部 | §8.1, §15 |
+| Epic | 名称               | 任务数 | 依赖   | 对应 Arch.md 章节               |
+| ---- | ------------------ | ------ | ------ | ------------------------------- |
+| E0   | 工程基础设施       | 6      | 无     | §3, §17                         |
+| E1   | 数据层基座         | 5      | E0     | §9                              |
+| E2   | IPC 契约与安全基线 | 4      | E0, E1 | §7.2, §8                        |
+| E3   | 订阅管理           | 6      | E1, E2 | §7.1（Subscription Service）    |
+| E4   | 播客内容浏览       | 4      | E3     | §7.1（Episode Service）         |
+| E5   | 音频播放           | 6      | E4     | §7.1（Playback Service）        |
+| E6   | 离线下载           | 7      | E4     | §7.4（下载队列子系统）          |
+| E7   | 本地数据可迁移     | 3      | E3-E6  | §9.4                            |
+| E8   | 桌面基础与错误恢复 | 6      | E1-E6  | §7.1（Window/Tray/Menu）, §12.6 |
+| E9   | 安全基线与发布验收 | 4      | 全部   | §8.1, §15                       |
 
 **合计 51 个任务**。每个任务遵循"一个任务 = 一个可独立提交、可独立验收的垂直切片"（UI + 状态 + IPC + 数据 + 对应测试），符合 Arch.md §17 的 PR 粒度约定。
 
@@ -86,11 +86,12 @@ E0 工程基础设施
 
 ## 4. 任务详情
 
-> 每个任务包含：ID、所属 Epic、依赖、描述、验收标准（Given/When/Then，可直接转测试用例）、测试要求（对应 Arch.md §12 三层测试）、交付物路径。规模标注为相对粒度 **S**（≤1 天）/ **M**（1~3 天）/ **L**（3~5 天），供排期参考，不代表绝对工时承诺。
+> 每个任务包含：ID、所属 Epic、依赖、描述、验收标准（Given/When/Then，可直接转测试用例）、测试要求（对应 Arch.md §12 三层测试）、交付物路径。规模标注为相对粒度 **S**（≤1 天）/ **M**（1~~3 天）/ **L**（3~~5 天），供排期参考，不代表绝对工时承诺。
 
 ### Epic E0：工程基础设施
 
 #### T0.1 引入 Tailwind CSS + shadcn/ui 基础设施
+
 - **依赖**：无　**规模**：M
 - **描述**：接入 `@tailwindcss/vite` 插件与 `tailwindcss` v4；执行 `shadcn init` 生成 `components.json`；建立 `src/renderer/src/lib/utils.ts`（`cn()` 辅助函数）；替换现有 `App.tsx` 脚手架样式为基础设计令牌（颜色/圆角/间距的 CSS 变量）。
 - **验收标准**：
@@ -100,6 +101,7 @@ E0 工程基础设施
 - **交付物**：`electron.vite.config.ts`（插入 Tailwind 插件）、`components.json`、`src/renderer/src/assets/main.css`（`@import 'tailwindcss'` + `@theme`）、`src/renderer/src/lib/utils.ts`。
 
 #### T0.2 搭建 Vitest 双 workspace（renderer / main）
+
 - **依赖**：无　**规模**：M
 - **描述**：新增 `vitest.workspace.ts`，分别为渲染进程（`jsdom` 环境）与主进程（`node` 环境）配置独立 project；接入 `@testing-library/react`、`@testing-library/jest-dom`、`@testing-library/user-event`；配置 `@vitest/coverage-v8`。
 - **验收标准**：
@@ -109,6 +111,7 @@ E0 工程基础设施
 - **交付物**：`vitest.workspace.ts`、`src/renderer/src/test/setup.ts`、`package.json` 新增 `test`/`test:coverage` scripts。
 
 #### T0.3 接入 MSW 用于网络请求 mock
+
 - **依赖**：T0.2　**规模**：S
 - **描述**：安装 `msw`，建立 `tests/mocks/server.ts`（Node 环境 `setupServer`），在主进程测试的 `setupFiles` 中默认启动/关闭 mock server；建立 `tests/fixtures/feeds/` 目录存放示例 RSS/Atom 样本文件。
 - **验收标准**：
@@ -117,6 +120,7 @@ E0 工程基础设施
 - **交付物**：`tests/mocks/server.ts`、`tests/mocks/handlers.ts`、`tests/fixtures/feeds/standard.xml`。
 
 #### T0.4 接入 Playwright E2E 基础设施
+
 - **依赖**：T0.2　**规模**：M
 - **描述**：安装 `@playwright/test`，配置 `playwright.config.ts` 使用 `_electron.launch()` 驱动方式；封装 `tests/e2e/helpers/launch-app.ts`（每次启动前生成临时 `userData` 目录，测试结束清理）；编写一个占位 E2E 冒烟用例（应用能启动并展示主窗口）。
 - **验收标准**：
@@ -126,6 +130,7 @@ E0 工程基础设施
 - **交付物**：`playwright.config.ts`、`tests/e2e/helpers/launch-app.ts`、`tests/e2e/smoke.spec.ts`、`package.json` 新增 `test:e2e` script。
 
 #### T0.5 建立 Feature-first 目录骨架与依赖边界校验
+
 - **依赖**：无　**规模**：S
 - **描述**：按 Arch.md §5 建立 `src/main/{ipc,features,infra,shared}`、`src/renderer/src/{app,components/ui,features,lib}`、`src/shared/` 空目录骨架（含 `.gitkeep` 或占位 `index.ts`）；引入 `dependency-cruiser`（或等价工具）配置规则："渲染进程 `features/a` 不得 import `features/b` 内部文件"，接入 `pnpm lint` 流程。
 - **验收标准**：
@@ -135,6 +140,7 @@ E0 工程基础设施
 - **交付物**：目录骨架、`.dependency-cruiser.cjs`、`package.json` 新增 `lint:boundaries` script。
 
 #### T0.6 CI 流水线搭建（lint → typecheck → 单元/集成 → build）
+
 - **依赖**：T0.1~T0.5　**规模**：M
 - **描述**：建立 CI 配置（GitHub Actions 或等效工具），实现 Arch.md §12.7 的门禁顺序：`lint → typecheck → 单元测试 → 集成测试 → build`；本阶段暂不接入 E2E 与三平台矩阵（留给 E9）。
 - **验收标准**：
@@ -148,6 +154,7 @@ E0 工程基础设施
 ### Epic E1：数据层基座
 
 #### T1.1 接入 better-sqlite3 + Drizzle ORM，建立数据库连接
+
 - **依赖**：T0.2　**规模**：M
 - **描述**：安装 `better-sqlite3`、`drizzle-orm`、`drizzle-kit`；建立 `src/main/infra/db/client.ts`（数据库文件路径基于 `app.getPath('userData')`，支持通过环境变量覆盖以便测试注入临时路径）；建立 `drizzle.config.ts`。
 - **验收标准**：
@@ -157,6 +164,7 @@ E0 工程基础设施
 - **交付物**：`src/main/infra/db/client.ts`、`drizzle.config.ts`、`src/main/infra/db/client.test.ts`。
 
 #### T1.2 定义核心数据表 Schema（Podcast / Episode / DownloadTask / AppSettings）
+
 - **依赖**：T1.1　**规模**：M
 - **描述**：按 Arch.md §9.2 落地 `src/main/infra/db/schema.ts`：`podcasts`、`episodes`、`download_tasks` 三张核心表（MVP 阶段暂不含 `playlists`/`notes`，留给 P1）；主键使用 ULID；时间字段统一 Unix 毫秒时间戳。
 - **验收标准**：
@@ -165,6 +173,7 @@ E0 工程基础设施
 - **交付物**：`src/main/infra/db/schema.ts`、`drizzle/0000_init.sql`。
 
 #### T1.3 实现数据库迁移执行与失败回滚机制
+
 - **依赖**：T1.2　**规模**：M
 - **描述**：`src/main/infra/db/migrate.ts`：应用启动时执行迁移前先复制当前数据库文件为 `*.bak-<timestamp>`，迁移失败时自动恢复备份文件并抛出可识别错误，供上层提示用户。
 - **验收标准**：
@@ -174,6 +183,7 @@ E0 工程基础设施
 - **交付物**：`src/main/infra/db/migrate.ts`、`src/main/infra/db/migrate.test.ts`。
 
 #### T1.4 实现 Subscription / Episode / DownloadTask 三个 Repository
+
 - **依赖**：T1.2　**规模**：L
 - **描述**：`src/main/features/{subscription,episode,download}/*.repository.ts`，仅暴露领域动词方法（`insertPodcast`、`findPodcastByFeedUrl`、`markEpisodePlayed`、`upsertDownloadTask` 等），内部使用 Drizzle 查询构建。
 - **验收标准**：
@@ -183,6 +193,7 @@ E0 工程基础设施
 - **交付物**：`subscription.repository.ts` / `episode.repository.ts` / `download.repository.ts` 及各自 `.test.ts`。
 
 #### T1.5 电config `electron-store` 落地 AppSettings
+
 - **依赖**：T0.1　**规模**：S
 - **描述**：安装 `electron-store`，建立 `src/main/infra/settings/store.ts` 封装单例配置读写（默认下载质量、续播偏好等 MVP 阶段需要的最小字段集），提供类型安全的 getter/setter。
 - **验收标准**：
@@ -196,6 +207,7 @@ E0 工程基础设施
 ### Epic E2：IPC 契约与安全基线
 
 #### T2.1 定义共享类型与 IPC 通道常量（`src/shared/`）
+
 - **依赖**：T1.2　**规模**：M
 - **描述**：建立 `src/shared/types.ts`（Podcast/Episode/DownloadTask 等领域类型，与 Drizzle schema 字段对齐但独立维护，供渲染进程使用而不依赖主进程内部实现）与 `src/shared/ipc-contract.ts`（每个 MVP 阶段需要的 IPC 通道名 + zod 输入 schema）。
 - **验收标准**：
@@ -205,6 +217,7 @@ E0 工程基础设施
 - **交付物**：`src/shared/types.ts`、`src/shared/ipc-contract.ts`、对应 `.test.ts`。
 
 #### T2.2 修正渲染进程安全基线配置
+
 - **依赖**：无　**规模**：S
 - **描述**：修改 `src/main/index.ts` 的 `webPreferences`：`sandbox: true`（当前脚手架为 `false`，对应 Arch.md §8.1/§15 中登记的待修正项）、显式 `contextIsolation: true`、`nodeIntegration: false`；配置基础 CSP（通过 `session.defaultSession.webRequest.onHeadersReceived` 注入 `Content-Security-Policy` 响应头）。
 - **验收标准**：
@@ -214,6 +227,7 @@ E0 工程基础设施
 - **交付物**：`src/main/index.ts`（修改）、`src/main/infra/security/csp.ts`、对应 E2E/集成断言用例。
 
 #### T2.3 实现 Preload 白名单式 API 暴露（订阅/集数/下载/设置四个领域）
+
 - **依赖**：T2.1　**规模**：M
 - **描述**：重写 `src/preload/index.ts`：移除默认脚手架的 `ping` 示例逻辑，暴露 `window.api.{subscription,episode,download,settings}` 四个领域的方法（仅覆盖 MVP 所需通道），每个方法内部仅做 `ipcRenderer.invoke`/`on` 的薄封装，不暴露 `ipcRenderer` 本身；同步更新 `src/preload/index.d.ts` 的类型声明。
 - **验收标准**：
@@ -223,6 +237,7 @@ E0 工程基础设施
 - **交付物**：`src/preload/index.ts`、`src/preload/index.d.ts`、`src/preload/index.test.ts`。
 
 #### T2.4 建立 IPC Handler 注册框架与统一错误映射
+
 - **依赖**：T2.1, T2.2　**规模**：M
 - **描述**：`src/main/ipc/register.ts` 提供统一的 `registerHandler(channel, schema, handler)` 封装：自动做 zod 校验、捕获 service 层抛出的领域错误并映射为 `{ code, message }` 结构，避免每个 handler 重复写 try/catch 样板；`src/main/index.ts` 中调用各领域的 `register*Handlers()`。
 - **验收标准**：
@@ -236,6 +251,7 @@ E0 工程基础设施
 ### Epic E3：订阅管理
 
 #### T3.1 实现 RSS/Atom Feed 解析模块
+
 - **依赖**：T0.3　**规模**：L
 - **描述**：`src/main/features/subscription/feed-parser.ts`，基于 `rss-parser` 封装，提取标题/描述/封面/作者/语言及集数列表（标题/发布时间/音频 URL/时长/大小）；对缺失字段、非标准编码、格式错误做容错处理，返回结构化解析结果或结构化错误（`timeout`/`parse_error`/`invalid_xml`/`not_found`）。
 - **验收标准**：
@@ -246,6 +262,7 @@ E0 工程基础设施
 - **交付物**：`feed-parser.ts`、`feed-parser.test.ts`、补充 `tests/fixtures/feeds/` 下 4+ 个样本文件。
 
 #### T3.2 实现"添加订阅"完整链路（Service + IPC + UI）
+
 - **依赖**：T1.4, T2.4, T3.1　**规模**：L
 - **描述**：`subscription.service.ts` 编排"请求 Feed → 解析 → 查重 → 落库"；`subscription.handler.ts` 注册 `subscription:add` 通道；渲染进程 `features/subscription/{api.ts,store.ts,components/AddSubscriptionDialog.tsx}` 使用 shadcn/ui 的 `Dialog` + `Input` + `Button` 构建输入表单。
 - **验收标准**（对应 PRD §6.1 验收标准）：
@@ -257,6 +274,7 @@ E0 工程基础设施
 - **交付物**：`src/main/features/subscription/subscription.service.ts`、`src/main/ipc/subscription.handler.ts`、`src/renderer/src/features/subscription/*`、对应三层测试文件、`tests/e2e/subscription-add.spec.ts`。
 
 #### T3.3 实现订阅列表展示（排序 + 搜索）
+
 - **依赖**：T3.2　**规模**：M
 - **描述**：`subscription:list` IPC 通道；渲染进程 `SubscriptionListView` 组件，支持按最近更新时间排序（默认）与标题关键词本地过滤（MVP 阶段搜索为纯前端内存过滤，不需要额外 IPC 通道）。
 - **验收标准**：
@@ -266,6 +284,7 @@ E0 工程基础设施
 - **交付物**：`src/renderer/src/features/subscription/components/SubscriptionListView.tsx`、`src/renderer/src/features/subscription/lib/sort-filter.ts`（含 `.test.ts`）。
 
 #### T3.4 实现取消订阅（保留数据选项）
+
 - **依赖**：T3.2　**规模**：S
 - **描述**：`subscription:remove` IPC 通道；UI 确认弹窗询问"是否保留已下载文件和历史数据"（默认保留，对应 PRD Local-first 原则）；`remove` 为"仅解除订阅关系"或"级联删除全部数据"两种模式，通过参数区分。
 - **验收标准**：
@@ -275,6 +294,7 @@ E0 工程基础设施
 - **交付物**：`subscription.handler.ts`（新增通道）、`subscription.service.ts`（新增方法）、UI 确认弹窗组件。
 
 #### T3.5 实现手动刷新单个订阅
+
 - **依赖**：T3.1, T3.2　**规模**：M
 - **描述**：`subscription:refresh` IPC 通道，复用 `feed-parser.ts` 重新拉取并 diff 出新增集数（按 `audioUrl` 或 Feed 提供的 `guid` 去重），更新播客元数据与 `lastFetchedAt`/`lastFetchStatus`；UI 提供刷新按钮与加载态。
 - **验收标准**：
@@ -284,6 +304,7 @@ E0 工程基础设施
 - **交付物**：`subscription.service.ts`（新增 `refresh` 方法）、`subscription:refresh` handler、UI 刷新按钮组件。
 
 #### T3.6 实现订阅列表空状态与加载态 UI
+
 - **依赖**：T3.3　**规模**：S
 - **描述**：使用 shadcn/ui 的 `Skeleton`/自定义空状态组件，覆盖"首次无订阅""加载中""加载失败"三种视图状态，避免白屏体验（对应 PRD §11.2 静态资源本地缓存、离线打开不空白的精神在 MVP 阶段的基础落地）。
 - **验收标准**：
@@ -296,6 +317,7 @@ E0 工程基础设施
 ### Epic E4：播客内容浏览
 
 #### T4.1 实现播客详情页
+
 - **依赖**：T3.2　**规模**：M
 - **描述**：`episode:listByPodcast` IPC 通道；渲染进程 `PodcastDetailPage` 展示简介/封面/作者信息 + 未听集数计数 + 集数列表入口。
 - **验收标准**：
@@ -304,6 +326,7 @@ E0 工程基础设施
 - **交付物**：`src/main/ipc/episode.handler.ts`、`src/renderer/src/features/episode/pages/PodcastDetailPage.tsx`。
 
 #### T4.2 实现集数列表（状态标识 + 排序）
+
 - **依赖**：T4.1　**规模**：M
 - **描述**：集数列表按发布时间倒序展示标题/日期/时长/大小，并标识已听/未听、已下载/未下载两组独立状态徽标。
 - **验收标准**：
@@ -312,6 +335,7 @@ E0 工程基础设施
 - **交付物**：`src/renderer/src/features/episode/components/EpisodeListItem.tsx` 及测试。
 
 #### T4.3 实现"标记全部为已读"
+
 - **依赖**：T4.2　**规模**：S
 - **描述**：`episode:markAllPlayed` IPC 通道，按 `podcastId` 批量更新。
 - **验收标准**：
@@ -320,6 +344,7 @@ E0 工程基础设施
 - **交付物**：`episode.service.ts`（新增方法）、对应 handler 与 UI 按钮。
 
 #### T4.4 实现集数详情（HTML 富文本安全渲染）
+
 - **依赖**：T4.2　**规模**：M
 - **描述**：主进程使用 `sanitize-html` 对 Feed 返回的集数描述做净化后再通过 IPC 传出（对应 Arch.md §8.3 安全要求）；渲染进程使用净化后字符串渲染，覆盖基础排版（段落/链接/列表）。
 - **验收标准**：
@@ -332,6 +357,7 @@ E0 工程基础设施
 ### Epic E5：音频播放
 
 #### T5.1 实现播放器核心状态机（Zustand `usePlaybackStore`）
+
 - **依赖**：T4.2　**规模**：L
 - **描述**：全局 `usePlaybackStore` 管理当前播放集数、播放/暂停状态、当前进度、总时长；基于 HTML5 `<audio>` 元素封装播放控制逻辑（`src/renderer/src/features/playback/lib/audio-controller.ts`），暴露 `play/pause/seek/next/previous` 动作。
 - **验收标准**：
@@ -341,6 +367,7 @@ E0 工程基础设施
 - **交付物**：`usePlaybackStore.ts`、`audio-controller.ts` 及测试。
 
 #### T5.2 实现迷你播放器组件
+
 - **依赖**：T5.1　**规模**：M
 - **描述**：常驻底部的迷你播放器（shadcn/ui `Slider` 做进度条 + 播放/暂停/上下集按钮 + 当前时间/总时长文本）。
 - **验收标准**：
@@ -350,6 +377,7 @@ E0 工程基础设施
 - **交付物**：`src/renderer/src/features/playback/components/MiniPlayer.tsx` 及测试。
 
 #### T5.3 实现全屏播放器页面
+
 - **依赖**：T5.1　**规模**：M
 - **描述**：全屏播放器视图，展示封面大图、标题、进度条、播放控制，与迷你播放器共享同一个 `usePlaybackStore`，切换视图时状态无缝衔接不中断播放。
 - **验收标准**：
@@ -358,6 +386,7 @@ E0 工程基础设施
 - **交付物**：`src/renderer/src/features/playback/pages/FullScreenPlayer.tsx` 及测试。
 
 #### T5.4 实现上一集/下一集切换逻辑
+
 - **依赖**：T5.1　**规模**：S
 - **描述**：基于当前播客的集数列表（按发布时间排序）计算上一集/下一集，边界情况（第一集无上一集、最后一集无下一集）按钮禁用而非报错。
 - **验收标准**：
@@ -367,6 +396,7 @@ E0 工程基础设施
 - **交付物**：`src/renderer/src/features/playback/lib/adjacent-episode.ts` 及测试。
 
 #### T5.5 实现播放进度持久化（写库 + 节流）
+
 - **依赖**：T5.1, T1.4　**规模**：M
 - **描述**：`playback:updateProgress` IPC 通道；渲染进程每隔固定间隔（如 5 秒）或暂停/切集时机把当前进度同步写入 `episodes.playbackPositionSec`，避免每秒写库造成 I/O 压力（对应 Arch.md §7.2 断电丢失范围 ≤ 5 秒的约束）。
 - **验收标准**：
@@ -375,6 +405,7 @@ E0 工程基础设施
 - **交付物**：`playback.service.ts`、`playback.handler.ts`、渲染进程节流写入逻辑及测试。
 
 #### T5.6 实现 App 重启恢复播放进度（不自动出声）
+
 - **依赖**：T5.5　**规模**：M
 - **描述**：应用启动时读取上次播放的集数与进度，恢复到播放器 UI（进度条、当前集数信息），但**不自动开始播放**，需用户手动点击播放（对应 PRD §11.3 已勾选项的产品要求，MVP 阶段需补齐自动化测试覆盖）。
 - **验收标准**：
@@ -387,6 +418,7 @@ E0 工程基础设施
 ### Epic E6：离线下载
 
 #### T6.1 实现下载队列核心调度器
+
 - **依赖**：T1.4　**规模**：L
 - **描述**：`src/main/features/download/download-queue.ts`：维护并发数可配置的任务队列（MVP 阶段并发数可先写死为 2，暴露配置接口供 P1 接入用户可调），状态机 `queued → downloading → paused/completed/failed`。
 - **验收标准**：
@@ -396,6 +428,7 @@ E0 工程基础设施
 - **交付物**：`download-queue.ts`、`download-queue.test.ts`。
 
 #### T6.2 实现单集下载（HTTP 请求 + 临时文件 + 原子转正）
+
 - **依赖**：T6.1　**规模**：L
 - **描述**：`download.service.ts` 对接真实 HTTP 下载（使用 Node 内置 `fetch` 流式写入临时文件 `<episodeId>.part`），完成后原子 `rename` 为最终文件并更新数据库 `isDownloaded`/`localFilePath`/`downloadedAt`。
 - **验收标准**：
@@ -404,6 +437,7 @@ E0 工程基础设施
 - **交付物**：`download.service.ts`（下载执行部分）、集成测试。
 
 #### T6.3 实现下载队列管理 UI（暂停/继续/取消）
+
 - **依赖**：T6.1, T6.2　**规模**：M
 - **描述**：`download:{enqueue,pause,resume,cancel}` IPC 通道 + 高频 `download:progress` 广播；渲染进程下载队列面板展示每个任务的进度条与操作按钮。
 - **验收标准**：
@@ -413,6 +447,7 @@ E0 工程基础设施
 - **交付物**：`src/renderer/src/features/download/components/DownloadQueuePanel.tsx`、对应 handler、测试。
 
 #### T6.4 实现下载断点续传
+
 - **依赖**：T6.2　**规模**：L
 - **描述**：暂停/中断的任务恢复下载时，基于已记录的 `progressBytes` 发起 `Range: bytes=<progressBytes>-` 请求；若响应非 `206 Partial Content`（服务端不支持 Range），清空临时文件从零重新下载并提示用户。
 - **验收标准**：
@@ -422,6 +457,7 @@ E0 工程基础设施
 - **交付物**：`download.service.ts`（续传逻辑）、`download-queue.test.ts` 补充用例。
 
 #### T6.5 实现 App 重启后下载任务自动恢复
+
 - **依赖**：T6.4　**规模**：M
 - **描述**：应用启动时扫描数据库中状态为 `downloading`（异常中断，未被正常暂停）的任务，自动转为 `queued` 并重新入队续传。
 - **验收标准**：
@@ -430,6 +466,7 @@ E0 工程基础设施
 - **交付物**：启动恢复逻辑（`src/main/features/download/resume-on-launch.ts`）、`tests/e2e/download-resume.spec.ts`。
 
 #### T6.6 实现下载完整性校验
+
 - **依赖**：T6.2　**规模**：S
 - **描述**：下载完成后比对实际文件大小与 Feed 提供的 `Content-Length`/`enclosure length` 字段，不一致则标记为 `failed` 而非 `completed`，避免损坏文件被误判为可用。
 - **验收标准**：
@@ -438,6 +475,7 @@ E0 工程基础设施
 - **交付物**：`download.service.ts`（校验逻辑）及对应测试。
 
 #### T6.7 实现已下载内容离线播放
+
 - **依赖**：T6.2, T5.1　**规模**：M
 - **描述**：播放器逻辑优先判断集数 `isDownloaded`：若已下载，`<audio src>` 指向本地文件路径（经 `file://` 协议或主进程提供的本地静态资源服务）；否则指向远程 `audioUrl`。断网时未下载集数应明确提示"仅元数据，需联网播放或先下载"而非直接播放失败报错。
 - **验收标准**：
@@ -451,6 +489,7 @@ E0 工程基础设施
 ### Epic E7：本地数据可迁移
 
 #### T7.1 实现完整本地数据导出
+
 - **依赖**：E3~E6 数据模型全部落地　**规模**：M
 - **描述**：`data-portability:export` IPC 通道，产出 Arch.md §9.4 定义的 `.biubackup`（zip 容器：`manifest.json` + `data.json`），覆盖订阅、集数元数据、播放进度、已听状态、下载记录（不含音频二进制文件本身）、应用设置；用户通过系统文件保存对话框选择导出路径。
 - **验收标准**：
@@ -459,6 +498,7 @@ E0 工程基础设施
 - **交付物**：`src/main/features/data-portability/export.service.ts`、handler、对应测试。
 
 #### T7.2 实现完整本地数据导入（含冲突预览）
+
 - **依赖**：T7.1　**规模**：L
 - **描述**：`data-portability:{previewImport,import}` 两个 IPC 通道：先解析待导入文件与本地现状做 diff，返回"新增 N 项/冲突 M 项"预览供用户确认；确认后在单一事务中执行导入（冲突项默认"跳过"，MVP 阶段暂不做逐项合并 UI，"整体覆盖"作为备选简单策略，供用户在预览阶段二选一）。
 - **验收标准**：
@@ -468,6 +508,7 @@ E0 工程基础设施
 - **交付物**：`import.service.ts`、`import-preview.service.ts`、handler、测试。
 
 #### T7.3 实现"导出→清空→导入"数据完整性 E2E 验证
+
 - **依赖**：T7.1, T7.2　**规模**：M
 - **描述**：编写覆盖 PRD §12.2 核心用户旅程的 E2E 测试："订阅若干播客、下载并播放部分集数产生播放进度 → 导出数据 → 清空 `userData` 模拟全新环境 → 导入 → 逐项断言订阅/进度/下载记录完整还原"。
 - **验收标准**：
@@ -480,6 +521,7 @@ E0 工程基础设施
 ### Epic E8：桌面基础与错误恢复
 
 #### T8.1 实现单实例锁定
+
 - **依赖**：T0.6　**规模**：S
 - **描述**：`app.requestSingleInstanceLock()`，重复启动时聚焦已有窗口而非新开实例。
 - **验收标准**：
@@ -488,6 +530,7 @@ E0 工程基础设施
 - **交付物**：`src/main/index.ts` 修改、`src/main/infra/window/single-instance.ts`。
 
 #### T8.2 实现窗口状态记忆
+
 - **依赖**：T1.5　**规模**：M
 - **描述**：窗口尺寸/位置/最大化状态变更时节流写入 `electron-store`；启动时读取并还原，若记录的位置超出当前显示器可视范围（如上次在外接显示器，现已拔出），回退到主屏居中显示。
 - **验收标准**：
@@ -497,6 +540,7 @@ E0 工程基础设施
 - **交付物**：`src/main/infra/window/window-state.ts` 及测试。
 
 #### T8.3 实现原生应用菜单（File/Edit/View/Window/Help）
+
 - **依赖**：T0.6　**规模**：S
 - **描述**：`src/main/infra/menu/index.ts` 构建跨平台原生菜单，macOS 补充应用名称菜单（含 Quit/Hide 等系统级约定项）。
 - **验收标准**：
@@ -506,6 +550,7 @@ E0 工程基础设施
 - **交付物**：`src/main/infra/menu/index.ts` 及测试。
 
 #### T8.4 实现 Feed 拉取失败分类提示
+
 - **依赖**：T3.1, T3.5　**规模**：S
 - **描述**：将 `feed-parser.ts` 已产出的错误分类（`timeout`/`parse_error`/`invalid_xml`/`not_found`/网络证书错误）映射为渲染进程可读的具体提示文案，而非统一展示"刷新失败"。
 - **验收标准**：
@@ -514,6 +559,7 @@ E0 工程基础设施
 - **交付物**：`src/renderer/src/features/subscription/lib/error-messages.ts` 及测试。
 
 #### T8.5 实现下载失败自动重试
+
 - **依赖**：T6.2　**规模**：M
 - **描述**：下载任务失败（网络中断类，非完整性校验失败）时按配置的次数与退避间隔（如 3 次，间隔 5s/15s/45s）自动重试，超过次数后转为 `failed` 并允许用户手动重试。
 - **验收标准**：
@@ -523,6 +569,7 @@ E0 工程基础设施
 - **交付物**：`download-queue.ts`（重试逻辑）及测试。
 
 #### T8.6 实现已下载文件丢失检测
+
 - **依赖**：T6.7　**规模**：S
 - **描述**：播放前检查 `localFilePath` 指向的文件是否实际存在（用户可能手动删除了文件），不存在则将该集数 `isDownloaded` 状态修正为 `false` 并提示"文件已丢失，请重新下载"。
 - **验收标准**：
@@ -535,6 +582,7 @@ E0 工程基础设施
 ### Epic E9：安全基线与发布验收
 
 #### T9.1 三平台构建产物基础验收（Windows/macOS/Linux）
+
 - **依赖**：E0~E8 全部完成　**规模**：M
 - **描述**：接入 `electron-builder` 三平台构建到 CI 矩阵（`windows-latest`/`macos-latest`/`ubuntu-latest`），执行 `pnpm build:{win,mac,linux}` 并验证产物生成；补充三平台 E2E 冒烟用例（安装/启动/播放/下载四个基础动作，见 Arch.md §12.5）。
 - **验收标准**：
@@ -543,6 +591,7 @@ E0 工程基础设施
 - **交付物**：CI 配置扩展、`tests/e2e/smoke/{platform-basic}.spec.ts`。
 
 #### T9.2 安全基线回归验证（对应 Arch.md §15 清单前 4 项）
+
 - **依赖**：T2.2　**规模**：S
 - **描述**：编写自动化回归测试固化 T2.2 的安全配置，防止未来重构时被无意改回不安全默认值；覆盖：`sandbox`/`contextIsolation`/`nodeIntegration` 运行时实际生效值、CSP 响应头存在性、集数描述 HTML 净化生效。
 - **验收标准**：
@@ -551,6 +600,7 @@ E0 工程基础设施
 - **交付物**：`tests/e2e/security-baseline.spec.ts`。
 
 #### T9.3 代码签名前置条件核对（不含实际签名执行）
+
 - **依赖**：无　**规模**：S
 - **描述**：MVP 阶段不强制要求已完成真实的证书采购与 Notarization（属组织行政流程，非纯技术任务），但需在 `electron-builder.yml` 中预留签名配置位（`win.certificateFile`/`mac.notarize` 等），并在 README 或本文档中明确记录"发布前必须完成"的清单项，避免临上线才发现阻塞（对应 PRD §13 风险项、Arch.md §11/§15）。
 - **验收标准**：
@@ -559,6 +609,7 @@ E0 工程基础设施
 - **交付物**：`electron-builder.yml` 补充注释、`mdocs/Mvp.md` 本节勾选说明（见第 6 章）。
 
 #### T9.4 MVP 整体验收：核心用户旅程完整走查
+
 - **依赖**：E0~E8 全部完成　**规模**：M
 - **描述**：对照 PRD §2.2 用户旅程 1/3/4（首次使用、断网通勤、数据搬家）与 §12.1 三大原则专项测试表，执行一次完整的手动+自动化混合走查，产出验收报告。
 - **验收标准**：
@@ -583,16 +634,16 @@ MVP 视为可交付，需同时满足：
 
 ## 6. 追溯矩阵（任务 ↔ PRD/Feature.md 对照，节选关键映射）
 
-| 本文档任务 | PRD 章节 | Feature.md 章节 |
-|---|---|---|
-| T3.1~T3.6 | §6.1 订阅管理 | 1.1 / 1.2 / 1.3 |
-| T4.1~T4.4 | §6.2 播客内容浏览 | 2.1 / 2.2 / 2.3 |
-| T5.1~T5.6 | §6.3 音频播放 | 3.1（部分） |
-| T6.1~T6.7 | §6.4 离线下载 | 4.1 / 4.2（部分） |
-| T7.1~T7.3 | §6.5 本地数据 / §11.1 | 5.1 / 11.1 |
-| T8.1~T8.3 | §6.8 跨平台支持 | 8.3 |
-| T8.4~T8.6 | §11.3 错误恢复与可靠性 | 11.3 |
-| T2.2, T9.2, T9.3 | §7.3 安全与隐私 | 11.4 |
+| 本文档任务       | PRD 章节               | Feature.md 章节   |
+| ---------------- | ---------------------- | ----------------- |
+| T3.1~T3.6        | §6.1 订阅管理          | 1.1 / 1.2 / 1.3   |
+| T4.1~T4.4        | §6.2 播客内容浏览      | 2.1 / 2.2 / 2.3   |
+| T5.1~T5.6        | §6.3 音频播放          | 3.1（部分）       |
+| T6.1~T6.7        | §6.4 离线下载          | 4.1 / 4.2（部分） |
+| T7.1~T7.3        | §6.5 本地数据 / §11.1  | 5.1 / 11.1        |
+| T8.1~T8.3        | §6.8 跨平台支持        | 8.3               |
+| T8.4~T8.6        | §11.3 错误恢复与可靠性 | 11.3              |
+| T2.2, T9.2, T9.3 | §7.3 安全与隐私        | 11.4              |
 
 > 完整逐条对照请交叉核对三份文档；本表仅列出 Epic 级映射，避免重复维护一份完整的行级映射表造成后续同步负担。
 

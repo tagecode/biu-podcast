@@ -1,102 +1,313 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <title>01 — 订阅列表</title>
-  <link rel="stylesheet" href="_shared.css">
-  <style>body { background: #D4CFC7; }</style>
-</head>
-<body>
-  <div class="window">
-    <div class="titlebar">
-      <div class="titlebar-dots"><span></span><span></span><span></span></div>
-      <div class="titlebar-title">博播 BiuPodcast</div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>01 — 订阅列表</title>
+    <link rel="stylesheet" href="_shared.css" />
+    <style>
+      body {
+        background: #d4cfc7;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="window">
+      <div class="titlebar">
+        <div class="titlebar-dots"><span></span><span></span><span></span></div>
+        <div class="titlebar-title">博播 BiuPodcast</div>
+      </div>
+      <div class="app-body">
+        <div class="toolbar">
+          <div class="app-logo">
+            <div class="app-logo-icon">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#1C1917"
+                stroke-width="1.75"
+              >
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+            </div>
+            <span class="app-logo-text">博播</span>
+          </div>
+          <div class="search-box">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            搜索播客…
+          </div>
+          <div class="toolbar-spacer"></div>
+          <button class="icon-btn" title="刷新全部">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+            >
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+              <path d="M16 16h5v5" />
+            </svg>
+          </button>
+          <button class="icon-btn" title="下载队列">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" x2="12" y1="15" y2="3" />
+            </svg>
+          </button>
+          <button class="btn btn-primary">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+            >
+              <line x1="12" x2="12" y1="5" y2="19" />
+              <line x1="5" x2="19" y1="12" y2="12" />
+            </svg>
+            添加订阅
+          </button>
+        </div>
+        <div class="content">
+          <div class="section-header">
+            <span class="section-title">我的订阅 · 12 个播客</span>
+            <span class="sort-chip">
+              最近更新
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </span>
+          </div>
+          <div class="podcast-grid">
+            <div class="podcast-card">
+              <div class="podcast-cover">
+                <div
+                  class="cover-placeholder"
+                  style="background: linear-gradient(135deg, #f5e6c8, #e7e0d6); font-size: 32px"
+                >
+                  科
+                </div>
+                <span class="unread-badge">3</span>
+              </div>
+              <div class="podcast-info">
+                <div class="podcast-title">科技乱炖</div>
+                <div class="podcast-meta">2 小时前更新</div>
+              </div>
+            </div>
+            <div class="podcast-card">
+              <div class="podcast-cover">
+                <div
+                  class="cover-placeholder"
+                  style="background: linear-gradient(135deg, #e8d5b5, #d4c4a8); font-size: 32px"
+                >
+                  无
+                </div>
+                <span class="unread-badge">12</span>
+              </div>
+              <div class="podcast-info">
+                <div class="podcast-title">无人知晓</div>
+                <div class="podcast-meta">昨天更新</div>
+              </div>
+            </div>
+            <div class="podcast-card">
+              <div class="podcast-cover">
+                <div
+                  class="cover-placeholder"
+                  style="background: linear-gradient(135deg, #d4e4d4, #b8d4b8); font-size: 32px"
+                >
+                  忽
+                </div>
+                <span class="unread-badge">1</span>
+              </div>
+              <div class="podcast-info">
+                <div class="podcast-title">忽左忽右</div>
+                <div class="podcast-meta">3 天前更新</div>
+              </div>
+            </div>
+            <div class="podcast-card">
+              <div class="podcast-cover">
+                <div
+                  class="cover-placeholder"
+                  style="background: linear-gradient(135deg, #e0d4f0, #c8b8e0); font-size: 32px"
+                >
+                  声
+                </div>
+              </div>
+              <div class="podcast-info">
+                <div class="podcast-title">声东击西</div>
+                <div class="podcast-meta">1 周前更新</div>
+              </div>
+            </div>
+            <div class="podcast-card">
+              <div class="podcast-cover">
+                <div
+                  class="cover-placeholder"
+                  style="background: linear-gradient(135deg, #f0d4d4, #e0b8b8); font-size: 32px"
+                >
+                  日
+                </div>
+                <span class="unread-badge">5</span>
+              </div>
+              <div class="podcast-info">
+                <div class="podcast-title">日谈公园</div>
+                <div class="podcast-meta">2 天前更新</div>
+              </div>
+            </div>
+            <div class="podcast-card">
+              <div class="podcast-cover">
+                <div
+                  class="cover-placeholder"
+                  style="background: linear-gradient(135deg, #d4e8f0, #b8d4e8); font-size: 32px"
+                >
+                  机
+                </div>
+              </div>
+              <div class="podcast-info">
+                <div class="podcast-title">机核 GCORES</div>
+                <div class="podcast-meta">4 天前更新</div>
+              </div>
+            </div>
+            <div class="podcast-card">
+              <div class="podcast-cover">
+                <div
+                  class="cover-placeholder"
+                  style="background: linear-gradient(135deg, #f0e8d4, #e0d8c0); font-size: 32px"
+                >
+                  有
+                </div>
+                <span class="unread-badge">2</span>
+              </div>
+              <div class="podcast-info">
+                <div class="podcast-title">有知有行</div>
+                <div class="podcast-meta">5 天前更新</div>
+              </div>
+            </div>
+            <div class="podcast-card">
+              <div class="podcast-cover">
+                <div
+                  class="cover-placeholder"
+                  style="background: linear-gradient(135deg, #e8e0d4, #d8d0c4); font-size: 32px"
+                >
+                  Story
+                </div>
+              </div>
+              <div class="podcast-info">
+                <div class="podcast-title">This American Life</div>
+                <div class="podcast-meta">1 周前更新</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="relative" style="position: relative">
+          <div
+            class="mini-progress-wrap"
+            style="
+              position: absolute;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              height: 3px;
+              background: var(--line);
+              z-index: 1;
+            "
+          >
+            <div style="width: 35%; height: 100%; background: var(--amber-600)"></div>
+          </div>
+          <div class="mini-player">
+            <div class="mini-cover">
+              <div
+                class="cover-placeholder"
+                style="font-size: 18px; background: linear-gradient(135deg, #f5e6c8, #e7e0d6)"
+              >
+                科
+              </div>
+            </div>
+            <div class="mini-info">
+              <div class="mini-title">EP.128 — AI 时代的播客创作</div>
+              <div class="mini-subtitle">科技乱炖</div>
+            </div>
+            <div class="mini-controls">
+              <button class="icon-btn">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                >
+                  <polygon points="19 20 9 12 19 4 19 20" />
+                  <line x1="5" x2="5" y1="19" y2="5" />
+                </svg>
+              </button>
+              <button class="play-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#1C1917" stroke="none">
+                  <rect x="6" y="4" width="4" height="16" rx="1" />
+                  <rect x="14" y="4" width="4" height="16" rx="1" />
+                </svg>
+              </button>
+              <button class="icon-btn">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                >
+                  <polygon points="5 4 15 12 5 20 5 4" />
+                  <line x1="19" x2="19" y1="5" y2="19" />
+                </svg>
+              </button>
+            </div>
+            <div class="mini-time">12:34 / 58:20</div>
+            <button class="icon-btn" title="展开播放器">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+              >
+                <path d="m15 3 6 6-6 6" />
+                <path d="M9 21l-6-6 6-6" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="app-body">
-      <div class="toolbar">
-        <div class="app-logo">
-          <div class="app-logo-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="1.75"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          </div>
-          <span class="app-logo-text">博播</span>
-        </div>
-        <div class="search-box">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          搜索播客…
-        </div>
-        <div class="toolbar-spacer"></div>
-        <button class="icon-btn" title="刷新全部">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
-        </button>
-        <button class="icon-btn" title="下载队列">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-        </button>
-        <button class="btn btn-primary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-          添加订阅
-        </button>
-      </div>
-      <div class="content">
-        <div class="section-header">
-          <span class="section-title">我的订阅 · 12 个播客</span>
-          <span class="sort-chip">
-            最近更新
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="m6 9 6 6 6-6"/></svg>
-          </span>
-        </div>
-        <div class="podcast-grid">
-          <div class="podcast-card">
-            <div class="podcast-cover"><div class="cover-placeholder" style="background:linear-gradient(135deg,#F5E6C8,#E7E0D6);font-size:32px;">科</div><span class="unread-badge">3</span></div>
-            <div class="podcast-info"><div class="podcast-title">科技乱炖</div><div class="podcast-meta">2 小时前更新</div></div>
-          </div>
-          <div class="podcast-card">
-            <div class="podcast-cover"><div class="cover-placeholder" style="background:linear-gradient(135deg,#E8D5B5,#D4C4A8);font-size:32px;">无</div><span class="unread-badge">12</span></div>
-            <div class="podcast-info"><div class="podcast-title">无人知晓</div><div class="podcast-meta">昨天更新</div></div>
-          </div>
-          <div class="podcast-card">
-            <div class="podcast-cover"><div class="cover-placeholder" style="background:linear-gradient(135deg,#D4E4D4,#B8D4B8);font-size:32px;">忽</div><span class="unread-badge">1</span></div>
-            <div class="podcast-info"><div class="podcast-title">忽左忽右</div><div class="podcast-meta">3 天前更新</div></div>
-          </div>
-          <div class="podcast-card">
-            <div class="podcast-cover"><div class="cover-placeholder" style="background:linear-gradient(135deg,#E0D4F0,#C8B8E0);font-size:32px;">声</div></div>
-            <div class="podcast-info"><div class="podcast-title">声东击西</div><div class="podcast-meta">1 周前更新</div></div>
-          </div>
-          <div class="podcast-card">
-            <div class="podcast-cover"><div class="cover-placeholder" style="background:linear-gradient(135deg,#F0D4D4,#E0B8B8);font-size:32px;">日</div><span class="unread-badge">5</span></div>
-            <div class="podcast-info"><div class="podcast-title">日谈公园</div><div class="podcast-meta">2 天前更新</div></div>
-          </div>
-          <div class="podcast-card">
-            <div class="podcast-cover"><div class="cover-placeholder" style="background:linear-gradient(135deg,#D4E8F0,#B8D4E8);font-size:32px;">机</div></div>
-            <div class="podcast-info"><div class="podcast-title">机核 GCORES</div><div class="podcast-meta">4 天前更新</div></div>
-          </div>
-          <div class="podcast-card">
-            <div class="podcast-cover"><div class="cover-placeholder" style="background:linear-gradient(135deg,#F0E8D4,#E0D8C0);font-size:32px;">有</div><span class="unread-badge">2</span></div>
-            <div class="podcast-info"><div class="podcast-title">有知有行</div><div class="podcast-meta">5 天前更新</div></div>
-          </div>
-          <div class="podcast-card">
-            <div class="podcast-cover"><div class="cover-placeholder" style="background:linear-gradient(135deg,#E8E0D4,#D8D0C4);font-size:32px;">Story</div></div>
-            <div class="podcast-info"><div class="podcast-title">This American Life</div><div class="podcast-meta">1 周前更新</div></div>
-          </div>
-        </div>
-      </div>
-      <div class="relative" style="position:relative;">
-        <div class="mini-progress-wrap" style="position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--line);z-index:1;"><div style="width:35%;height:100%;background:var(--amber-600);"></div></div>
-        <div class="mini-player">
-          <div class="mini-cover"><div class="cover-placeholder" style="font-size:18px;background:linear-gradient(135deg,#F5E6C8,#E7E0D6);">科</div></div>
-          <div class="mini-info">
-            <div class="mini-title">EP.128 — AI 时代的播客创作</div>
-            <div class="mini-subtitle">科技乱炖</div>
-          </div>
-          <div class="mini-controls">
-            <button class="icon-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" x2="5" y1="19" y2="5"/></svg></button>
-            <button class="play-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="#1C1917" stroke="none"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg></button>
-            <button class="icon-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg></button>
-          </div>
-          <div class="mini-time">12:34 / 58:20</div>
-          <button class="icon-btn" title="展开播放器"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="m15 3 6 6-6 6"/><path d="M9 21l-6-6 6-6"/></svg></button>
-        </div>
-      </div>
-    </div>
-  </div>
-</body>
+  </body>
 </html>

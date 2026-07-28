@@ -1,7 +1,10 @@
-appId: com.electron.app
-productName: biu-podcast
+appId: com.biupodcast.app
+productName: 博播 BiuPodcast
 directories:
   buildResources: build
+extraResources:
+  - from: drizzle
+    to: drizzle
 files:
   - '!**/.vscode/*'
   - '!src/*'

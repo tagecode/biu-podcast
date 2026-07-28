@@ -7,7 +7,6 @@
  * Usage:
  *   node mdocs/design/export-screenshots.mjs
  */
-import { spawn } from 'node:child_process'
 import { chromium } from 'playwright'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -28,14 +27,17 @@ const pages = [
   { html: '06-download-queue.html', png: '06-download-queue.png' },
   { html: '07-offline-state.html', png: '07-offline-state.png' },
   { html: '08-settings-data.html', png: '08-settings-data.png' },
-  { html: '09-dark-theme.html', png: '09-dark-theme.png' },
+  { html: '09-dark-theme.html', png: '09-dark-theme.png' }
 ]
 
-function startServer() {
+function startServer(): Promise<http.Server> {
   return new Promise((resolve, reject) => {
     const server = http.createServer((req, res) => {
       const urlPath = decodeURIComponent(req.url?.split('?')[0] ?? '/')
-      const filePath = path.join(mockupsDir, urlPath === '/' ? '01-subscription-list.html' : urlPath.slice(1))
+      const filePath = path.join(
+        mockupsDir,
+        urlPath === '/' ? '01-subscription-list.html' : urlPath.slice(1)
+      )
       if (!filePath.startsWith(mockupsDir)) {
         res.writeHead(403)
         res.end()
@@ -64,7 +66,7 @@ const server = await startServer()
 const browser = await chromium.launch()
 const context = await browser.newContext({
   viewport: { width: 1400, height: 900 },
-  deviceScaleFactor: 2,
+  deviceScaleFactor: 2
 })
 
 for (const page of pages) {

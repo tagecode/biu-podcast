@@ -1,36 +1,40 @@
 /* Biu Podcast Design Mockups — Brand Tokens from brand-spec.md v1.1 */
 :root {
-  --amber-600: #C67C14;
-  --amber-700: #A8650F;
-  --amber-500: #D68C2E;
-  --amber-100: #F5E6C8;
-  --amber-400: #E8A83A;
-  --ink: #1C1917;
-  --muted: #78716C;
-  --muted-700: #5C5551;
-  --paper: #FAF7F2;
-  --surface: #FFFFFF;
-  --line: #E7E0D6;
-  --offline: #B45309;
-  --success: #3F7D4E;
-  --danger: #B91C1C;
-  --warning: #B45309;
+  --amber-600: #c67c14;
+  --amber-700: #a8650f;
+  --amber-500: #d68c2e;
+  --amber-100: #f5e6c8;
+  --amber-400: #e8a83a;
+  --ink: #1c1917;
+  --muted: #78716c;
+  --muted-700: #5c5551;
+  --paper: #faf7f2;
+  --surface: #ffffff;
+  --line: #e7e0d6;
+  --offline: #b45309;
+  --success: #3f7d4e;
+  --danger: #b91c1c;
+  --warning: #b45309;
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
   --radius-full: 999px;
   --shadow-sm: 0 1px 2px rgb(28 25 23 / 0.06);
-  --shadow-md: 0 4px 12px rgb(28 25 23 / 0.10);
+  --shadow-md: 0 4px 12px rgb(28 25 23 / 0.1);
   --shadow-lg: 0 12px 32px rgb(28 25 23 / 0.16);
-  --font-sans: "Inter", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
-  --font-mono: "SF Mono", "Cascadia Mono", "Consolas", monospace;
+  --font-sans: 'Inter', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --font-mono: 'SF Mono', 'Cascadia Mono', 'Consolas', monospace;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 body {
   font-family: var(--font-sans);
-  background: #E8E4DE;
+  background: #e8e4de;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,9 +77,15 @@ body {
   border-radius: 50%;
 }
 
-.titlebar-dots span:nth-child(1) { background: #FF5F57; }
-.titlebar-dots span:nth-child(2) { background: #FEBC2E; }
-.titlebar-dots span:nth-child(3) { background: #28C840; }
+.titlebar-dots span:nth-child(1) {
+  background: #ff5f57;
+}
+.titlebar-dots span:nth-child(2) {
+  background: #febc2e;
+}
+.titlebar-dots span:nth-child(3) {
+  background: #28c840;
+}
 
 .titlebar-title {
   font-size: 13px;
@@ -155,9 +165,14 @@ body {
   font-size: 14px;
 }
 
-.search-box svg { color: var(--muted); flex-shrink: 0; }
+.search-box svg {
+  color: var(--muted);
+  flex-shrink: 0;
+}
 
-.toolbar-spacer { flex: 1; }
+.toolbar-spacer {
+  flex: 1;
+}
 
 .btn {
   display: inline-flex;
@@ -192,7 +207,9 @@ body {
   justify-content: center;
 }
 
-.btn-ghost:hover { background: var(--amber-100); }
+.btn-ghost:hover {
+  background: var(--amber-100);
+}
 
 .icon-btn {
   width: 36px;
@@ -207,7 +224,9 @@ body {
   cursor: pointer;
 }
 
-.icon-btn:hover { background: var(--amber-100); }
+.icon-btn:hover {
+  background: var(--amber-100);
+}
 
 .content {
   flex: 1;
@@ -216,7 +235,9 @@ body {
   padding-bottom: 96px;
 }
 
-.content-inner { max-width: 100%; }
+.content-inner {
+  max-width: 100%;
+}
 
 .section-header {
   display: flex;
@@ -322,7 +343,10 @@ body {
 }
 
 /* Episode List */
-.episode-list { display: flex; flex-direction: column; }
+.episode-list {
+  display: flex;
+  flex-direction: column;
+}
 
 .episode-item {
   display: flex;
@@ -354,9 +378,14 @@ body {
   flex-shrink: 0;
 }
 
-.episode-dot.hidden { visibility: hidden; }
+.episode-dot.hidden {
+  visibility: hidden;
+}
 
-.episode-content { flex: 1; min-width: 0; }
+.episode-content {
+  flex: 1;
+  min-width: 0;
+}
 
 .episode-title {
   font-size: 14px;
@@ -368,7 +397,9 @@ body {
   text-overflow: ellipsis;
 }
 
-.episode-title.played { color: var(--muted); }
+.episode-title.played {
+  color: var(--muted);
+}
 
 .episode-meta {
   font-size: 12px;
@@ -384,8 +415,12 @@ body {
   flex-shrink: 0;
 }
 
-.status-icon { color: var(--success); }
-.status-icon.danger { color: var(--danger); }
+.status-icon {
+  color: var(--success);
+}
+.status-icon.danger {
+  color: var(--danger);
+}
 
 .download-ring {
   width: 20px;
@@ -416,7 +451,10 @@ body {
   overflow: hidden;
 }
 
-.mini-info { flex: 1; min-width: 0; }
+.mini-info {
+  flex: 1;
+  min-width: 0;
+}
 
 .mini-title {
   font-size: 14px;
@@ -604,7 +642,9 @@ body {
   overflow: hidden;
 }
 
-.detail-info { flex: 1; }
+.detail-info {
+  flex: 1;
+}
 
 .detail-title {
   font-size: 22px;
@@ -646,7 +686,10 @@ body {
   border-radius: var(--radius-full);
 }
 
-.detail-actions { display: flex; gap: 8px; }
+.detail-actions {
+  display: flex;
+  gap: 8px;
+}
 
 /* Fullscreen Player */
 .fullscreen-player {
@@ -832,7 +875,9 @@ body {
   font-family: inherit;
 }
 
-.text-btn:hover { color: var(--ink); }
+.text-btn:hover {
+  color: var(--ink);
+}
 
 /* Settings */
 .settings-layout {
@@ -899,7 +944,9 @@ body {
   margin-top: 2px;
 }
 
-.relative { position: relative; }
+.relative {
+  position: relative;
+}
 
 .back-btn {
   display: inline-flex;

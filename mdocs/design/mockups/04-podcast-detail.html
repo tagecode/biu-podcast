@@ -1,125 +1,307 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <title>04 — 播客详情</title>
-  <link rel="stylesheet" href="_shared.css">
-</head>
-<body>
-  <div class="window">
-    <div class="titlebar">
-      <div class="titlebar-dots"><span></span><span></span><span></span></div>
-      <div class="titlebar-title">博播 BiuPodcast — 科技乱炖</div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>04 — 播客详情</title>
+    <link rel="stylesheet" href="_shared.css" />
+  </head>
+  <body>
+    <div class="window">
+      <div class="titlebar">
+        <div class="titlebar-dots"><span></span><span></span><span></span></div>
+        <div class="titlebar-title">博播 BiuPodcast — 科技乱炖</div>
+      </div>
+      <div class="app-body">
+        <div class="toolbar">
+          <div class="back-btn">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+            >
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+            返回订阅列表
+          </div>
+          <div class="toolbar-spacer"></div>
+          <button class="icon-btn" title="刷新">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+            >
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+          </button>
+          <button class="btn btn-secondary">标记全部已听</button>
+        </div>
+        <div class="content">
+          <div class="detail-header">
+            <div class="detail-cover">
+              <div
+                class="cover-placeholder"
+                style="
+                  width: 100%;
+                  height: 100%;
+                  font-size: 48px;
+                  background: linear-gradient(135deg, #f5e6c8, #e7e0d6);
+                "
+              >
+                科
+              </div>
+            </div>
+            <div class="detail-info">
+              <h1 class="detail-title">科技乱炖</h1>
+              <div class="detail-author">主播：乱炖君 · 中文</div>
+              <p class="detail-desc">
+                一档关于科技、互联网与数字生活的播客节目。我们试图用轻松的方式讨论严肃的技术话题，从
+                AI 到开源，从产品设计到开发者文化。
+              </p>
+              <div class="detail-stats">
+                <span class="stat-chip">3 集未听</span>
+                <span class="stat-chip">共 128 集</span>
+                <span class="stat-chip">已下载 45 集 · 2.3 GB</span>
+              </div>
+              <div class="detail-actions">
+                <button class="btn btn-primary">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                  >
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                  播放最新一集
+                </button>
+                <button class="btn btn-secondary">取消订阅</button>
+              </div>
+            </div>
+          </div>
+          <div class="section-header"><span class="section-title">集数列表</span></div>
+          <div class="episode-list">
+            <div class="episode-item playing">
+              <span class="episode-dot"></span>
+              <div class="episode-content">
+                <div class="episode-title">EP.128 — AI 时代的播客创作与分发</div>
+                <div class="episode-meta">2026-07-26 · 58:20 · 56 MB</div>
+              </div>
+              <div class="episode-actions">
+                <svg
+                  class="status-icon"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                <button class="icon-btn">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                  >
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="episode-item">
+              <span class="episode-dot"></span>
+              <div class="episode-content">
+                <div class="episode-title">EP.127 — Local-first 架构实践</div>
+                <div class="episode-meta">2026-07-19 · 1:02:15 · 62 MB</div>
+              </div>
+              <div class="episode-actions">
+                <div class="download-ring"></div>
+                <button class="icon-btn">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" x2="12" y1="15" y2="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="episode-item">
+              <span class="episode-dot"></span>
+              <div class="episode-content">
+                <div class="episode-title">EP.126 — Electron 桌面应用性能优化</div>
+                <div class="episode-meta">2026-07-12 · 45:30 · 44 MB</div>
+              </div>
+              <div class="episode-actions">
+                <svg
+                  class="status-icon"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                <button class="icon-btn">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                  >
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="episode-item">
+              <span class="episode-dot hidden"></span>
+              <div class="episode-content">
+                <div class="episode-title played">EP.125 — SQLite 在客户端的最佳实践</div>
+                <div class="episode-meta">2026-07-05 · 52:10 · 50 MB</div>
+              </div>
+              <div class="episode-actions">
+                <svg
+                  class="status-icon"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                <button class="icon-btn">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                  >
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="episode-item">
+              <span class="episode-dot hidden"></span>
+              <div class="episode-content">
+                <div class="episode-title played">EP.124 — 播客 RSS 规范深度解读</div>
+                <div class="episode-meta">2026-06-28 · 38:45 · 37 MB</div>
+              </div>
+              <div class="episode-actions">
+                <button class="icon-btn">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" x2="12" y1="15" y2="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="episode-item">
+              <span class="episode-dot"></span>
+              <div class="episode-content">
+                <div class="episode-title">EP.123 — 离线优先产品设计思考</div>
+                <div class="episode-meta">2026-06-21 · 41:20 · 40 MB</div>
+              </div>
+              <div class="episode-actions">
+                <svg
+                  class="status-icon danger"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" x2="12" y1="8" y2="12" />
+                  <line x1="12" x2="12.01" y1="16" y2="16" />
+                </svg>
+                <button class="icon-btn">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" x2="12" y1="15" y2="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mini-player">
+          <div class="mini-cover">
+            <div
+              class="cover-placeholder"
+              style="
+                font-size: 18px;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, #f5e6c8, #e7e0d6);
+              "
+            >
+              科
+            </div>
+          </div>
+          <div class="mini-info">
+            <div class="mini-title">EP.128 — AI 时代的播客创作与分发</div>
+            <div class="mini-subtitle">科技乱炖</div>
+          </div>
+          <div class="mini-controls">
+            <button class="play-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#1C1917" stroke="none">
+                <rect x="6" y="4" width="4" height="16" rx="1" />
+                <rect x="14" y="4" width="4" height="16" rx="1" />
+              </svg>
+            </button>
+          </div>
+          <div class="mini-time">12:34 / 58:20</div>
+        </div>
+      </div>
     </div>
-    <div class="app-body">
-      <div class="toolbar">
-        <div class="back-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="m15 18-6-6 6-6"/></svg>
-          返回订阅列表
-        </div>
-        <div class="toolbar-spacer"></div>
-        <button class="icon-btn" title="刷新"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
-        <button class="btn btn-secondary">标记全部已听</button>
-      </div>
-      <div class="content">
-        <div class="detail-header">
-          <div class="detail-cover"><div class="cover-placeholder" style="width:100%;height:100%;font-size:48px;background:linear-gradient(135deg,#F5E6C8,#E7E0D6);">科</div></div>
-          <div class="detail-info">
-            <h1 class="detail-title">科技乱炖</h1>
-            <div class="detail-author">主播：乱炖君 · 中文</div>
-            <p class="detail-desc">一档关于科技、互联网与数字生活的播客节目。我们试图用轻松的方式讨论严肃的技术话题，从 AI 到开源，从产品设计到开发者文化。</p>
-            <div class="detail-stats">
-              <span class="stat-chip">3 集未听</span>
-              <span class="stat-chip">共 128 集</span>
-              <span class="stat-chip">已下载 45 集 · 2.3 GB</span>
-            </div>
-            <div class="detail-actions">
-              <button class="btn btn-primary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                播放最新一集
-              </button>
-              <button class="btn btn-secondary">取消订阅</button>
-            </div>
-          </div>
-        </div>
-        <div class="section-header"><span class="section-title">集数列表</span></div>
-        <div class="episode-list">
-          <div class="episode-item playing">
-            <span class="episode-dot"></span>
-            <div class="episode-content">
-              <div class="episode-title">EP.128 — AI 时代的播客创作与分发</div>
-              <div class="episode-meta">2026-07-26 · 58:20 · 56 MB</div>
-            </div>
-            <div class="episode-actions">
-              <svg class="status-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              <button class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
-            </div>
-          </div>
-          <div class="episode-item">
-            <span class="episode-dot"></span>
-            <div class="episode-content">
-              <div class="episode-title">EP.127 — Local-first 架构实践</div>
-              <div class="episode-meta">2026-07-19 · 1:02:15 · 62 MB</div>
-            </div>
-            <div class="episode-actions">
-              <div class="download-ring"></div>
-              <button class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></button>
-            </div>
-          </div>
-          <div class="episode-item">
-            <span class="episode-dot"></span>
-            <div class="episode-content">
-              <div class="episode-title">EP.126 — Electron 桌面应用性能优化</div>
-              <div class="episode-meta">2026-07-12 · 45:30 · 44 MB</div>
-            </div>
-            <div class="episode-actions">
-              <svg class="status-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              <button class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
-            </div>
-          </div>
-          <div class="episode-item">
-            <span class="episode-dot hidden"></span>
-            <div class="episode-content">
-              <div class="episode-title played">EP.125 — SQLite 在客户端的最佳实践</div>
-              <div class="episode-meta">2026-07-05 · 52:10 · 50 MB</div>
-            </div>
-            <div class="episode-actions">
-              <svg class="status-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              <button class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
-            </div>
-          </div>
-          <div class="episode-item">
-            <span class="episode-dot hidden"></span>
-            <div class="episode-content">
-              <div class="episode-title played">EP.124 — 播客 RSS 规范深度解读</div>
-              <div class="episode-meta">2026-06-28 · 38:45 · 37 MB</div>
-            </div>
-            <div class="episode-actions">
-              <button class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></button>
-            </div>
-          </div>
-          <div class="episode-item">
-            <span class="episode-dot"></span>
-            <div class="episode-content">
-              <div class="episode-title">EP.123 — 离线优先产品设计思考</div>
-              <div class="episode-meta">2026-06-21 · 41:20 · 40 MB</div>
-            </div>
-            <div class="episode-actions">
-              <svg class="status-icon danger" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-              <button class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="mini-player">
-        <div class="mini-cover"><div class="cover-placeholder" style="font-size:18px;width:100%;height:100%;background:linear-gradient(135deg,#F5E6C8,#E7E0D6);">科</div></div>
-        <div class="mini-info"><div class="mini-title">EP.128 — AI 时代的播客创作与分发</div><div class="mini-subtitle">科技乱炖</div></div>
-        <div class="mini-controls">
-          <button class="play-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="#1C1917" stroke="none"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg></button>
-        </div>
-        <div class="mini-time">12:34 / 58:20</div>
-      </div>
-    </div>
-  </div>
-</body>
+  </body>
 </html>

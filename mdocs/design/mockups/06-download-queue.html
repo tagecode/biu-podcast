@@ -1,85 +1,148 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <title>06 — 下载队列</title>
-  <link rel="stylesheet" href="_shared.css">
-</head>
-<body>
-  <div class="window">
-    <div class="titlebar">
-      <div class="titlebar-dots"><span></span><span></span><span></span></div>
-      <div class="titlebar-title">博播 BiuPodcast</div>
-    </div>
-    <div class="app-body">
-      <div class="main-with-panel">
-        <div class="panel-main">
-          <div class="toolbar">
-            <div class="app-logo">
-              <div class="app-logo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="1.75"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
-              <span class="app-logo-text">博播</span>
+  <head>
+    <meta charset="UTF-8" />
+    <title>06 — 下载队列</title>
+    <link rel="stylesheet" href="_shared.css" />
+  </head>
+  <body>
+    <div class="window">
+      <div class="titlebar">
+        <div class="titlebar-dots"><span></span><span></span><span></span></div>
+        <div class="titlebar-title">博播 BiuPodcast</div>
+      </div>
+      <div class="app-body">
+        <div class="main-with-panel">
+          <div class="panel-main">
+            <div class="toolbar">
+              <div class="app-logo">
+                <div class="app-logo-icon">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#1C1917"
+                    stroke-width="1.75"
+                  >
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                </div>
+                <span class="app-logo-text">博播</span>
+              </div>
+              <div class="toolbar-spacer"></div>
+              <button class="btn btn-primary">添加订阅</button>
             </div>
-            <div class="toolbar-spacer"></div>
-            <button class="btn btn-primary">添加订阅</button>
+            <div class="content" style="opacity: 0.5">
+              <div class="podcast-grid">
+                <div class="podcast-card">
+                  <div class="podcast-cover"><div class="cover-placeholder">科</div></div>
+                  <div class="podcast-info"><div class="podcast-title">科技乱炖</div></div>
+                </div>
+                <div class="podcast-card">
+                  <div class="podcast-cover"><div class="cover-placeholder">无</div></div>
+                  <div class="podcast-info"><div class="podcast-title">无人知晓</div></div>
+                </div>
+                <div class="podcast-card">
+                  <div class="podcast-cover"><div class="cover-placeholder">忽</div></div>
+                  <div class="podcast-info"><div class="podcast-title">忽左忽右</div></div>
+                </div>
+                <div class="podcast-card">
+                  <div class="podcast-cover"><div class="cover-placeholder">声</div></div>
+                  <div class="podcast-info"><div class="podcast-title">声东击西</div></div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="content" style="opacity:0.5;">
-            <div class="podcast-grid">
-              <div class="podcast-card"><div class="podcast-cover"><div class="cover-placeholder">科</div></div><div class="podcast-info"><div class="podcast-title">科技乱炖</div></div></div>
-              <div class="podcast-card"><div class="podcast-cover"><div class="cover-placeholder">无</div></div><div class="podcast-info"><div class="podcast-title">无人知晓</div></div></div>
-              <div class="podcast-card"><div class="podcast-cover"><div class="cover-placeholder">忽</div></div><div class="podcast-info"><div class="podcast-title">忽左忽右</div></div></div>
-              <div class="podcast-card"><div class="podcast-cover"><div class="cover-placeholder">声</div></div><div class="podcast-info"><div class="podcast-title">声东击西</div></div></div>
+          <div class="download-panel">
+            <div class="panel-header">
+              <span class="panel-title">下载队列 · 3 项</span>
+              <button class="icon-btn">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+            <div style="flex: 1; overflow-y: auto">
+              <div class="download-item">
+                <div class="download-item-title">EP.127 — Local-first 架构实践</div>
+                <div class="download-item-meta">科技乱炖 · 62 MB · 2.4 MB/s</div>
+                <div class="download-progress">
+                  <div class="download-progress-fill" style="width: 68%"></div>
+                </div>
+                <div class="download-item-actions">
+                  <button class="text-btn">暂停</button>
+                  <button class="text-btn">取消</button>
+                </div>
+              </div>
+              <div class="download-item">
+                <div class="download-item-title">EP.45 — 产品经理的底层逻辑</div>
+                <div class="download-item-meta">无人知晓 · 48 MB · 等待中</div>
+                <div class="download-progress">
+                  <div class="download-progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="download-item-actions">
+                  <button class="text-btn">取消</button>
+                </div>
+              </div>
+              <div class="download-item">
+                <div class="download-item-title">EP.89 — 2026 年的互联网观察</div>
+                <div class="download-item-meta">忽左忽右 · 55 MB · 等待中</div>
+                <div class="download-progress">
+                  <div class="download-progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="download-item-actions">
+                  <button class="text-btn">取消</button>
+                </div>
+              </div>
+              <div class="download-item" style="opacity: 0.6">
+                <div class="download-item-title">EP.126 — Electron 桌面应用性能优化</div>
+                <div class="download-item-meta" style="color: var(--success)">
+                  科技乱炖 · 44 MB · 已完成
+                </div>
+                <div class="download-progress">
+                  <div
+                    class="download-progress-fill"
+                    style="width: 100%; background: var(--success)"
+                  ></div>
+                </div>
+              </div>
+            </div>
+            <div
+              style="
+                padding: 12px 20px;
+                border-top: 1px solid var(--line);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              "
+            >
+              <span style="font-size: 12px; color: var(--muted)">已用空间 4.2 GB / 剩余 28 GB</span>
+              <button class="text-btn">全部暂停</button>
             </div>
           </div>
         </div>
-        <div class="download-panel">
-          <div class="panel-header">
-            <span class="panel-title">下载队列 · 3 项</span>
-            <button class="icon-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
-          </div>
-          <div style="flex:1;overflow-y:auto;">
-            <div class="download-item">
-              <div class="download-item-title">EP.127 — Local-first 架构实践</div>
-              <div class="download-item-meta">科技乱炖 · 62 MB · 2.4 MB/s</div>
-              <div class="download-progress"><div class="download-progress-fill" style="width:68%;"></div></div>
-              <div class="download-item-actions">
-                <button class="text-btn">暂停</button>
-                <button class="text-btn">取消</button>
-              </div>
-            </div>
-            <div class="download-item">
-              <div class="download-item-title">EP.45 — 产品经理的底层逻辑</div>
-              <div class="download-item-meta">无人知晓 · 48 MB · 等待中</div>
-              <div class="download-progress"><div class="download-progress-fill" style="width:0%;"></div></div>
-              <div class="download-item-actions">
-                <button class="text-btn">取消</button>
-              </div>
-            </div>
-            <div class="download-item">
-              <div class="download-item-title">EP.89 — 2026 年的互联网观察</div>
-              <div class="download-item-meta">忽左忽右 · 55 MB · 等待中</div>
-              <div class="download-progress"><div class="download-progress-fill" style="width:0%;"></div></div>
-              <div class="download-item-actions">
-                <button class="text-btn">取消</button>
-              </div>
-            </div>
-            <div class="download-item" style="opacity:0.6;">
-              <div class="download-item-title">EP.126 — Electron 桌面应用性能优化</div>
-              <div class="download-item-meta" style="color:var(--success);">科技乱炖 · 44 MB · 已完成</div>
-              <div class="download-progress"><div class="download-progress-fill" style="width:100%;background:var(--success);"></div></div>
+        <div class="mini-player">
+          <div class="mini-cover">
+            <div class="cover-placeholder" style="font-size: 18px; width: 100%; height: 100%">
+              科
             </div>
           </div>
-          <div style="padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:12px;color:var(--muted);">已用空间 4.2 GB / 剩余 28 GB</span>
-            <button class="text-btn">全部暂停</button>
+          <div class="mini-info">
+            <div class="mini-title">EP.128 — AI 时代的播客创作</div>
+            <div class="mini-subtitle">科技乱炖</div>
           </div>
+          <div class="mini-time">12:34 / 58:20</div>
         </div>
       </div>
-      <div class="mini-player">
-        <div class="mini-cover"><div class="cover-placeholder" style="font-size:18px;width:100%;height:100%;">科</div></div>
-        <div class="mini-info"><div class="mini-title">EP.128 — AI 时代的播客创作</div><div class="mini-subtitle">科技乱炖</div></div>
-        <div class="mini-time">12:34 / 58:20</div>
-      </div>
     </div>
-  </div>
-</body>
+  </body>
 </html>

@@ -1,14 +1,14 @@
 # 博播（BiuPodcast）- 技术架构文档（Architecture Design）
 
-| 项目 | 内容 |
-|---|---|
-| 产品名称 | 博播 BiuPodcast（`biu-podcast`） |
-| 文档版本 | v1.0 |
-| 更新日期 | 2026-07-28 |
-| 状态 | Draft — 待评审 |
-| 关联文档 | [`mdocs/Prd.md`](./Prd.md)（产品需求文档，本架构文档的需求输入）、[`mdocs/Feature.md`](./Feature.md)（功能条目清单） |
-| 技术栈基线 | Electron + Vite + React 19 + TypeScript + shadcn/ui + Tailwind CSS |
-| 面向读者 | 客户端开发工程师、QA、后续维护者 |
+| 项目       | 内容                                                                                                                 |
+| ---------- | -------------------------------------------------------------------------------------------------------------------- |
+| 产品名称   | 博播 BiuPodcast（`biu-podcast`）                                                                                     |
+| 文档版本   | v1.0                                                                                                                 |
+| 更新日期   | 2026-07-28                                                                                                           |
+| 状态       | Draft — 待评审                                                                                                       |
+| 关联文档   | [`mdocs/Prd.md`](./Prd.md)（产品需求文档，本架构文档的需求输入）、[`mdocs/Feature.md`](./Feature.md)（功能条目清单） |
+| 技术栈基线 | Electron + Vite + React 19 + TypeScript + shadcn/ui + Tailwind CSS                                                   |
+| 面向读者   | 客户端开发工程师、QA、后续维护者                                                                                     |
 
 ---
 
@@ -27,12 +27,12 @@
 
 ## 2. 架构目标与约束（源自 PRD 四大原则）
 
-| 原则 | 对架构的硬约束 |
-|---|---|
-| **Feature-first** | 代码组织以功能域（订阅、播放、下载、笔记……）为第一维度，而非"controllers/services/models"这类技术分层维度；每个功能域内部才按技术层次（UI / 状态 / IPC / 数据）二次切分 |
-| **Offline-first** | 任何 UI 渲染路径不得对网络请求做同步阻塞式依赖；数据读取默认来自本地 SQLite，网络请求只用于"刷新/发现"类动作，且必须有独立的加载态与失败态，不拖垮已有数据展示 |
-| **Local-first** | 唯一权威数据源是本机 SQLite + 文件系统；不存在"云端为准、本地为缓存"的反向依赖关系；导入导出链路必须覆盖 100% 用户数据域 |
-| **Desktop-only** | 不引入任何以移动端/触屏为第一优先的框架假设（如手势库），UI 组件选型以鼠标+键盘+桌面窗口范式为基线；三端（Win/macOS/Linux）差异通过适配层收敛，不允许业务代码内散落 `process.platform` 分支 |
+| 原则              | 对架构的硬约束                                                                                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Feature-first** | 代码组织以功能域（订阅、播放、下载、笔记……）为第一维度，而非"controllers/services/models"这类技术分层维度；每个功能域内部才按技术层次（UI / 状态 / IPC / 数据）二次切分                     |
+| **Offline-first** | 任何 UI 渲染路径不得对网络请求做同步阻塞式依赖；数据读取默认来自本地 SQLite，网络请求只用于"刷新/发现"类动作，且必须有独立的加载态与失败态，不拖垮已有数据展示                              |
+| **Local-first**   | 唯一权威数据源是本机 SQLite + 文件系统；不存在"云端为准、本地为缓存"的反向依赖关系；导入导出链路必须覆盖 100% 用户数据域                                                                    |
+| **Desktop-only**  | 不引入任何以移动端/触屏为第一优先的框架假设（如手势库），UI 组件选型以鼠标+键盘+桌面窗口范式为基线；三端（Win/macOS/Linux）差异通过适配层收敛，不允许业务代码内散落 `process.platform` 分支 |
 
 此外，架构层面追加以下工程目标：
 
@@ -46,41 +46,41 @@
 
 ### 3.1 现有基线（已在仓库中）
 
-| 类别 | 选型 | 版本基线 | 来源 |
-|---|---|---|---|
-| 桌面应用框架 | Electron | ^39 | `package.json` |
-| 构建工具 | electron-vite + Vite | ^5 / ^7 | `package.json` |
-| UI 框架 | React | ^19.2 | `package.json` |
-| 语言 | TypeScript | ^5.9 | `package.json` |
-| 打包 | electron-builder | ^26 | `electron-builder.yml` |
-| 自动更新 | electron-updater | ^6.3 | `package.json` |
-| Electron 工具集 | @electron-toolkit/{preload,utils,eslint-config-*,tsconfig} | ^3～^4 | `package.json` |
-| 包管理器 | pnpm | — | `pnpm-lock.yaml` |
+| 类别            | 选型                                                       | 版本基线 | 来源                   |
+| --------------- | ---------------------------------------------------------- | -------- | ---------------------- |
+| 桌面应用框架    | Electron                                                   | ^39      | `package.json`         |
+| 构建工具        | electron-vite + Vite                                       | ^5 / ^7  | `package.json`         |
+| UI 框架         | React                                                      | ^19.2    | `package.json`         |
+| 语言            | TypeScript                                                 | ^5.9     | `package.json`         |
+| 打包            | electron-builder                                           | ^26      | `electron-builder.yml` |
+| 自动更新        | electron-updater                                           | ^6.3     | `package.json`         |
+| Electron 工具集 | @electron-toolkit/{preload,utils,eslint-config-*,tsconfig} | ^3～^4   | `package.json`         |
+| 包管理器        | pnpm                                                       | —        | `pnpm-lock.yaml`       |
 
 ### 3.2 新增技术栈（本文档引入）
 
-| 类别 | 选型 | 说明 |
-|---|---|---|
-| UI 组件库 | **shadcn/ui** | 非运行时依赖的组件源码生成方案（CLI 拷贝源码到 `src/renderer/src/components/ui`），基于 Radix UI Primitives + Tailwind CSS，可完全掌控样式与无障碍实现，符合 Local-first"不锁定黑盒"的工程哲学 |
-| 原子化 CSS | **Tailwind CSS v4** | 通过 `@tailwindcss/vite` 插件接入 Vite，CSS-first 配置（`@theme` 指令），与 shadcn/ui v4 版本对齐 |
-| 无障碍原语 | **Radix UI Primitives** | shadcn/ui 的底层依赖，提供无障碍、无样式的交互组件（Dialog、DropdownMenu、Slider 等），契合 6.6 章无障碍需求 |
-| 图标 | **lucide-react** | shadcn/ui 官方推荐图标库 |
-| 样式辅助 | `class-variance-authority`、`tailwind-merge`、`clsx` | shadcn/ui 组件变体（variant）与类名合并的标准配套 |
-| 状态管理（渲染进程） | **Zustand** | 轻量、无 Provider 嵌套负担，天然契合 Feature-first（每个功能域一个 slice/store），对 React 19 并发特性兼容良好 |
-| 服务端状态/异步缓存 | **TanStack Query**（可选，P1 引入） | 用于封装"经 IPC 获取的数据"的加载态/缓存/重试逻辑，替代手写 loading/error 样板代码 |
-| 主进程本地数据库 | **better-sqlite3** | 同步 API、性能优异，天然适合 Electron 主进程单线程模型，避免异步 SQLite 驱动带来的竞态复杂度 |
-| ORM / 查询构建 | **Drizzle ORM**（+ `drizzle-kit` 做 migration） | 类型安全、SQL-first、零运行时反射开销，migration 文件可读可审查，契合"数据可迁移"的 Local-first 要求 |
-| HTTP 客户端 | **ky** 或 **原生 fetch（undici）** | 主进程发起 Feed 拉取/下载请求；不使用 axios 以减少依赖体积（Node 18+ 内置 fetch 已足够，复杂重试逻辑用轻量封装） |
-| RSS/Atom 解析 | **rss-parser** | 社区成熟方案，支持自定义命名空间字段（用于解析 `<podcast:chapters>` 等播客专属标签） |
-| 配置/轻量存储 | **electron-store** | 存放 `AppSettings` 单例配置、窗口状态记忆等非关系型数据 |
-| 全局快捷键/托盘/窗口 | Electron 内置 `globalShortcut` / `Tray` / `BrowserWindow` | 无需三方包，见 PRD 10.2 节 |
-| 国际化 | **i18next** + **react-i18next** | 多语言（P1） |
-| 表单校验 / IPC Payload 校验 | **zod** | 定义 IPC 契约的输入输出 schema，运行时校验 + 编译期类型推导双重保障 |
-| 单元/集成测试 | **Vitest** | 与 Vite 生态原生集成，渲染进程用 `jsdom` 环境，主进程模块用 `node` 环境，共享一套 test runner |
-| 组件测试 | **@testing-library/react** + `@testing-library/user-event` | 面向用户行为断言，不测实现细节 |
-| API Mock | **MSW (Mock Service Worker)** | mock RSS Feed 请求、播客目录 API 请求 |
-| E2E 测试 | **Playwright**（`_electron` API） | 直接驱动打包后的 Electron 应用做端到端用户旅程测试 |
-| 覆盖率 | **v8 coverage（Vitest 内置）** | 无需额外安装 istanbul，Vite/Vitest 原生支持 |
+| 类别                        | 选型                                                       | 说明                                                                                                                                                                                           |
+| --------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UI 组件库                   | **shadcn/ui**                                              | 非运行时依赖的组件源码生成方案（CLI 拷贝源码到 `src/renderer/src/components/ui`），基于 Radix UI Primitives + Tailwind CSS，可完全掌控样式与无障碍实现，符合 Local-first"不锁定黑盒"的工程哲学 |
+| 原子化 CSS                  | **Tailwind CSS v4**                                        | 通过 `@tailwindcss/vite` 插件接入 Vite，CSS-first 配置（`@theme` 指令），与 shadcn/ui v4 版本对齐                                                                                              |
+| 无障碍原语                  | **Radix UI Primitives**                                    | shadcn/ui 的底层依赖，提供无障碍、无样式的交互组件（Dialog、DropdownMenu、Slider 等），契合 6.6 章无障碍需求                                                                                   |
+| 图标                        | **lucide-react**                                           | shadcn/ui 官方推荐图标库                                                                                                                                                                       |
+| 样式辅助                    | `class-variance-authority`、`tailwind-merge`、`clsx`       | shadcn/ui 组件变体（variant）与类名合并的标准配套                                                                                                                                              |
+| 状态管理（渲染进程）        | **Zustand**                                                | 轻量、无 Provider 嵌套负担，天然契合 Feature-first（每个功能域一个 slice/store），对 React 19 并发特性兼容良好                                                                                 |
+| 服务端状态/异步缓存         | **TanStack Query**（可选，P1 引入）                        | 用于封装"经 IPC 获取的数据"的加载态/缓存/重试逻辑，替代手写 loading/error 样板代码                                                                                                             |
+| 主进程本地数据库            | **better-sqlite3**                                         | 同步 API、性能优异，天然适合 Electron 主进程单线程模型，避免异步 SQLite 驱动带来的竞态复杂度                                                                                                   |
+| ORM / 查询构建              | **Drizzle ORM**（+ `drizzle-kit` 做 migration）            | 类型安全、SQL-first、零运行时反射开销，migration 文件可读可审查，契合"数据可迁移"的 Local-first 要求                                                                                           |
+| HTTP 客户端                 | **ky** 或 **原生 fetch（undici）**                         | 主进程发起 Feed 拉取/下载请求；不使用 axios 以减少依赖体积（Node 18+ 内置 fetch 已足够，复杂重试逻辑用轻量封装）                                                                               |
+| RSS/Atom 解析               | **rss-parser**                                             | 社区成熟方案，支持自定义命名空间字段（用于解析 `<podcast:chapters>` 等播客专属标签）                                                                                                           |
+| 配置/轻量存储               | **electron-store**                                         | 存放 `AppSettings` 单例配置、窗口状态记忆等非关系型数据                                                                                                                                        |
+| 全局快捷键/托盘/窗口        | Electron 内置 `globalShortcut` / `Tray` / `BrowserWindow`  | 无需三方包，见 PRD 10.2 节                                                                                                                                                                     |
+| 国际化                      | **i18next** + **react-i18next**                            | 多语言（P1）                                                                                                                                                                                   |
+| 表单校验 / IPC Payload 校验 | **zod**                                                    | 定义 IPC 契约的输入输出 schema，运行时校验 + 编译期类型推导双重保障                                                                                                                            |
+| 单元/集成测试               | **Vitest**                                                 | 与 Vite 生态原生集成，渲染进程用 `jsdom` 环境，主进程模块用 `node` 环境，共享一套 test runner                                                                                                  |
+| 组件测试                    | **@testing-library/react** + `@testing-library/user-event` | 面向用户行为断言，不测实现细节                                                                                                                                                                 |
+| API Mock                    | **MSW (Mock Service Worker)**                              | mock RSS Feed 请求、播客目录 API 请求                                                                                                                                                          |
+| E2E 测试                    | **Playwright**（`_electron` API）                          | 直接驱动打包后的 Electron 应用做端到端用户旅程测试                                                                                                                                             |
+| 覆盖率                      | **v8 coverage（Vitest 内置）**                             | 无需额外安装 istanbul，Vite/Vitest 原生支持                                                                                                                                                    |
 
 > 选型原则：优先选择与 Vite/Vitest 生态原生集成、类型安全、无过度运行时开销的方案；凡是"新增一个包能省 100 行样板代码，但增加的心智负担 > 收益"的候选（如引入完整状态机库、完整 ORM 框架）一律不选。
 
@@ -290,12 +290,12 @@ biu-podcast/
 
 ### 6.2 状态管理：Zustand + 分层职责
 
-| 状态类型 | 存放位置 | 示例 |
-|---|---|---|
-| 权威业务数据（订阅、集数、下载记录等） | 主进程 SQLite，渲染进程通过 IPC 拉取后缓存在对应 feature 的 Zustand store 中，作为"只读镜像" | `useSubscriptionStore` |
-| 纯 UI 交互状态（弹窗开关、当前选中项、表单草稿） | 组件本地 `useState` 或功能域 Zustand store 中的 UI slice | `isAddDialogOpen` |
-| 跨功能域的全局态（当前播放器状态、网络在线/离线） | 顶层 `app/store/` 下的全局 store，供多个功能域订阅 | `usePlaybackStore`、`useNetworkStatusStore` |
-| 异步请求的加载态/错误态/缓存（P1 起） | TanStack Query，key 以 `[domain, action, params]` 命名 | `useQuery(['episodes', podcastId])` |
+| 状态类型                                          | 存放位置                                                                                     | 示例                                        |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 权威业务数据（订阅、集数、下载记录等）            | 主进程 SQLite，渲染进程通过 IPC 拉取后缓存在对应 feature 的 Zustand store 中，作为"只读镜像" | `useSubscriptionStore`                      |
+| 纯 UI 交互状态（弹窗开关、当前选中项、表单草稿）  | 组件本地 `useState` 或功能域 Zustand store 中的 UI slice                                     | `isAddDialogOpen`                           |
+| 跨功能域的全局态（当前播放器状态、网络在线/离线） | 顶层 `app/store/` 下的全局 store，供多个功能域订阅                                           | `usePlaybackStore`、`useNetworkStatusStore` |
+| 异步请求的加载态/错误态/缓存（P1 起）             | TanStack Query，key 以 `[domain, action, params]` 命名                                       | `useQuery(['episodes', podcastId])`         |
 
 **数据流向铁律**：渲染进程的 Zustand store **不是**数据的第二权威来源——任何写操作必须先经 IPC 写入主进程数据库成功后，主进程再通过 `webContents.send` 广播变更事件，渲染进程订阅该事件后才更新 store（乐观更新场景需在失败时回滚）。这保证多个视图（如迷你播放器与全屏播放器）看到的状态永远一致，且应用崩溃重启后可完全从主进程数据重建 UI 状态。
 
@@ -308,11 +308,9 @@ biu-podcast/
 import type { AddSubscriptionInput, Subscription } from '@shared/types'
 
 export const subscriptionApi = {
-  add: (input: AddSubscriptionInput): Promise<Subscription> =>
-    window.api.subscription.add(input),
+  add: (input: AddSubscriptionInput): Promise<Subscription> => window.api.subscription.add(input),
   list: (): Promise<Subscription[]> => window.api.subscription.list(),
-  onChanged: (cb: (subs: Subscription[]) => void) =>
-    window.api.subscription.onChanged(cb) // 返回取消订阅函数
+  onChanged: (cb: (subs: Subscription[]) => void) => window.api.subscription.onChanged(cb) // 返回取消订阅函数
 }
 ```
 
@@ -337,27 +335,27 @@ export const subscriptionApi = {
 
 ### 7.1 模块划分
 
-| 模块 | 职责 | 关键文件 |
-|---|---|---|
-| Bootstrap | 应用生命周期、单实例锁定、窗口创建 | `main/index.ts` |
-| Window | 窗口状态记忆、多显示器越界保护 | `main/infra/window/` |
-| Tray | 托盘图标、右键菜单、播放状态同步 | `main/infra/tray/` |
-| Menu | 原生应用菜单（File/Edit/View/Window/Help） | `main/infra/menu/` |
-| Protocol | 自定义协议注册与解析（`biu-podcast://`） | `main/infra/protocol/` |
-| GlobalShortcut | 全局快捷键注册与释放 | `main/infra/shortcut/` |
-| MediaSession | SMTC / MPRIS / Now Playing 适配 | `main/infra/media-session/` |
-| DB | SQLite 连接、Drizzle schema、启动迁移 | `main/infra/db/` |
-| Net | 网络状态感知、HTTP 封装、重试策略 | `main/infra/net/` |
-| Logger | 结构化日志（可关闭） | `main/infra/logger/` |
-| Updater | electron-updater 封装、更新事件转发 | `main/infra/updater/` |
-| Subscription Service | 订阅增删改查、Feed 解析编排、OPML 导入导出 | `main/features/subscription/` |
-| Episode Service | 集数列表、已听状态、章节解析 | `main/features/episode/` |
-| Playback Service | 播放进度持久化、播放队列状态 | `main/features/playback/` |
-| Download Service | 下载队列调度、断点续传、完整性校验 | `main/features/download/` |
-| Playlist Service | 播放列表 CRUD | `main/features/playlist/` |
-| Note Service | 时间戳笔记 CRUD、导出 | `main/features/note/` |
-| Data Portability Service | 全量导入导出、备份/恢复 | `main/features/data-portability/` |
-| Settings Service | 应用设置读写 | `main/features/settings/` |
+| 模块                     | 职责                                       | 关键文件                          |
+| ------------------------ | ------------------------------------------ | --------------------------------- |
+| Bootstrap                | 应用生命周期、单实例锁定、窗口创建         | `main/index.ts`                   |
+| Window                   | 窗口状态记忆、多显示器越界保护             | `main/infra/window/`              |
+| Tray                     | 托盘图标、右键菜单、播放状态同步           | `main/infra/tray/`                |
+| Menu                     | 原生应用菜单（File/Edit/View/Window/Help） | `main/infra/menu/`                |
+| Protocol                 | 自定义协议注册与解析（`biu-podcast://`）   | `main/infra/protocol/`            |
+| GlobalShortcut           | 全局快捷键注册与释放                       | `main/infra/shortcut/`            |
+| MediaSession             | SMTC / MPRIS / Now Playing 适配            | `main/infra/media-session/`       |
+| DB                       | SQLite 连接、Drizzle schema、启动迁移      | `main/infra/db/`                  |
+| Net                      | 网络状态感知、HTTP 封装、重试策略          | `main/infra/net/`                 |
+| Logger                   | 结构化日志（可关闭）                       | `main/infra/logger/`              |
+| Updater                  | electron-updater 封装、更新事件转发        | `main/infra/updater/`             |
+| Subscription Service     | 订阅增删改查、Feed 解析编排、OPML 导入导出 | `main/features/subscription/`     |
+| Episode Service          | 集数列表、已听状态、章节解析               | `main/features/episode/`          |
+| Playback Service         | 播放进度持久化、播放队列状态               | `main/features/playback/`         |
+| Download Service         | 下载队列调度、断点续传、完整性校验         | `main/features/download/`         |
+| Playlist Service         | 播放列表 CRUD                              | `main/features/playlist/`         |
+| Note Service             | 时间戳笔记 CRUD、导出                      | `main/features/note/`             |
+| Data Portability Service | 全量导入导出、备份/恢复                    | `main/features/data-portability/` |
+| Settings Service         | 应用设置读写                               | `main/features/settings/`         |
 
 ### 7.2 IPC 契约设计
 
@@ -436,13 +434,13 @@ interface MediaSessionAdapter {
 
 ### 8.1 安全基线（发布阻断项，对应 PRD 7.3 节）
 
-| 配置项 | 取值 | 原因 |
-|---|---|---|
-| `contextIsolation` | `true` | 隔离渲染进程与 Electron/Node 内部对象，防止原型污染攻击 |
-| `nodeIntegration` | `false` | 渲染进程不得直接访问 Node.js API |
-| `sandbox` | `true` | 渲染进程运行在操作系统级沙箱中，即便存在 XSS 也难以逃逸 |
-| CSP | `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'` | 阻止远程脚本注入；`style-src` 因 Tailwind 生成内联样式需放行 `unsafe-inline`，后续可评估 nonce 方案收紧 |
-| 远程内容加载 | 禁止 `loadURL` 加载非本地/非受信来源 | 集数详情等富文本一律走净化后渲染，不使用 `<webview>` 直接加载第三方页面 |
+| 配置项             | 取值                                                                      | 原因                                                                                                    |
+| ------------------ | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `contextIsolation` | `true`                                                                    | 隔离渲染进程与 Electron/Node 内部对象，防止原型污染攻击                                                 |
+| `nodeIntegration`  | `false`                                                                   | 渲染进程不得直接访问 Node.js API                                                                        |
+| `sandbox`          | `true`                                                                    | 渲染进程运行在操作系统级沙箱中，即便存在 XSS 也难以逃逸                                                 |
+| CSP                | `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'` | 阻止远程脚本注入；`style-src` 因 Tailwind 生成内联样式需放行 `unsafe-inline`，后续可评估 nonce 方案收紧 |
+| 远程内容加载       | 禁止 `loadURL` 加载非本地/非受信来源                                      | 集数详情等富文本一律走净化后渲染，不使用 `<webview>` 直接加载第三方页面                                 |
 
 > 现状说明：仓库当前 `src/main/index.ts` 中 `webPreferences.sandbox: false`，属于脚手架默认值，落地开发时**必须**在实现该模块的任务中一并修正为 `true` 并补充回归测试，此项在第 15 章安全清单中再次列出以确保不被遗漏。
 
@@ -457,8 +455,7 @@ import { IPC_CHANNELS } from '../shared/ipc-contract'
 
 const api = {
   subscription: {
-    add: (input: AddSubscriptionInput) =>
-      ipcRenderer.invoke(IPC_CHANNELS.subscription.add, input),
+    add: (input: AddSubscriptionInput) => ipcRenderer.invoke(IPC_CHANNELS.subscription.add, input),
     list: () => ipcRenderer.invoke(IPC_CHANNELS.subscription.list),
     onChanged: (cb: (subs: Subscription[]) => void) => {
       const listener = (_: unknown, subs: Subscription[]): void => cb(subs)
@@ -485,12 +482,12 @@ export type Api = typeof api
 
 ### 9.1 存储选型落地
 
-| 数据类型 | 存储介质 | 原因 |
-|---|---|---|
-| 关系型业务数据（订阅、集数、播放列表、笔记、下载记录） | SQLite（better-sqlite3 + Drizzle） | 需要关联查询、事务、索引，是核心数据 |
-| 应用配置（主题、语言、默认下载质量等单例设置） | `electron-store`（JSON 文件） | 结构简单、无需查询能力，直接键值读写更轻量 |
-| 音频文件本体 | 文件系统（用户可配置的下载目录） | 大文件不适合入库，数据库只存路径引用 |
-| 封面图片缓存 | 文件系统缓存目录 + 数据库存路径 | 同上，且属于"可重建缓存"，纳入"清除缓存"范围 |
+| 数据类型                                               | 存储介质                           | 原因                                         |
+| ------------------------------------------------------ | ---------------------------------- | -------------------------------------------- |
+| 关系型业务数据（订阅、集数、播放列表、笔记、下载记录） | SQLite（better-sqlite3 + Drizzle） | 需要关联查询、事务、索引，是核心数据         |
+| 应用配置（主题、语言、默认下载质量等单例设置）         | `electron-store`（JSON 文件）      | 结构简单、无需查询能力，直接键值读写更轻量   |
+| 音频文件本体                                           | 文件系统（用户可配置的下载目录）   | 大文件不适合入库，数据库只存路径引用         |
+| 封面图片缓存                                           | 文件系统缓存目录 + 数据库存路径    | 同上，且属于"可重建缓存"，纳入"清除缓存"范围 |
 
 ### 9.2 Schema 设计（Drizzle，节选核心表）
 
@@ -514,7 +511,9 @@ export const podcasts = sqliteTable('podcasts', {
 
 export const episodes = sqliteTable('episodes', {
   id: text('id').primaryKey(),
-  podcastId: text('podcast_id').notNull().references(() => podcasts.id, { onDelete: 'cascade' }),
+  podcastId: text('podcast_id')
+    .notNull()
+    .references(() => podcasts.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   descriptionHtml: text('description_html'),
   publishedAt: integer('published_at', { mode: 'timestamp' }).notNull(),
@@ -531,7 +530,9 @@ export const episodes = sqliteTable('episodes', {
 
 export const downloadTasks = sqliteTable('download_tasks', {
   id: text('id').primaryKey(),
-  episodeId: text('episode_id').notNull().references(() => episodes.id, { onDelete: 'cascade' }),
+  episodeId: text('episode_id')
+    .notNull()
+    .references(() => episodes.id, { onDelete: 'cascade' }),
   status: text('status').notNull(),
   progressBytes: integer('progress_bytes').notNull().default(0),
   totalBytes: integer('total_bytes'),
@@ -567,12 +568,12 @@ export const downloadTasks = sqliteTable('download_tasks', {
 
 为遵守"业务代码不得散落 `process.platform` 判断"的约束，所有平台差异收敛到 `main/infra/` 下按能力命名的适配器，对上层暴露统一接口：
 
-| 能力接口 | 实现文件 | Windows | macOS | Linux |
-|---|---|---|---|---|
-| `MediaSessionAdapter` | `infra/media-session/{win,mac,linux}.ts` | SMTC 原生绑定 | MPRemoteCommandCenter 原生绑定 | MPRIS（纯 JS，D-Bus） |
-| `ProtocolRegistrar` | `infra/protocol/index.ts` | `app.setAsDefaultProtocolClient` + 注册表校验 | `CFBundleURLTypes`（`electron-builder.yml` 声明） | desktop entry `MimeType` |
-| `AutoLaunch` | `infra/autolaunch/index.ts` | 注册表 Run 键 | Login Items | `.desktop` autostart 目录 |
-| `TrayBehavior` | `infra/tray/index.ts` | 任务栏通知区 | 菜单栏 + Dock 双入口 | AppIndicator（检测不支持时降级隐藏托盘功能并提示） |
+| 能力接口              | 实现文件                                 | Windows                                       | macOS                                             | Linux                                              |
+| --------------------- | ---------------------------------------- | --------------------------------------------- | ------------------------------------------------- | -------------------------------------------------- |
+| `MediaSessionAdapter` | `infra/media-session/{win,mac,linux}.ts` | SMTC 原生绑定                                 | MPRemoteCommandCenter 原生绑定                    | MPRIS（纯 JS，D-Bus）                              |
+| `ProtocolRegistrar`   | `infra/protocol/index.ts`                | `app.setAsDefaultProtocolClient` + 注册表校验 | `CFBundleURLTypes`（`electron-builder.yml` 声明） | desktop entry `MimeType`                           |
+| `AutoLaunch`          | `infra/autolaunch/index.ts`              | 注册表 Run 键                                 | Login Items                                       | `.desktop` autostart 目录                          |
+| `TrayBehavior`        | `infra/tray/index.ts`                    | 任务栏通知区                                  | 菜单栏 + Dock 双入口                              | AppIndicator（检测不支持时降级隐藏托盘功能并提示） |
 
 统一由 `electron-builder.yml` 与运行时 `process.platform` 分支**仅存在于这一层**，业务 service 层只调用适配器接口，单元测试时可用假适配器（no-op 实现）跑通全部业务逻辑而不依赖真实操作系统能力。
 
@@ -608,12 +609,12 @@ export const downloadTasks = sqliteTable('download_tasks', {
 
 ### 12.2 工具与环境配置
 
-| 层级 | 工具 | 运行环境 | 覆盖对象 |
-|---|---|---|---|
-| 单元测试（渲染进程） | Vitest + `@testing-library/react` + `@testing-library/user-event` | `jsdom` | UI 组件行为、Zustand store 纯逻辑、`lib/format.ts` 等工具函数 |
-| 单元测试（主进程） | Vitest | `node` | Service 层业务规则（依赖注入假 Repository/假 Adapter）、Feed 解析纯函数、下载队列调度算法 |
-| 集成测试 | Vitest | `node` | Repository 层对真实 `:memory:` SQLite 的 CRUD 与事务；IPC handler 端到端（在测试中启动精简版 `ipcMain`/`ipcRenderer` 对，不启动完整 BrowserWindow）；下载队列对接 MSW 模拟的 HTTP 服务器（含断点续传、限速、失败重试路径） |
-| E2E 测试 | `@playwright/test` 的 `_electron` API | 真实打包/开发构建的 Electron 进程 | 完整用户旅程：添加订阅→播放→下载→重启应用验证状态恢复；断网场景；数据导入导出；三平台各自的安装包基础冒烟（CI 矩阵） |
+| 层级                 | 工具                                                              | 运行环境                          | 覆盖对象                                                                                                                                                                                                                   |
+| -------------------- | ----------------------------------------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 单元测试（渲染进程） | Vitest + `@testing-library/react` + `@testing-library/user-event` | `jsdom`                           | UI 组件行为、Zustand store 纯逻辑、`lib/format.ts` 等工具函数                                                                                                                                                              |
+| 单元测试（主进程）   | Vitest                                                            | `node`                            | Service 层业务规则（依赖注入假 Repository/假 Adapter）、Feed 解析纯函数、下载队列调度算法                                                                                                                                  |
+| 集成测试             | Vitest                                                            | `node`                            | Repository 层对真实 `:memory:` SQLite 的 CRUD 与事务；IPC handler 端到端（在测试中启动精简版 `ipcMain`/`ipcRenderer` 对，不启动完整 BrowserWindow）；下载队列对接 MSW 模拟的 HTTP 服务器（含断点续传、限速、失败重试路径） |
+| E2E 测试             | `@playwright/test` 的 `_electron` API                             | 真实打包/开发构建的 Electron 进程 | 完整用户旅程：添加订阅→播放→下载→重启应用验证状态恢复；断网场景；数据导入导出；三平台各自的安装包基础冒烟（CI 矩阵）                                                                                                       |
 
 `vitest.workspace.ts` 按 renderer / main 拆分两套 project 配置，共享同一份覆盖率汇总：
 
@@ -663,26 +664,26 @@ export default defineWorkspace([
 - **网络场景模拟**：借助 MSW（Node 侧拦截）或本地可控的 mock Feed 服务器模拟"正常/超时/断开"三种网络状态，断网场景通过让 mock 服务器返回连接拒绝或直接关闭端口实现，不依赖真实拔网线（保证 CI 环境可重复执行）；
 - **关键 E2E 用例清单（对应 PRD 12.2 节场景）**：
 
-  | 用例 | 覆盖原则 |
-  |---|---|
-  | 输入有效 RSS URL → 成功订阅 → 详情页展示集数列表 | 核心主链路 |
-  | 输入格式错误的 RSS URL → 展示明确错误、不产生脏数据 | 容错性 |
-  | 下载一集 → 断网 → 播放该集验证可正常播放，未下载集数显示"仅元数据"提示 | Offline-first |
-  | 下载中途终止应用进程 → 重启 → 验证任务自动续传而非从零开始 | 可靠性 |
-  | 导出全部数据 → 清空 `userData` → 导入 → 校验订阅/进度/笔记/播放列表完整还原 | Local-first |
-  | 修改主题为深色 → 重启应用 → 验证主题记忆生效 | 设置持久化 |
-  | 三平台（Windows/macOS/Linux）分别验证安装、启动、播放、下载四个基础动作 | Desktop-only + 跨平台 |
+  | 用例                                                                        | 覆盖原则              |
+  | --------------------------------------------------------------------------- | --------------------- |
+  | 输入有效 RSS URL → 成功订阅 → 详情页展示集数列表                            | 核心主链路            |
+  | 输入格式错误的 RSS URL → 展示明确错误、不产生脏数据                         | 容错性                |
+  | 下载一集 → 断网 → 播放该集验证可正常播放，未下载集数显示"仅元数据"提示      | Offline-first         |
+  | 下载中途终止应用进程 → 重启 → 验证任务自动续传而非从零开始                  | 可靠性                |
+  | 导出全部数据 → 清空 `userData` → 导入 → 校验订阅/进度/笔记/播放列表完整还原 | Local-first           |
+  | 修改主题为深色 → 重启应用 → 验证主题记忆生效                                | 设置持久化            |
+  | 三平台（Windows/macOS/Linux）分别验证安装、启动、播放、下载四个基础动作     | Desktop-only + 跨平台 |
 
 - **CI 矩阵**：E2E 测试在 GitHub Actions（或等效 CI）的 `windows-latest` / `macos-latest` / `ubuntu-latest` 三个 runner 上并行执行核心冒烟用例（上表前 6 条 + 每平台的安装启动验证），完整 E2E 套件可仅在单一平台（如 `ubuntu-latest`）全量跑，三平台跑精简冒烟集，兼顾覆盖面与 CI 时长。
 
 ### 12.6 专项测试：呼应四大设计原则
 
-| 原则 | 专项测试方式 | 归属层级 |
-|---|---|---|
-| Offline-first | 集成测试层模拟网络状态切换，断言 UI 状态广播正确；E2E 层验证断网下核心旅程零报错零白屏 | 集成 + E2E |
-| Local-first | 集成测试验证导入导出的数据完整性（逐字段 diff）；E2E 层验证"导出→清空→导入"全链路 | 集成 + E2E |
+| 原则          | 专项测试方式                                                                                                                    | 归属层级                                 |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| Offline-first | 集成测试层模拟网络状态切换，断言 UI 状态广播正确；E2E 层验证断网下核心旅程零报错零白屏                                          | 集成 + E2E                               |
+| Local-first   | 集成测试验证导入导出的数据完整性（逐字段 diff）；E2E 层验证"导出→清空→导入"全链路                                               | 集成 + E2E                               |
 | Feature-first | 通过依赖关系静态检查（如 `dependency-cruiser` 或 ESLint 自定义规则）在 CI 中断言 `features/a` 不得 import `features/b` 内部模块 | 静态分析（非运行时测试，但纳入 CI 门禁） |
-| Desktop-only | 组件测试中使用 `user-event` 模拟纯键盘操作路径，断言核心播放操作无需鼠标/触屏也可完成 | 单元/组件测试 |
+| Desktop-only  | 组件测试中使用 `user-event` 模拟纯键盘操作路径，断言核心播放操作无需鼠标/触屏也可完成                                           | 单元/组件测试                            |
 
 ### 12.7 测试在 CI 中的门禁顺序
 
@@ -756,12 +757,12 @@ lint → typecheck → 单元测试(renderer+main, 并行) → 集成测试 → 
 
 ## 18. 风险与技术决策待定项（ADR 候选）
 
-| 事项 | 现状 | 需要的决策 |
-|---|---|---|
-| SMTC/MPRIS/Now Playing 的具体实现方式 | 社区方案成熟度、原生编译维护成本未验证 | 需一次技术 Spike，产出独立 ADR 确定是否自研原生模块 |
-| 云同步冲突解决策略（P2） | PRD 未定案，本文档未展开 | 待 P2 排期前专项设计，输出独立子文档 |
-| 是否引入 TanStack Query | 当前定为 P1 引入，MVP 阶段用 Zustand + 手写 loading 态即可 | 视 MVP 阶段实际样板代码量决定是否提前引入 |
-| Tailwind v4 CSS-first 配置 vs 保留 `tailwind.config.ts` | v4 推荐纯 CSS 配置，但项目可能需要 JS 侧读取设计令牌（如图表配色） | 落地时按是否有 JS 侧读取需求决定保留与否 |
+| 事项                                                    | 现状                                                               | 需要的决策                                          |
+| ------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------- |
+| SMTC/MPRIS/Now Playing 的具体实现方式                   | 社区方案成熟度、原生编译维护成本未验证                             | 需一次技术 Spike，产出独立 ADR 确定是否自研原生模块 |
+| 云同步冲突解决策略（P2）                                | PRD 未定案，本文档未展开                                           | 待 P2 排期前专项设计，输出独立子文档                |
+| 是否引入 TanStack Query                                 | 当前定为 P1 引入，MVP 阶段用 Zustand + 手写 loading 态即可         | 视 MVP 阶段实际样板代码量决定是否提前引入           |
+| Tailwind v4 CSS-first 配置 vs 保留 `tailwind.config.ts` | v4 推荐纯 CSS 配置，但项目可能需要 JS 侧读取设计令牌（如图表配色） | 落地时按是否有 JS 侧读取需求决定保留与否            |
 
 ---
 
