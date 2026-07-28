@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>09 — 深色主题</title>
+  <link rel="stylesheet" href="_shared.css">
+  <style>
+    :root {
+      --amber-600: #E8A83A;
+      --amber-100: #3D3428;
+      --ink: #F2EDE4;
+      --muted: #A9A29B;
+      --muted-700: #A9A29B;
+      --paper: #1C1917;
+      --surface: #292524;
+      --line: #40392F;
+      --success: #5FA971;
+    }
+    body { background: #0F0E0D; }
+    .window { border-color: var(--line); }
+    .titlebar { background: var(--surface); }
+    .btn-primary { background: var(--amber-600); color: #1C1917; }
+    .app-logo-icon { background: var(--amber-600); }
+    .app-logo-icon svg { stroke: #1C1917; }
+    .search-box { background: var(--paper); border-color: var(--line); color: var(--muted); }
+    .unread-badge { background: var(--amber-600); color: #1C1917; }
+    .play-btn { background: var(--amber-600); color: #1C1917; }
+    .progress-fill, .mini-progress-fill { background: var(--amber-600) !important; }
+  </style>
+</head>
+<body>
+  <div class="window">
+    <div class="titlebar">
+      <div class="titlebar-dots"><span></span><span></span><span></span></div>
+      <div class="titlebar-title">博播 BiuPodcast</div>
+    </div>
+    <div class="app-body">
+      <div class="toolbar">
+        <div class="app-logo">
+          <div class="app-logo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="1.75"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+          <span class="app-logo-text">博播</span>
+        </div>
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          搜索播客…
+        </div>
+        <div class="toolbar-spacer"></div>
+        <button class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+          添加订阅
+        </button>
+      </div>
+      <div class="content">
+        <div class="section-header"><span class="section-title">我的订阅 · 12 个播客</span></div>
+        <div class="podcast-grid">
+          <div class="podcast-card">
+            <div class="podcast-cover"><div class="cover-placeholder" style="background:linear-gradient(135deg,#3D3428,#292524);font-size:32px;color:var(--muted);">科</div><span class="unread-badge">3</span></div>
+            <div class="podcast-info"><div class="podcast-title">科技乱炖</div><div class="podcast-meta">2 小时前更新</div></div>
+          </div>
+          <div class="podcast-card">
+            <div class="podcast-cover"><div class="cover-placeholder" style="background:linear-gradient(135deg,#3A3530,#292524);font-size:32px;color:var(--muted);">无</div><span class="unread-badge">12</span></div>
+            <div class="podcast-info"><div class="podcast-title">无人知晓</div><div class="podcast-meta">昨天更新</div></div>
+          </div>
+          <div class="podcast-card">
+            <div class="podcast-cover"><div class="cover-placeholder" style="background:linear-gradient(135deg,#2E3530,#292524);font-size:32px;color:var(--muted);">忽</div><span class="unread-badge">1</span></div>
+            <div class="podcast-info"><div class="podcast-title">忽左忽右</div><div class="podcast-meta">3 天前更新</div></div>
+          </div>
+          <div class="podcast-card">
+            <div class="podcast-cover"><div class="cover-placeholder" style="background:linear-gradient(135deg,#353040,#292524);font-size:32px;color:var(--muted);">声</div></div>
+            <div class="podcast-info"><div class="podcast-title">声东击西</div><div class="podcast-meta">1 周前更新</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;">
+        <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--line);"><div class="mini-progress-fill" style="width:35%;height:100%;"></div></div>
+        <div class="mini-player">
+          <div class="mini-cover"><div class="cover-placeholder" style="font-size:18px;width:100%;height:100%;background:linear-gradient(135deg,#3D3428,#292524);color:var(--muted);">科</div></div>
+          <div class="mini-info"><div class="mini-title">EP.128 — AI 时代的播客创作</div><div class="mini-subtitle">科技乱炖</div></div>
+          <div class="mini-controls">
+            <button class="play-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="#1C1917" stroke="none"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg></button>
+          </div>
+          <div class="mini-time">12:34 / 58:20</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

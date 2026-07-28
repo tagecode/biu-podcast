@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>03 — 添加订阅</title>
+  <link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+  <div class="window" style="position:relative;">
+    <div class="titlebar">
+      <div class="titlebar-dots"><span></span><span></span><span></span></div>
+      <div class="titlebar-title">博播 BiuPodcast</div>
+    </div>
+    <div class="app-body" style="opacity:0.6;filter:blur(1px);">
+      <div class="toolbar">
+        <div class="app-logo">
+          <div class="app-logo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="1.75"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+          <span class="app-logo-text">博播</span>
+        </div>
+        <div class="toolbar-spacer"></div>
+        <button class="btn btn-primary">添加订阅</button>
+      </div>
+      <div class="content">
+        <div class="podcast-grid" style="opacity:0.5;">
+          <div class="podcast-card"><div class="podcast-cover"><div class="cover-placeholder">科</div></div><div class="podcast-info"><div class="podcast-title">科技乱炖</div></div></div>
+          <div class="podcast-card"><div class="podcast-cover"><div class="cover-placeholder">无</div></div><div class="podcast-info"><div class="podcast-title">无人知晓</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog-overlay">
+      <div class="dialog">
+        <h2 class="dialog-title">添加订阅</h2>
+        <p class="dialog-desc">输入播客的 RSS Feed 地址，我们将解析并展示播客信息供您确认。</p>
+        <label class="form-label">RSS Feed 地址</label>
+        <input class="form-input" type="text" value="https://example.com/podcast/feed.xml" readonly>
+        <div class="form-error">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+          该订阅源已失效（404），请检查地址是否正确
+        </div>
+        <div class="dialog-actions">
+          <button class="btn btn-secondary">取消</button>
+          <button class="btn btn-primary">解析并添加</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

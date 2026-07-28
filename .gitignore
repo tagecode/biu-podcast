@@ -1,0 +1,16 @@
+node_modules
+dist
+out
+.DS_Store
+.eslintcache
+*.log*
+.vscode
+
+# AI
+.cursor
+.codegraph
+.claude
+.playwright-mcp
+
+# venv
+.venv
