@@ -51,7 +51,7 @@ export function registerEpisodeHandlers(): void {
     IPC_CHANNELS.episode.listByPodcast,
     ListEpisodesInputSchema,
     async (_event, input) => {
-      return episodeService.listByPodcast(input.podcastId)
+      return episodeService.listByPodcast(input.podcastId, input.offset, input.limit)
     }
   )
 

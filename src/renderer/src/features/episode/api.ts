@@ -1,7 +1,12 @@
-import type { Episode } from '@shared/types'
+import type { EpisodeListPage } from '@shared/episode-list'
+import { EPISODE_PAGE_SIZE } from '@shared/episode-list'
 
-export async function listEpisodes(podcastId: string): Promise<Episode[]> {
-  const result = await window.api.episode.listByPodcast({ podcastId })
+export async function listEpisodesPage(
+  podcastId: string,
+  offset = 0,
+  limit = EPISODE_PAGE_SIZE
+): Promise<EpisodeListPage> {
+  const result = await window.api.episode.listByPodcast({ podcastId, offset, limit })
   if (!result.ok) throw new Error(result.error.message)
   return result.data
 }

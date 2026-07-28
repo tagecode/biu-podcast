@@ -1,10 +1,11 @@
 import { ArrowLeft, RefreshCw } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Episode, Podcast } from '@shared/types'
+import { EPISODE_PAGE_SIZE } from '@shared/episode-list'
 
 import * as episodeApi from '../api'
 import { EpisodeListItem } from '../components/EpisodeListItem'
@@ -25,32 +26,72 @@ export function PodcastDetailPage({
   )
   const refreshSubscription = useSubscriptionStore((state) => state.refresh)
   const [episodes, setEpisodes] = useState<Episode[]>([])
+  const [total, setTotal] = useState(0)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const playEpisode = usePlaybackStore((state) => state.playEpisode)
   const currentEpisodeId = usePlaybackStore((state) => state.currentEpisode?.id)
+  const listRef = useRef<HTMLDivElement>(null)
 
-  const loadEpisodes = async (): Promise<void> => {
+  const loadFirstPage = useCallback(async (): Promise<void> => {
     setLoading(true)
     setError(null)
     try {
-      const data = await episodeApi.listEpisodes(podcastId)
-      setEpisodes(data)
+      const page = await episodeApi.listEpisodesPage(podcastId, 0, EPISODE_PAGE_SIZE)
+      setEpisodes(page.items)
+      setTotal(page.total)
+      setUnreadCount(page.unreadCount)
+      setHasMore(page.hasMore)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : '加载集数失败')
     } finally {
       setLoading(false)
     }
-  }
+  }, [podcastId])
+
+  const loadMore = useCallback(async (): Promise<void> => {
+    if (loadingMore || !hasMore) return
+    setLoadingMore(true)
+    try {
+      const page = await episodeApi.listEpisodesPage(podcastId, episodes.length, EPISODE_PAGE_SIZE)
+      setEpisodes((prev) => {
+        const seen = new Set(prev.map((item) => item.id))
+        return [...prev, ...page.items.filter((item) => !seen.has(item.id))]
+      })
+      setTotal(page.total)
+      setUnreadCount(page.unreadCount)
+      setHasMore(page.hasMore)
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : '加载更多失败')
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [episodes.length, hasMore, loadingMore, podcastId])
 
   useEffect(() => {
     const unsubscribe = window.api.episode.onChanged((payload) => {
-      if (payload.podcastId === podcastId) void loadEpisodes()
+      if (payload.podcastId === podcastId) void loadFirstPage()
     })
     // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data load is acceptable here
-    void loadEpisodes()
+    void loadFirstPage()
     return unsubscribe
-  }, [podcastId])
+  }, [podcastId, loadFirstPage])
+
+  useEffect(() => {
+    const el = listRef.current
+    if (!el) return
+
+    const onScroll = (): void => {
+      const remaining = el.scrollHeight - el.scrollTop - el.clientHeight
+      if (remaining < 240) void loadMore()
+    }
+
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [loadMore])
 
   if (!podcast) {
     return (
@@ -59,8 +100,6 @@ export function PodcastDetailPage({
       </div>
     )
   }
-
-  const unreadCount = episodes.filter((episode) => !episode.isPlayed).length
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -78,19 +117,19 @@ export function PodcastDetailPage({
           variant="ghost"
           size="icon"
           aria-label="刷新"
-          onClick={() => void refreshSubscription(podcastId).then(loadEpisodes)}
+          onClick={() => void refreshSubscription(podcastId).then(loadFirstPage)}
         >
           <RefreshCw className="size-4" />
         </Button>
         <Button
           variant="secondary"
-          onClick={() => void episodeApi.markAllPlayed(podcastId).then(loadEpisodes)}
+          onClick={() => void episodeApi.markAllPlayed(podcastId).then(loadFirstPage)}
         >
           标记全部已听
         </Button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+      <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
         <div className="mb-6 flex gap-6">
           <div className="size-40 shrink-0 overflow-hidden rounded-lg bg-line">
             {podcast.coverUrl ? (
@@ -114,7 +153,7 @@ export function PodcastDetailPage({
             ) : null}
             <div className="mt-4 flex flex-wrap gap-2">
               <Badge variant="secondary">{unreadCount} 集未听</Badge>
-              <Badge variant="secondary">共 {episodes.length} 集</Badge>
+              <Badge variant="secondary">共 {total} 集</Badge>
             </div>
             <div className="mt-4">
               <Button
@@ -122,6 +161,7 @@ export function PodcastDetailPage({
                   const latest = episodes[0]
                   if (latest) playEpisode(latest, podcast)
                 }}
+                disabled={episodes.length === 0}
               >
                 播放最新一集
               </Button>
@@ -129,7 +169,10 @@ export function PodcastDetailPage({
           </div>
         </div>
 
-        <div className="mb-3 text-sm text-muted">集数列表</div>
+        <div className="mb-3 text-sm text-muted">
+          集数列表
+          {total > 0 ? ` · 已加载 ${episodes.length} / ${total}` : null}
+        </div>
         {loading ? (
           <div className="space-y-2">
             {Array.from({ length: 6 }).map((_, index) => (
@@ -150,6 +193,12 @@ export function PodcastDetailPage({
                 onPlay={() => playEpisode(episode, podcast as Podcast)}
               />
             ))}
+            {loadingMore ? (
+              <div className="py-3 text-center text-xs text-muted">加载更多…</div>
+            ) : null}
+            {!hasMore && episodes.length > 0 ? (
+              <div className="py-3 text-center text-xs text-muted">已加载全部集数</div>
+            ) : null}
           </div>
         )}
       </div>

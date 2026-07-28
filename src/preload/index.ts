@@ -10,7 +10,8 @@ import type {
   RemoveSubscriptionInput,
   UpdateProgressInput
 } from '@shared/ipc-contract'
-import type { AppSettings, DownloadTask, Episode, IpcResult, Podcast } from '@shared/types'
+import type { AppSettings, DownloadTask, IpcResult, Podcast } from '@shared/types'
+import type { EpisodeListPage } from '@shared/episode-list'
 
 const api = {
   subscription: {
@@ -31,7 +32,7 @@ const api = {
     }
   },
   episode: {
-    listByPodcast: (input: ListEpisodesInput): Promise<IpcResult<Episode[]>> =>
+    listByPodcast: (input: ListEpisodesInput): Promise<IpcResult<EpisodeListPage>> =>
       ipcRenderer.invoke(IPC_CHANNELS.episode.listByPodcast, input),
     markAllPlayed: (input: MarkAllPlayedInput): Promise<IpcResult<{ updated: number }>> =>
       ipcRenderer.invoke(IPC_CHANNELS.episode.markAllPlayed, input),

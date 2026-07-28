@@ -16,7 +16,9 @@ export const RefreshSubscriptionInputSchema = z.object({
 })
 
 export const ListEpisodesInputSchema = z.object({
-  podcastId: z.string().min(1)
+  podcastId: z.string().min(1),
+  offset: z.number().int().min(0).optional().default(0),
+  limit: z.number().int().min(1).max(100).optional().default(50)
 })
 
 export const MarkAllPlayedInputSchema = z.object({

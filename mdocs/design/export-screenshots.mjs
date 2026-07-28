@@ -30,7 +30,7 @@ const pages = [
   { html: '09-dark-theme.html', png: '09-dark-theme.png' }
 ]
 
-function startServer(): Promise<http.Server> {
+function startServer() {
   return new Promise((resolve, reject) => {
     const server = http.createServer((req, res) => {
       const urlPath = decodeURIComponent(req.url?.split('?')[0] ?? '/')

@@ -9,7 +9,7 @@ const parser = new Parser({
   }
 })
 
-const FETCH_TIMEOUT_MS = 15000
+const FETCH_TIMEOUT_MS = 60000
 
 function parseDuration(value: unknown): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) return Math.round(value)
@@ -45,13 +45,19 @@ function toEpisode(item: Parser.Item): ParsedFeedEpisode | null {
 
   return {
     title: item.title?.trim() || '未命名集数',
-    descriptionHtml: item.content ?? item.contentSnippet ?? item.summary ?? null,
+    descriptionHtml: truncateHtml(item.content ?? item.contentSnippet ?? item.summary ?? null),
     publishedAt: Number.isNaN(publishedAt) ? Date.now() : publishedAt,
     audioUrl,
     durationSec,
     fileSizeBytes,
     guid: item.guid ?? item.link ?? audioUrl
   }
+}
+
+function truncateHtml(html: string | null, maxChars = 4000): string | null {
+  if (!html) return null
+  if (html.length <= maxChars) return html
+  return `${html.slice(0, maxChars)}…`
 }
 
 export async function fetchAndParseFeed(feedUrl: string): Promise<ParsedFeed> {

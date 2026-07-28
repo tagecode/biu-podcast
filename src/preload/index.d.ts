@@ -7,7 +7,8 @@ import type {
   RemoveSubscriptionInput,
   UpdateProgressInput
 } from '@shared/ipc-contract'
-import type { AppSettings, DownloadTask, Episode, IpcResult, Podcast } from '@shared/types'
+import type { EpisodeListPage } from '@shared/episode-list'
+import type { AppSettings, DownloadTask, IpcResult, Podcast } from '@shared/types'
 
 declare global {
   interface Window {
@@ -22,7 +23,7 @@ declare global {
         onChanged: (callback: (podcasts: Podcast[]) => void) => () => void
       }
       episode: {
-        listByPodcast: (input: ListEpisodesInput) => Promise<IpcResult<Episode[]>>
+        listByPodcast: (input: ListEpisodesInput) => Promise<IpcResult<EpisodeListPage>>
         markAllPlayed: (input: MarkAllPlayedInput) => Promise<IpcResult<{ updated: number }>>
         onChanged: (callback: (payload: { podcastId: string }) => void) => () => void
       }
