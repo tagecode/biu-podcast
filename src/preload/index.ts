@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
-import { IPC_CHANNELS } from '@shared/ipc-contract'
+import { IPC_CHANNELS } from '@shared/ipc-channels'
 import type {
   AddSubscriptionInput,
   EnqueueDownloadInput,
