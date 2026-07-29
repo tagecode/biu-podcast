@@ -1,5 +1,8 @@
 import {
   AddSubscriptionInputSchema,
+  DownloadTaskIdInputSchema,
+  EnqueueDownloadInputSchema,
+  GetAdjacentInputSchema,
   IPC_CHANNELS,
   ListEpisodesInputSchema,
   MarkAllPlayedInputSchema,
@@ -8,7 +11,9 @@ import {
   UpdateProgressInputSchema
 } from '@shared/ipc-contract'
 
+import { downloadService } from '../features/download/download.service'
 import { episodeService } from '../features/episode/episode.service'
+import { playbackService } from '../features/playback/playback.service'
 import { subscriptionService } from '../features/subscription/subscription.service'
 import { broadcast, registerHandler, registerNoInputHandler, registerVoidHandler } from './register'
 
@@ -29,7 +34,7 @@ export function registerSubscriptionHandlers(): void {
     IPC_CHANNELS.subscription.remove,
     RemoveSubscriptionInputSchema,
     async (_event, input) => {
-      subscriptionService.remove(input.podcastId, input.deleteData)
+      await subscriptionService.remove(input.podcastId, input.deleteData)
       broadcast(IPC_CHANNELS.subscription.changed, subscriptionService.list())
     }
   )
@@ -66,11 +71,58 @@ export function registerEpisodeHandlers(): void {
     }
   )
 
+  registerHandler(IPC_CHANNELS.episode.getAdjacent, GetAdjacentInputSchema, async (_event, input) =>
+    playbackService.getAdjacent(input.episodeId)
+  )
+}
+
+export function registerPlaybackHandlers(): void {
   registerVoidHandler(
     IPC_CHANNELS.playback.updateProgress,
     UpdateProgressInputSchema,
     async (_event, input) => {
-      episodeService.updateProgress(input.episodeId, input.positionSec)
+      playbackService.updateProgress(input.episodeId, input.positionSec)
+    }
+  )
+
+  registerNoInputHandler(IPC_CHANNELS.playback.getLastSession, () =>
+    playbackService.getLastSession()
+  )
+}
+
+export function registerDownloadHandlers(): void {
+  registerHandler(
+    IPC_CHANNELS.download.enqueue,
+    EnqueueDownloadInputSchema,
+    async (_event, input) => {
+      const task = downloadService.enqueue(input.episodeId)
+      return task
+    }
+  )
+
+  registerNoInputHandler(IPC_CHANNELS.download.list, () => downloadService.list())
+
+  registerVoidHandler(
+    IPC_CHANNELS.download.pause,
+    DownloadTaskIdInputSchema,
+    async (_event, input) => {
+      downloadService.pause(input.taskId)
+    }
+  )
+
+  registerVoidHandler(
+    IPC_CHANNELS.download.resume,
+    DownloadTaskIdInputSchema,
+    async (_event, input) => {
+      downloadService.resume(input.taskId)
+    }
+  )
+
+  registerVoidHandler(
+    IPC_CHANNELS.download.cancel,
+    DownloadTaskIdInputSchema,
+    async (_event, input) => {
+      await downloadService.cancel(input.taskId)
     }
   )
 }
@@ -78,4 +130,6 @@ export function registerEpisodeHandlers(): void {
 export function registerAllHandlers(): void {
   registerSubscriptionHandlers()
   registerEpisodeHandlers()
+  registerPlaybackHandlers()
+  registerDownloadHandlers()
 }

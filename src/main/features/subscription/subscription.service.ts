@@ -1,12 +1,22 @@
 import { ulid } from 'ulid'
+import { join } from 'path'
+import { rm } from 'fs/promises'
+import { app } from 'electron'
 
 import { EpisodeRepository } from '../episode/episode.repository'
 import { getDb } from '../../infra/db/client'
+import { settingsStore } from '../../infra/settings/store'
 import { AppError } from '@shared/errors'
 import type { FetchStatus, Podcast } from '@shared/types'
 
 import { fetchAndParseFeed } from './feed-parser'
 import { normalizeFeedUrl, SubscriptionRepository } from './subscription.repository'
+
+function getDownloadDir(): string {
+  const configured = settingsStore.getAll().downloadPath
+  if (configured) return configured
+  return join(app.getPath('userData'), 'downloads')
+}
 
 export class SubscriptionService {
   private readonly db = getDb()
@@ -105,15 +115,21 @@ export class SubscriptionService {
     }
   }
 
-  remove(podcastId: string, deleteData: boolean): void {
+  async remove(podcastId: string, deleteData: boolean): Promise<void> {
     const podcast = this.subscriptions.findById(podcastId)
     if (!podcast) {
       throw new AppError('NOT_FOUND', '播客不存在')
     }
     if (deleteData) {
+      const localPaths = this.episodes.listLocalFilePaths(podcastId)
       this.subscriptions.deletePodcast(podcastId)
+      for (const filePath of localPaths) {
+        await rm(filePath, { force: true })
+        await rm(`${filePath}.part`, { force: true })
+      }
+      await rm(join(getDownloadDir(), podcastId), { recursive: true, force: true })
     } else {
-      throw new AppError('NOT_IMPLEMENTED', '保留数据的取消订阅将在后续版本支持')
+      this.subscriptions.softUnsubscribe(podcastId)
     }
   }
 }

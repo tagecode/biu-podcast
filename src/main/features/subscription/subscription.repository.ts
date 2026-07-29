@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm'
+import { eq, isNull, sql } from 'drizzle-orm'
 
 import type { AppDatabase } from '../../infra/db/client'
 import { episodes, podcasts } from '../../infra/db/schema'
@@ -25,12 +25,18 @@ export class SubscriptionRepository {
     lastFetchedAt: number
     lastFetchStatus: FetchStatus
   }): void {
-    this.db.insert(podcasts).values(input).run()
+    this.db
+      .insert(podcasts)
+      .values({
+        ...input,
+        unsubscribedAt: null
+      })
+      .run()
   }
 
   findByFeedUrl(feedUrl: string): Podcast | null {
     const normalized = normalizeFeedUrl(feedUrl)
-    const rows = this.db.select().from(podcasts).all()
+    const rows = this.db.select().from(podcasts).where(isNull(podcasts.unsubscribedAt)).all()
     const row = rows.find((item) => normalizeFeedUrl(item.feedUrl) === normalized)
     return row ? this.toPodcast(row) : null
   }
@@ -48,6 +54,7 @@ export class SubscriptionRepository {
       })
       .from(podcasts)
       .leftJoin(episodes, eq(episodes.podcastId, podcasts.id))
+      .where(isNull(podcasts.unsubscribedAt))
       .groupBy(podcasts.id)
       .all()
 
@@ -70,6 +77,10 @@ export class SubscriptionRepository {
     }
   ): void {
     this.db.update(podcasts).set(input).where(eq(podcasts.id, id)).run()
+  }
+
+  softUnsubscribe(id: string): void {
+    this.db.update(podcasts).set({ unsubscribedAt: Date.now() }).where(eq(podcasts.id, id)).run()
   }
 
   deletePodcast(id: string): void {

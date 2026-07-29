@@ -206,6 +206,67 @@ export class EpisodeRepository {
     return row ? this.toEpisode(row) : null
   }
 
+  /** Newest-first ordering: previous = newer, next = older. */
+  findAdjacent(episodeId: string): { previous: Episode | null; next: Episode | null } {
+    const current = this.findById(episodeId)
+    if (!current) return { previous: null, next: null }
+
+    const ordered = this.db
+      .select()
+      .from(episodes)
+      .where(eq(episodes.podcastId, current.podcastId))
+      .orderBy(desc(episodes.publishedAt), desc(episodes.id))
+      .all()
+      .map((row) => this.toEpisode(row))
+
+    const index = ordered.findIndex((item) => item.id === episodeId)
+    if (index < 0) return { previous: null, next: null }
+    return {
+      previous: index > 0 ? ordered[index - 1] : null,
+      next: index < ordered.length - 1 ? ordered[index + 1] : null
+    }
+  }
+
+  markDownloaded(episodeId: string, localFilePath: string): void {
+    this.db
+      .update(episodes)
+      .set({
+        isDownloaded: true,
+        localFilePath,
+        downloadStatus: 'completed',
+        downloadedAt: Date.now()
+      })
+      .where(eq(episodes.id, episodeId))
+      .run()
+  }
+
+  setDownloadStatus(episodeId: string, status: Episode['downloadStatus']): void {
+    this.db.update(episodes).set({ downloadStatus: status }).where(eq(episodes.id, episodeId)).run()
+  }
+
+  clearDownload(episodeId: string): void {
+    this.db
+      .update(episodes)
+      .set({
+        isDownloaded: false,
+        localFilePath: null,
+        downloadStatus: null,
+        downloadedAt: null
+      })
+      .where(eq(episodes.id, episodeId))
+      .run()
+  }
+
+  listLocalFilePaths(podcastId: string): string[] {
+    return this.db
+      .select({ localFilePath: episodes.localFilePath })
+      .from(episodes)
+      .where(eq(episodes.podcastId, podcastId))
+      .all()
+      .map((row) => row.localFilePath)
+      .filter((path): path is string => Boolean(path))
+  }
+
   private toEpisode(row: typeof episodes.$inferSelect): Episode {
     return {
       id: row.id,

@@ -10,12 +10,14 @@ interface EpisodeListItemProps {
   episode: Episode
   active?: boolean
   onPlay: () => void
+  onDownload?: () => void
 }
 
 export function EpisodeListItem({
   episode,
   active,
-  onPlay
+  onPlay,
+  onDownload
 }: EpisodeListItemProps): React.JSX.Element {
   return (
     <div
@@ -46,15 +48,23 @@ export function EpisodeListItem({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        {episode.downloadStatus === 'downloading' ? (
+        {episode.downloadStatus === 'downloading' || episode.downloadStatus === 'queued' ? (
           <span className="size-5 animate-spin rounded-full border-2 border-line border-t-amber-600" />
         ) : episode.isDownloaded ? (
           <CheckCircle2 className="size-4 text-success" strokeWidth={1.75} />
         ) : episode.downloadStatus === 'failed' ? (
           <AlertCircle className="size-4 text-danger" strokeWidth={1.75} />
         ) : null}
-        {!episode.isDownloaded ? (
-          <Button variant="ghost" size="icon" aria-label="下载">
+        {!episode.isDownloaded &&
+        episode.downloadStatus !== 'queued' &&
+        episode.downloadStatus !== 'downloading' ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="下载"
+            onClick={onDownload}
+            disabled={!onDownload}
+          >
             <Download className="size-4" />
           </Button>
         ) : null}

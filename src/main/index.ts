@@ -1,13 +1,28 @@
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, protocol, net, shell } from 'electron'
 import { join } from 'path'
+import { pathToFileURL } from 'url'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 
 import icon from '../../resources/icon.png?asset'
+import { downloadService } from './features/download/download.service'
 import { registerAllHandlers } from './ipc/handlers'
 import { setMainWindow } from './ipc/register'
 import { closeDb, getDb } from './infra/db/client'
 import { migrateDatabase } from './infra/db/migrate'
 import { applyContentSecurityPolicy } from './infra/security/csp'
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'biu-media',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      stream: true,
+      bypassCSP: true
+    }
+  }
+])
 
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -48,11 +63,21 @@ function createWindow(): BrowserWindow {
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.biupodcast.app')
-  applyContentSecurityPolicy()
 
+  protocol.handle('biu-media', (request) => {
+    const url = new URL(request.url)
+    const filePath = url.searchParams.get('path')
+    if (!filePath) {
+      return new Response('Missing path', { status: 400 })
+    }
+    return net.fetch(pathToFileURL(filePath).href)
+  })
+
+  applyContentSecurityPolicy()
   migrateDatabase()
   getDb()
   registerAllHandlers()
+  downloadService.start()
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)

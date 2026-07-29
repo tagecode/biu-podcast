@@ -40,4 +40,14 @@ export type RefreshSubscriptionInput = z.infer<typeof RefreshSubscriptionInputSc
 export type ListEpisodesInput = z.infer<typeof ListEpisodesInputSchema>
 export type MarkAllPlayedInput = z.infer<typeof MarkAllPlayedInputSchema>
 export type UpdateProgressInput = z.infer<typeof UpdateProgressInputSchema>
+export const DownloadTaskIdInputSchema = z.object({
+  taskId: z.string().min(1)
+})
+
+export const GetAdjacentInputSchema = z.object({
+  episodeId: z.string().min(1)
+})
+
+export type DownloadTaskIdInput = z.infer<typeof DownloadTaskIdInputSchema>
+export type GetAdjacentInput = z.infer<typeof GetAdjacentInputSchema>
 export type EnqueueDownloadInput = z.infer<typeof EnqueueDownloadInputSchema>

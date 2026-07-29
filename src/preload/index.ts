@@ -3,15 +3,33 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { IPC_CHANNELS } from '@shared/ipc-channels'
 import type {
   AddSubscriptionInput,
+  DownloadTaskIdInput,
   EnqueueDownloadInput,
+  GetAdjacentInput,
   ListEpisodesInput,
   MarkAllPlayedInput,
   RefreshSubscriptionInput,
   RemoveSubscriptionInput,
   UpdateProgressInput
 } from '@shared/ipc-contract'
-import type { AppSettings, DownloadTask, IpcResult, Podcast } from '@shared/types'
+import type {
+  AppSettings,
+  DownloadTask,
+  DownloadTaskStatus,
+  Episode,
+  IpcResult,
+  PlaybackSession,
+  Podcast
+} from '@shared/types'
 import type { EpisodeListPage } from '@shared/episode-list'
+
+export type DownloadProgressPayload = {
+  taskId: string
+  episodeId: string
+  status: DownloadTaskStatus
+  progressBytes: number
+  totalBytes: number | null
+}
 
 const api = {
   subscription: {
@@ -36,6 +54,10 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.episode.listByPodcast, input),
     markAllPlayed: (input: MarkAllPlayedInput): Promise<IpcResult<{ updated: number }>> =>
       ipcRenderer.invoke(IPC_CHANNELS.episode.markAllPlayed, input),
+    getAdjacent: (
+      input: GetAdjacentInput
+    ): Promise<IpcResult<{ previous: Episode | null; next: Episode | null }>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.episode.getAdjacent, input),
     onChanged: (callback: (payload: { podcastId: string }) => void): (() => void) => {
       const listener = (_event: Electron.IpcRendererEvent, payload: { podcastId: string }): void =>
         callback(payload)
@@ -45,21 +67,40 @@ const api = {
   },
   playback: {
     updateProgress: (input: UpdateProgressInput): Promise<IpcResult<void>> =>
-      ipcRenderer.invoke(IPC_CHANNELS.playback.updateProgress, input)
+      ipcRenderer.invoke(IPC_CHANNELS.playback.updateProgress, input),
+    getLastSession: (): Promise<IpcResult<PlaybackSession | null>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.playback.getLastSession)
   },
   download: {
-    enqueue: (input: EnqueueDownloadInput): Promise<IpcResult<never>> =>
-      Promise.resolve({
-        ok: false,
-        error: { code: 'NOT_IMPLEMENTED', message: `下载功能开发中: ${input.episodeId}` }
-      }),
-    list: (): Promise<IpcResult<DownloadTask[]>> => Promise.resolve({ ok: true, data: [] })
+    enqueue: (input: EnqueueDownloadInput): Promise<IpcResult<DownloadTask>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.download.enqueue, input),
+    list: (): Promise<IpcResult<DownloadTask[]>> => ipcRenderer.invoke(IPC_CHANNELS.download.list),
+    pause: (input: DownloadTaskIdInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.download.pause, input),
+    resume: (input: DownloadTaskIdInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.download.resume, input),
+    cancel: (input: DownloadTaskIdInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.download.cancel, input),
+    onProgress: (callback: (payload: DownloadProgressPayload) => void): (() => void) => {
+      const listener = (
+        _event: Electron.IpcRendererEvent,
+        payload: DownloadProgressPayload
+      ): void => callback(payload)
+      ipcRenderer.on(IPC_CHANNELS.download.progress, listener)
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.download.progress, listener)
+    }
   },
   settings: {
     get: (): Promise<IpcResult<AppSettings>> =>
       Promise.resolve({
         ok: true,
-        data: { downloadPath: null, resumeOnLaunch: true }
+        data: {
+          downloadPath: null,
+          resumeOnLaunch: true,
+          lastEpisodeId: null,
+          lastPodcastId: null,
+          lastPositionSec: 0
+        }
       })
   }
 }

@@ -32,6 +32,7 @@ describe('EpisodeRepository.insertMany', () => {
         author text,
         language text,
         is_paused integer DEFAULT false NOT NULL,
+        unsubscribed_at integer,
         subscribed_at integer NOT NULL,
         last_fetched_at integer,
         last_fetch_status text

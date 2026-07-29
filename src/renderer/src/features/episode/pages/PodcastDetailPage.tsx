@@ -9,8 +9,10 @@ import { EPISODE_PAGE_SIZE } from '@shared/episode-list'
 
 import * as episodeApi from '../api'
 import { EpisodeListItem } from '../components/EpisodeListItem'
-import { useSubscriptionStore } from '@/features/subscription/store'
+import { useDownloadStore } from '@/features/download/store'
 import { usePlaybackStore } from '@/features/playback/store'
+import { UnsubscribeDialog } from '@/features/subscription/components/UnsubscribeDialog'
+import { useSubscriptionStore } from '@/features/subscription/store'
 
 interface PodcastDetailPageProps {
   podcastId: string
@@ -25,6 +27,7 @@ export function PodcastDetailPage({
     state.podcasts.find((item) => item.id === podcastId)
   )
   const refreshSubscription = useSubscriptionStore((state) => state.refresh)
+  const removeSubscription = useSubscriptionStore((state) => state.remove)
   const [episodes, setEpisodes] = useState<Episode[]>([])
   const [total, setTotal] = useState(0)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -32,8 +35,10 @@ export function PodcastDetailPage({
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [unsubscribeOpen, setUnsubscribeOpen] = useState(false)
   const playEpisode = usePlaybackStore((state) => state.playEpisode)
   const currentEpisodeId = usePlaybackStore((state) => state.currentEpisode?.id)
+  const enqueueDownload = useDownloadStore((state) => state.enqueue)
   const listRef = useRef<HTMLDivElement>(null)
 
   const loadFirstPage = useCallback(async (): Promise<void> => {
@@ -155,7 +160,7 @@ export function PodcastDetailPage({
               <Badge variant="secondary">{unreadCount} 集未听</Badge>
               <Badge variant="secondary">共 {total} 集</Badge>
             </div>
-            <div className="mt-4">
+            <div className="mt-4 flex flex-wrap gap-2">
               <Button
                 onClick={() => {
                   const latest = episodes[0]
@@ -164,6 +169,9 @@ export function PodcastDetailPage({
                 disabled={episodes.length === 0}
               >
                 播放最新一集
+              </Button>
+              <Button variant="secondary" onClick={() => setUnsubscribeOpen(true)}>
+                取消订阅
               </Button>
             </div>
           </div>
@@ -191,6 +199,7 @@ export function PodcastDetailPage({
                 episode={episode}
                 active={currentEpisodeId === episode.id}
                 onPlay={() => playEpisode(episode, podcast as Podcast)}
+                onDownload={() => void enqueueDownload(episode.id)}
               />
             ))}
             {loadingMore ? (
@@ -202,6 +211,16 @@ export function PodcastDetailPage({
           </div>
         )}
       </div>
+
+      <UnsubscribeDialog
+        open={unsubscribeOpen}
+        podcastTitle={podcast.title}
+        onOpenChange={setUnsubscribeOpen}
+        onConfirm={async (deleteData) => {
+          await removeSubscription(podcastId, deleteData)
+          onBack()
+        }}
+      />
     </div>
   )
 }

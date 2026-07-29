@@ -1,6 +1,8 @@
 import type {
   AddSubscriptionInput,
+  DownloadTaskIdInput,
   EnqueueDownloadInput,
+  GetAdjacentInput,
   ListEpisodesInput,
   MarkAllPlayedInput,
   RefreshSubscriptionInput,
@@ -8,7 +10,23 @@ import type {
   UpdateProgressInput
 } from '@shared/ipc-contract'
 import type { EpisodeListPage } from '@shared/episode-list'
-import type { AppSettings, DownloadTask, IpcResult, Podcast } from '@shared/types'
+import type {
+  AppSettings,
+  DownloadTask,
+  DownloadTaskStatus,
+  Episode,
+  IpcResult,
+  PlaybackSession,
+  Podcast
+} from '@shared/types'
+
+type DownloadProgressPayload = {
+  taskId: string
+  episodeId: string
+  status: DownloadTaskStatus
+  progressBytes: number
+  totalBytes: number | null
+}
 
 declare global {
   interface Window {
@@ -25,14 +43,22 @@ declare global {
       episode: {
         listByPodcast: (input: ListEpisodesInput) => Promise<IpcResult<EpisodeListPage>>
         markAllPlayed: (input: MarkAllPlayedInput) => Promise<IpcResult<{ updated: number }>>
+        getAdjacent: (
+          input: GetAdjacentInput
+        ) => Promise<IpcResult<{ previous: Episode | null; next: Episode | null }>>
         onChanged: (callback: (payload: { podcastId: string }) => void) => () => void
       }
       playback: {
         updateProgress: (input: UpdateProgressInput) => Promise<IpcResult<void>>
+        getLastSession: () => Promise<IpcResult<PlaybackSession | null>>
       }
       download: {
-        enqueue: (input: EnqueueDownloadInput) => Promise<IpcResult<void>>
+        enqueue: (input: EnqueueDownloadInput) => Promise<IpcResult<DownloadTask>>
         list: () => Promise<IpcResult<DownloadTask[]>>
+        pause: (input: DownloadTaskIdInput) => Promise<IpcResult<void>>
+        resume: (input: DownloadTaskIdInput) => Promise<IpcResult<void>>
+        cancel: (input: DownloadTaskIdInput) => Promise<IpcResult<void>>
+        onProgress: (callback: (payload: DownloadProgressPayload) => void) => () => void
       }
       settings: {
         get: () => Promise<IpcResult<AppSettings>>

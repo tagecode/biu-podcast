@@ -17,8 +17,8 @@ export async function refreshSubscription(podcastId: string): Promise<void> {
   if (!result.ok) throw new Error(result.error.message)
 }
 
-export async function removeSubscription(podcastId: string): Promise<void> {
-  const result = await window.api.subscription.remove({ podcastId, deleteData: true })
+export async function removeSubscription(podcastId: string, deleteData = false): Promise<void> {
+  const result = await window.api.subscription.remove({ podcastId, deleteData })
   if (!result.ok) throw new Error(result.error.message)
 }
 

@@ -13,7 +13,7 @@ interface SubscriptionState {
   load: () => Promise<void>
   add: (feedUrl: string) => Promise<void>
   refresh: (podcastId: string) => Promise<void>
-  remove: (podcastId: string) => Promise<void>
+  remove: (podcastId: string, deleteData?: boolean) => Promise<void>
   setQuery: (query: string) => void
   setSortKey: (sortKey: SortKey) => void
   visiblePodcasts: () => Podcast[]
@@ -45,8 +45,8 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     await subscriptionApi.refreshSubscription(podcastId)
     await get().load()
   },
-  remove: async (podcastId) => {
-    await subscriptionApi.removeSubscription(podcastId)
+  remove: async (podcastId, deleteData = false) => {
+    await subscriptionApi.removeSubscription(podcastId, deleteData)
     await get().load()
   },
   setQuery: (query) => set({ query }),

@@ -1,0 +1,169 @@
+import type { DownloadTaskStatus } from '@shared/types'
+
+export interface QueueTask {
+  id: string
+  episodeId: string
+  status: DownloadTaskStatus
+  progressBytes: number
+  totalBytes: number | null
+}
+
+export type DownloadRunner = (
+  task: QueueTask,
+  signal: AbortSignal,
+  onProgress: (progressBytes: number, totalBytes: number | null) => void
+) => Promise<{ localFilePath: string; totalBytes: number | null }>
+
+export type QueueListener = (event: {
+  type: 'progress' | 'status'
+  taskId: string
+  episodeId: string
+  status: DownloadTaskStatus
+  progressBytes: number
+  totalBytes: number | null
+}) => void
+
+/**
+ * In-memory concurrency scheduler. Persistence is owned by DownloadService.
+ */
+export class DownloadQueue {
+  private readonly tasks = new Map<string, QueueTask>()
+  private readonly controllers = new Map<string, AbortController>()
+  private readonly active = new Set<string>()
+  private readonly listeners = new Set<QueueListener>()
+  private concurrency: number
+  private runner: DownloadRunner
+
+  constructor(runner: DownloadRunner, concurrency = 2) {
+    this.runner = runner
+    this.concurrency = concurrency
+  }
+
+  setRunner(runner: DownloadRunner): void {
+    this.runner = runner
+  }
+
+  setConcurrency(value: number): void {
+    this.concurrency = Math.max(1, value)
+    this.pump()
+  }
+
+  onEvent(listener: QueueListener): () => void {
+    this.listeners.add(listener)
+    return () => this.listeners.delete(listener)
+  }
+
+  enqueue(task: QueueTask): void {
+    this.tasks.set(task.id, { ...task, status: 'queued' })
+    this.emit(task.id)
+    this.pump()
+  }
+
+  pause(taskId: string): void {
+    const task = this.tasks.get(taskId)
+    if (!task) return
+    if (task.status === 'downloading') {
+      this.controllers.get(taskId)?.abort()
+    }
+    task.status = 'paused'
+    this.active.delete(taskId)
+    this.emit(taskId)
+    this.pump()
+  }
+
+  resume(taskId: string): void {
+    const task = this.tasks.get(taskId)
+    if (!task) return
+    if (task.status === 'paused' || task.status === 'failed') {
+      task.status = 'queued'
+      this.emit(taskId)
+      this.pump()
+    }
+  }
+
+  cancel(taskId: string): void {
+    const task = this.tasks.get(taskId)
+    if (!task) return
+    this.controllers.get(taskId)?.abort()
+    this.controllers.delete(taskId)
+    this.active.delete(taskId)
+    this.tasks.delete(taskId)
+  }
+
+  getTask(taskId: string): QueueTask | undefined {
+    return this.tasks.get(taskId)
+  }
+
+  list(): QueueTask[] {
+    return [...this.tasks.values()]
+  }
+
+  downloadingCount(): number {
+    return this.active.size
+  }
+
+  private pump(): void {
+    while (this.active.size < this.concurrency) {
+      const next = [...this.tasks.values()].find((task) => task.status === 'queued')
+      if (!next) break
+      void this.start(next.id)
+    }
+  }
+
+  private async start(taskId: string): Promise<void> {
+    const task = this.tasks.get(taskId)
+    if (!task || task.status !== 'queued') return
+
+    const controller = new AbortController()
+    this.controllers.set(taskId, controller)
+    this.active.add(taskId)
+    task.status = 'downloading'
+    this.emit(taskId)
+
+    try {
+      const result = await this.runner(task, controller.signal, (progressBytes, totalBytes) => {
+        const current = this.tasks.get(taskId)
+        if (!current) return
+        current.progressBytes = progressBytes
+        current.totalBytes = totalBytes
+        this.emit(taskId, 'progress')
+      })
+      const current = this.tasks.get(taskId)
+      if (!current) return
+      current.status = 'completed'
+      current.progressBytes = result.totalBytes ?? current.progressBytes
+      current.totalBytes = result.totalBytes
+      this.emit(taskId)
+    } catch {
+      const current = this.tasks.get(taskId)
+      if (!current) return
+      if (controller.signal.aborted && current.status === 'paused') {
+        // paused intentionally
+      } else if (controller.signal.aborted) {
+        // cancelled — already removed
+      } else {
+        current.status = 'failed'
+        this.emit(taskId)
+      }
+    } finally {
+      this.active.delete(taskId)
+      this.controllers.delete(taskId)
+      this.pump()
+    }
+  }
+
+  private emit(taskId: string, type: 'progress' | 'status' = 'status'): void {
+    const task = this.tasks.get(taskId)
+    if (!task) return
+    for (const listener of this.listeners) {
+      listener({
+        type,
+        taskId: task.id,
+        episodeId: task.episodeId,
+        status: task.status,
+        progressBytes: task.progressBytes,
+        totalBytes: task.totalBytes
+      })
+    }
+  }
+}

@@ -77,6 +77,15 @@ export type IpcResult<T> = { ok: true; data: T } | { ok: false; error: IpcError 
 export interface AppSettings {
   downloadPath: string | null
   resumeOnLaunch: boolean
+  lastEpisodeId: string | null
+  lastPodcastId: string | null
+  lastPositionSec: number
+}
+
+export interface PlaybackSession {
+  episode: Episode
+  podcast: Podcast
+  positionSec: number
 }
 
 export type AppRoute = 'subscriptions' | 'detail' | 'player' | 'settings'

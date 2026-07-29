@@ -1,10 +1,7 @@
 import type { Episode, Podcast } from '@shared/types'
 import { create } from 'zustand'
 
-interface PlaybackEpisodeContext {
-  episode: Episode
-  podcast: Podcast
-}
+import { resolveMediaUrl } from './lib/media-url'
 
 interface PlaybackState {
   currentEpisode: Episode | null
@@ -13,7 +10,10 @@ interface PlaybackState {
   currentTimeSec: number
   durationSec: number
   view: 'mini' | 'full'
-  playEpisode: (episode: Episode, podcast: Podcast) => void
+  hasPrevious: boolean
+  hasNext: boolean
+  playEpisode: (episode: Episode, podcast: Podcast, options?: { fromSec?: number }) => void
+  restoreSession: (episode: Episode, podcast: Podcast, positionSec: number) => void
   togglePlay: () => void
   pause: () => void
   seek: (timeSec: number) => void
@@ -21,9 +21,14 @@ interface PlaybackState {
   setDuration: (durationSec: number) => void
   openFullPlayer: () => void
   closeFullPlayer: () => void
+  playPrevious: () => Promise<void>
+  playNext: () => Promise<void>
+  refreshAdjacent: () => Promise<void>
+  persistProgress: () => void
 }
 
 let audioElement: HTMLAudioElement | null = null
+let lastPersistAt = 0
 
 function getAudio(): HTMLAudioElement {
   if (!audioElement) {
@@ -33,6 +38,11 @@ function getAudio(): HTMLAudioElement {
   return audioElement
 }
 
+async function persistNow(episodeId: string, positionSec: number): Promise<void> {
+  lastPersistAt = Date.now()
+  await window.api.playback.updateProgress({ episodeId, positionSec })
+}
+
 export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   currentEpisode: null,
   currentPodcast: null,
@@ -40,20 +50,46 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   currentTimeSec: 0,
   durationSec: 0,
   view: 'mini',
-  playEpisode: (episode, podcast) => {
+  hasPrevious: false,
+  hasNext: false,
+  playEpisode: (episode, podcast, options) => {
     const audio = getAudio()
+    const prev = get().currentEpisode
+    if (prev && prev.id !== episode.id) {
+      void persistNow(prev.id, audio.currentTime)
+    }
+
+    const fromSec = options?.fromSec ?? episode.playbackPositionSec
     if (get().currentEpisode?.id !== episode.id) {
-      audio.src = episode.audioUrl
-      audio.currentTime = episode.playbackPositionSec
+      audio.src = resolveMediaUrl(episode)
+      audio.currentTime = fromSec
       set({
         currentEpisode: episode,
         currentPodcast: podcast,
-        currentTimeSec: episode.playbackPositionSec,
-        durationSec: episode.durationSec ?? 0
+        currentTimeSec: fromSec,
+        durationSec: episode.durationSec ?? 0,
+        hasPrevious: false,
+        hasNext: false
       })
+      void get().refreshAdjacent()
     }
     void audio.play()
     set({ isPlaying: true })
+  },
+  restoreSession: (episode, podcast, positionSec) => {
+    const audio = getAudio()
+    audio.src = resolveMediaUrl(episode)
+    audio.currentTime = positionSec
+    set({
+      currentEpisode: episode,
+      currentPodcast: podcast,
+      currentTimeSec: positionSec,
+      durationSec: episode.durationSec ?? 0,
+      isPlaying: false,
+      hasPrevious: false,
+      hasNext: false
+    })
+    void get().refreshAdjacent()
   },
   togglePlay: () => {
     const audio = getAudio()
@@ -64,11 +100,13 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     } else {
       audio.pause()
       set({ isPlaying: false })
+      get().persistProgress()
     }
   },
   pause: () => {
     getAudio().pause()
     set({ isPlaying: false })
+    get().persistProgress()
   },
   seek: (timeSec) => {
     const audio = getAudio()
@@ -78,20 +116,64 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   setCurrentTime: (timeSec) => set({ currentTimeSec: timeSec }),
   setDuration: (durationSec) => set({ durationSec }),
   openFullPlayer: () => set({ view: 'full' }),
-  closeFullPlayer: () => set({ view: 'mini' })
+  closeFullPlayer: () => set({ view: 'mini' }),
+  playPrevious: async () => {
+    const { currentEpisode, currentPodcast } = get()
+    if (!currentEpisode || !currentPodcast) return
+    const result = await window.api.episode.getAdjacent({ episodeId: currentEpisode.id })
+    if (!result.ok || !result.data.previous) return
+    get().playEpisode(result.data.previous, currentPodcast, { fromSec: 0 })
+  },
+  playNext: async () => {
+    const { currentEpisode, currentPodcast } = get()
+    if (!currentEpisode || !currentPodcast) return
+    const result = await window.api.episode.getAdjacent({ episodeId: currentEpisode.id })
+    if (!result.ok || !result.data.next) return
+    get().playEpisode(result.data.next, currentPodcast, { fromSec: 0 })
+  },
+  refreshAdjacent: async () => {
+    const episode = get().currentEpisode
+    if (!episode) {
+      set({ hasPrevious: false, hasNext: false })
+      return
+    }
+    const result = await window.api.episode.getAdjacent({ episodeId: episode.id })
+    if (!result.ok) return
+    set({
+      hasPrevious: Boolean(result.data.previous),
+      hasNext: Boolean(result.data.next)
+    })
+  },
+  persistProgress: () => {
+    const episode = get().currentEpisode
+    if (!episode) return
+    void persistNow(episode.id, getAudio().currentTime)
+  }
 }))
 
 export function bindAudioEvents(): () => void {
   const audio = getAudio()
 
   const onTimeUpdate = (): void => {
-    usePlaybackStore.getState().setCurrentTime(audio.currentTime)
+    const state = usePlaybackStore.getState()
+    state.setCurrentTime(audio.currentTime)
+    if (!state.currentEpisode) return
+    const now = Date.now()
+    if (now - lastPersistAt >= 5000) {
+      void persistNow(state.currentEpisode.id, audio.currentTime)
+    }
   }
   const onLoadedMetadata = (): void => {
     usePlaybackStore.getState().setDuration(audio.duration)
   }
   const onEnded = (): void => {
-    usePlaybackStore.getState().pause()
+    const state = usePlaybackStore.getState()
+    state.persistProgress()
+    if (state.hasNext) {
+      void state.playNext()
+    } else {
+      usePlaybackStore.setState({ isPlaying: false })
+    }
   }
   const onPlay = (): void => usePlaybackStore.setState({ isPlaying: true })
   const onPause = (): void => usePlaybackStore.setState({ isPlaying: false })
@@ -110,5 +192,3 @@ export function bindAudioEvents(): () => void {
     audio.removeEventListener('pause', onPause)
   }
 }
-
-export type { PlaybackEpisodeContext }

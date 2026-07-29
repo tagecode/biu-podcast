@@ -1,11 +1,11 @@
-import { Maximize2, Pause, Play } from 'lucide-react'
+import { Maximize2, Pause, Play, SkipBack, SkipForward } from 'lucide-react'
+import { useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { formatDuration } from '@/features/episode/lib/format'
 
 import { bindAudioEvents, usePlaybackStore } from '../store'
-import { formatDuration } from '@/features/episode/lib/format'
-import { useEffect } from 'react'
 
 export function MiniPlayer(): React.JSX.Element | null {
   const currentEpisode = usePlaybackStore((state) => state.currentEpisode)
@@ -13,7 +13,11 @@ export function MiniPlayer(): React.JSX.Element | null {
   const isPlaying = usePlaybackStore((state) => state.isPlaying)
   const currentTimeSec = usePlaybackStore((state) => state.currentTimeSec)
   const durationSec = usePlaybackStore((state) => state.durationSec)
+  const hasPrevious = usePlaybackStore((state) => state.hasPrevious)
+  const hasNext = usePlaybackStore((state) => state.hasNext)
   const togglePlay = usePlaybackStore((state) => state.togglePlay)
+  const playPrevious = usePlaybackStore((state) => state.playPrevious)
+  const playNext = usePlaybackStore((state) => state.playNext)
   const openFullPlayer = usePlaybackStore((state) => state.openFullPlayer)
 
   useEffect(() => bindAudioEvents(), [])
@@ -45,14 +49,38 @@ export function MiniPlayer(): React.JSX.Element | null {
           <div className="truncate text-sm font-medium text-ink">{currentEpisode.title}</div>
           <div className="truncate text-xs text-muted">{currentPodcast.title}</div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-full bg-amber-600 hover:bg-amber-500"
-          onClick={togglePlay}
-        >
-          {isPlaying ? <Pause className="size-4 text-ink" /> : <Play className="size-4 text-ink" />}
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="上一集"
+            disabled={!hasPrevious}
+            onClick={() => void playPrevious()}
+          >
+            <SkipBack className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full bg-amber-600 hover:bg-amber-500"
+            onClick={togglePlay}
+          >
+            {isPlaying ? (
+              <Pause className="size-4 text-ink" />
+            ) : (
+              <Play className="size-4 text-ink" />
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="下一集"
+            disabled={!hasNext}
+            onClick={() => void playNext()}
+          >
+            <SkipForward className="size-4" />
+          </Button>
+        </div>
         <div className="font-mono text-xs text-muted">
           {formatDuration(currentTimeSec)} / {formatDuration(durationSec)}
         </div>
@@ -71,7 +99,11 @@ export function FullScreenPlayer(): React.JSX.Element | null {
   const currentTimeSec = usePlaybackStore((state) => state.currentTimeSec)
   const durationSec = usePlaybackStore((state) => state.durationSec)
   const view = usePlaybackStore((state) => state.view)
+  const hasPrevious = usePlaybackStore((state) => state.hasPrevious)
+  const hasNext = usePlaybackStore((state) => state.hasNext)
   const togglePlay = usePlaybackStore((state) => state.togglePlay)
+  const playPrevious = usePlaybackStore((state) => state.playPrevious)
+  const playNext = usePlaybackStore((state) => state.playNext)
   const seek = usePlaybackStore((state) => state.seek)
   const closeFullPlayer = usePlaybackStore((state) => state.closeFullPlayer)
 
@@ -120,9 +152,31 @@ export function FullScreenPlayer(): React.JSX.Element | null {
             <span>{formatDuration(durationSec)}</span>
           </div>
         </div>
-        <Button size="lg" className={cn('mt-6 size-16 rounded-full p-0')} onClick={togglePlay}>
-          {isPlaying ? <Pause className="size-6" /> : <Play className="size-6" />}
-        </Button>
+        <div className="mt-6 flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-12"
+            aria-label="上一集"
+            disabled={!hasPrevious}
+            onClick={() => void playPrevious()}
+          >
+            <SkipBack className="size-6" />
+          </Button>
+          <Button size="lg" className={cn('size-16 rounded-full p-0')} onClick={togglePlay}>
+            {isPlaying ? <Pause className="size-6" /> : <Play className="size-6" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-12"
+            aria-label="下一集"
+            disabled={!hasNext}
+            onClick={() => void playNext()}
+          >
+            <SkipForward className="size-6" />
+          </Button>
+        </div>
       </div>
     </div>
   )

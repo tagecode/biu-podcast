@@ -9,6 +9,7 @@ export const podcasts = sqliteTable('podcasts', {
   author: text('author'),
   language: text('language'),
   isPaused: integer('is_paused', { mode: 'boolean' }).notNull().default(false),
+  unsubscribedAt: integer('unsubscribed_at'),
   subscribedAt: integer('subscribed_at').notNull(),
   lastFetchedAt: integer('last_fetched_at'),
   lastFetchStatus: text('last_fetch_status')
