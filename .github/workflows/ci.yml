@@ -22,7 +22,9 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # Node 20: better-sqlite3 ships prebuilds; Node 22 on windows-latest
+          # falls back to node-gyp and fails against VS 18 on GH runners.
+          node-version: 20
           cache: pnpm
 
       - name: Install dependencies
@@ -61,11 +63,14 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
           cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Rebuild native modules for Electron
+        run: pnpm exec electron-builder install-app-deps
 
       - name: Compile (electron-vite)
         run: pnpm exec electron-vite build
