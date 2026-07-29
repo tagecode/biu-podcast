@@ -1,4 +1,4 @@
-import Store from 'electron-store'
+import ElectronStore from 'electron-store'
 
 import type { AppSettings } from '@shared/types'
 
@@ -9,6 +9,12 @@ const defaults: AppSettings = {
   lastPodcastId: null,
   lastPositionSec: 0
 }
+
+// electron-store v9+ is ESM-only. electron-vite externalizes it into CJS
+// `require()`, which returns `{ default: Store }` — not a constructor.
+const Store =
+  ((ElectronStore as unknown as { default?: typeof ElectronStore }).default ??
+    ElectronStore) as typeof ElectronStore
 
 export class SettingsStore {
   private readonly store = new Store<AppSettings>({
