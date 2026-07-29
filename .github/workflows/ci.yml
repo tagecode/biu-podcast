@@ -22,9 +22,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          # Node 20: better-sqlite3 ships prebuilds; Node 22 on windows-latest
-          # falls back to node-gyp and fails against VS 18 on GH runners.
-          node-version: 20
+          # Keep Node 22: jsdom/undici need markAsUncloneable (broken on Node 20).
+          node-version: 22
           cache: pnpm
 
       - name: Install dependencies
@@ -49,7 +48,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
+          # windows-2022 ships VS 2022 that node-gyp recognizes.
+          # windows-latest currently has VS 18, which breaks better-sqlite3 rebuild.
+          - os: windows-2022
             package_cmd: pnpm exec electron-builder --win --publish never
           - os: macos-latest
             package_cmd: pnpm exec electron-builder --mac --publish never
@@ -63,8 +64,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
+
+      - name: Setup MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
