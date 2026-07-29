@@ -1,6 +1,7 @@
 import type { Episode, Podcast } from '@shared/types'
 import { create } from 'zustand'
 
+import { canPlayEpisode } from './lib/offline-guard'
 import { resolveMediaUrl } from './lib/media-url'
 
 interface PlaybackState {
@@ -12,7 +13,8 @@ interface PlaybackState {
   view: 'mini' | 'full'
   hasPrevious: boolean
   hasNext: boolean
-  playEpisode: (episode: Episode, podcast: Podcast, options?: { fromSec?: number }) => void
+  playbackError: string | null
+  playEpisode: (episode: Episode, podcast: Podcast, options?: { fromSec?: number }) => boolean
   restoreSession: (episode: Episode, podcast: Podcast, positionSec: number) => void
   togglePlay: () => void
   pause: () => void
@@ -25,6 +27,7 @@ interface PlaybackState {
   playNext: () => Promise<void>
   refreshAdjacent: () => Promise<void>
   persistProgress: () => void
+  clearPlaybackError: () => void
 }
 
 let audioElement: HTMLAudioElement | null = null
@@ -52,7 +55,15 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   view: 'mini',
   hasPrevious: false,
   hasNext: false,
+  playbackError: null,
   playEpisode: (episode, podcast, options) => {
+    const online = typeof navigator === 'undefined' ? true : navigator.onLine
+    const guard = canPlayEpisode(episode, online)
+    if (!guard.ok) {
+      set({ playbackError: guard.message })
+      return false
+    }
+
     const audio = getAudio()
     const prev = get().currentEpisode
     if (prev && prev.id !== episode.id) {
@@ -69,12 +80,16 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
         currentTimeSec: fromSec,
         durationSec: episode.durationSec ?? 0,
         hasPrevious: false,
-        hasNext: false
+        hasNext: false,
+        playbackError: null
       })
       void get().refreshAdjacent()
+    } else {
+      set({ playbackError: null })
     }
     void audio.play()
     set({ isPlaying: true })
+    return true
   },
   restoreSession: (episode, podcast, positionSec) => {
     const audio = getAudio()
@@ -87,10 +102,12 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
       durationSec: episode.durationSec ?? 0,
       isPlaying: false,
       hasPrevious: false,
-      hasNext: false
+      hasNext: false,
+      playbackError: null
     })
     void get().refreshAdjacent()
   },
+  clearPlaybackError: () => set({ playbackError: null }),
   togglePlay: () => {
     const audio = getAudio()
     if (!get().currentEpisode) return

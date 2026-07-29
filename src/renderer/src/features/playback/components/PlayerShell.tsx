@@ -15,12 +15,25 @@ export function MiniPlayer(): React.JSX.Element | null {
   const durationSec = usePlaybackStore((state) => state.durationSec)
   const hasPrevious = usePlaybackStore((state) => state.hasPrevious)
   const hasNext = usePlaybackStore((state) => state.hasNext)
+  const playbackError = usePlaybackStore((state) => state.playbackError)
   const togglePlay = usePlaybackStore((state) => state.togglePlay)
   const playPrevious = usePlaybackStore((state) => state.playPrevious)
   const playNext = usePlaybackStore((state) => state.playNext)
   const openFullPlayer = usePlaybackStore((state) => state.openFullPlayer)
+  const clearPlaybackError = usePlaybackStore((state) => state.clearPlaybackError)
 
   useEffect(() => bindAudioEvents(), [])
+
+  if (playbackError && !currentEpisode) {
+    return (
+      <div className="shrink-0 border-t border-line bg-danger/5 px-6 py-3 text-sm text-danger">
+        {playbackError}
+        <button type="button" className="ml-3 underline" onClick={clearPlaybackError}>
+          关闭
+        </button>
+      </div>
+    )
+  }
 
   if (!currentEpisode || !currentPodcast) return null
 
@@ -28,6 +41,14 @@ export function MiniPlayer(): React.JSX.Element | null {
 
   return (
     <div className="relative shrink-0 border-t border-line bg-surface">
+      {playbackError ? (
+        <div className="border-b border-danger/20 bg-danger/5 px-6 py-2 text-xs text-danger">
+          {playbackError}
+          <button type="button" className="ml-3 underline" onClick={clearPlaybackError}>
+            关闭
+          </button>
+        </div>
+      ) : null}
       <div className="absolute inset-x-0 top-0 h-0.5 bg-line">
         <div className="h-full bg-amber-600 transition-all" style={{ width: `${progress}%` }} />
       </div>

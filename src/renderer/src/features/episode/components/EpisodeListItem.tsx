@@ -9,21 +9,25 @@ import { formatDate, formatDuration, formatFileSize } from '../lib/format'
 interface EpisodeListItemProps {
   episode: Episode
   active?: boolean
+  selected?: boolean
   onPlay: () => void
   onDownload?: () => void
+  onOpenDetail?: () => void
 }
 
 export function EpisodeListItem({
   episode,
   active,
+  selected,
   onPlay,
-  onDownload
+  onDownload,
+  onOpenDetail
 }: EpisodeListItemProps): React.JSX.Element {
   return (
     <div
       className={cn(
         'flex items-center gap-3 rounded-md border px-4 py-3 transition-colors',
-        active
+        active || selected
           ? 'border-amber-600 bg-amber-100'
           : 'border-transparent bg-surface hover:border-line hover:shadow-sm'
       )}
@@ -33,7 +37,12 @@ export function EpisodeListItem({
       ) : (
         <span className="size-2 shrink-0" />
       )}
-      <div className="min-w-0 flex-1">
+      <button
+        type="button"
+        className="min-w-0 flex-1 text-left"
+        onClick={onOpenDetail}
+        disabled={!onOpenDetail}
+      >
         <div
           className={cn(
             'truncate text-sm font-medium',
@@ -46,7 +55,7 @@ export function EpisodeListItem({
           {formatDate(episode.publishedAt)} · {formatDuration(episode.durationSec)} ·{' '}
           {formatFileSize(episode.fileSizeBytes)}
         </div>
-      </div>
+      </button>
       <div className="flex items-center gap-2">
         {episode.downloadStatus === 'downloading' || episode.downloadStatus === 'queued' ? (
           <span className="size-5 animate-spin rounded-full border-2 border-line border-t-amber-600" />

@@ -3,12 +3,15 @@ import type {
   DownloadTaskIdInput,
   EnqueueDownloadInput,
   GetAdjacentInput,
+  GetEpisodeInput,
+  ImportBackupInput,
   ListEpisodesInput,
   MarkAllPlayedInput,
   RefreshSubscriptionInput,
   RemoveSubscriptionInput,
   UpdateProgressInput
 } from '@shared/ipc-contract'
+import type { ImportPreview } from '@shared/backup'
 import type { EpisodeListPage } from '@shared/episode-list'
 import type {
   AppSettings,
@@ -42,6 +45,7 @@ declare global {
       }
       episode: {
         listByPodcast: (input: ListEpisodesInput) => Promise<IpcResult<EpisodeListPage>>
+        getById: (input: GetEpisodeInput) => Promise<IpcResult<Episode>>
         markAllPlayed: (input: MarkAllPlayedInput) => Promise<IpcResult<{ updated: number }>>
         getAdjacent: (
           input: GetAdjacentInput
@@ -62,6 +66,11 @@ declare global {
       }
       settings: {
         get: () => Promise<IpcResult<AppSettings>>
+      }
+      dataPortability: {
+        export: () => Promise<IpcResult<{ filePath: string } | null>>
+        previewImport: () => Promise<IpcResult<{ filePath: string; preview: ImportPreview } | null>>
+        import: (input: ImportBackupInput) => Promise<IpcResult<ImportPreview>>
       }
     }
   }

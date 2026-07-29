@@ -8,6 +8,7 @@ export const IPC_CHANNELS = {
   },
   episode: {
     listByPodcast: 'episode:list-by-podcast',
+    getById: 'episode:get-by-id',
     markAllPlayed: 'episode:mark-all-played',
     getAdjacent: 'episode:get-adjacent',
     changed: 'episode:changed'
@@ -27,5 +28,10 @@ export const IPC_CHANNELS = {
   settings: {
     get: 'settings:get',
     set: 'settings:set'
+  },
+  dataPortability: {
+    export: 'data-portability:export',
+    previewImport: 'data-portability:preview-import',
+    import: 'data-portability:import'
   }
 } as const

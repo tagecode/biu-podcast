@@ -3,6 +3,8 @@ import {
   DownloadTaskIdInputSchema,
   EnqueueDownloadInputSchema,
   GetAdjacentInputSchema,
+  GetEpisodeInputSchema,
+  ImportBackupInputSchema,
   IPC_CHANNELS,
   ListEpisodesInputSchema,
   MarkAllPlayedInputSchema,
@@ -11,6 +13,7 @@ import {
   UpdateProgressInputSchema
 } from '@shared/ipc-contract'
 
+import { dataPortabilityService } from '../features/data-portability/data-portability.service'
 import { downloadService } from '../features/download/download.service'
 import { episodeService } from '../features/episode/episode.service'
 import { playbackService } from '../features/playback/playback.service'
@@ -58,6 +61,10 @@ export function registerEpisodeHandlers(): void {
     async (_event, input) => {
       return episodeService.listByPodcast(input.podcastId, input.offset, input.limit)
     }
+  )
+
+  registerHandler(IPC_CHANNELS.episode.getById, GetEpisodeInputSchema, async (_event, input) =>
+    episodeService.getById(input.episodeId)
   )
 
   registerHandler(
@@ -127,9 +134,30 @@ export function registerDownloadHandlers(): void {
   )
 }
 
+export function registerDataPortabilityHandlers(): void {
+  registerNoInputHandler(IPC_CHANNELS.dataPortability.export, async () =>
+    dataPortabilityService.exportToFile()
+  )
+
+  registerNoInputHandler(IPC_CHANNELS.dataPortability.previewImport, async () =>
+    dataPortabilityService.previewFromFile()
+  )
+
+  registerHandler(
+    IPC_CHANNELS.dataPortability.import,
+    ImportBackupInputSchema,
+    async (_event, input) => {
+      const preview = await dataPortabilityService.importFromFile(input.filePath, input.strategy)
+      broadcast(IPC_CHANNELS.subscription.changed, subscriptionService.list())
+      return preview
+    }
+  )
+}
+
 export function registerAllHandlers(): void {
   registerSubscriptionHandlers()
   registerEpisodeHandlers()
   registerPlaybackHandlers()
   registerDownloadHandlers()
+  registerDataPortabilityHandlers()
 }

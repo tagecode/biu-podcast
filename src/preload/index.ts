@@ -6,12 +6,15 @@ import type {
   DownloadTaskIdInput,
   EnqueueDownloadInput,
   GetAdjacentInput,
+  GetEpisodeInput,
+  ImportBackupInput,
   ListEpisodesInput,
   MarkAllPlayedInput,
   RefreshSubscriptionInput,
   RemoveSubscriptionInput,
   UpdateProgressInput
 } from '@shared/ipc-contract'
+import type { ImportPreview } from '@shared/backup'
 import type {
   AppSettings,
   DownloadTask,
@@ -52,6 +55,8 @@ const api = {
   episode: {
     listByPodcast: (input: ListEpisodesInput): Promise<IpcResult<EpisodeListPage>> =>
       ipcRenderer.invoke(IPC_CHANNELS.episode.listByPodcast, input),
+    getById: (input: GetEpisodeInput): Promise<IpcResult<Episode>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.episode.getById, input),
     markAllPlayed: (input: MarkAllPlayedInput): Promise<IpcResult<{ updated: number }>> =>
       ipcRenderer.invoke(IPC_CHANNELS.episode.markAllPlayed, input),
     getAdjacent: (
@@ -102,6 +107,14 @@ const api = {
           lastPositionSec: 0
         }
       })
+  },
+  dataPortability: {
+    export: (): Promise<IpcResult<{ filePath: string } | null>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.dataPortability.export),
+    previewImport: (): Promise<IpcResult<{ filePath: string; preview: ImportPreview } | null>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.dataPortability.previewImport),
+    import: (input: ImportBackupInput): Promise<IpcResult<ImportPreview>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.dataPortability.import, input)
   }
 }
 

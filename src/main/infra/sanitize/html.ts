@@ -30,3 +30,49 @@ export function htmlToPlainText(input: string | null | undefined): string | null
   const normalized = decodeHtmlEntities(text).replace(/\s+/g, ' ').trim()
   return normalized.length > 0 ? normalized : null
 }
+
+const RICH_HTML_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: [
+    'p',
+    'br',
+    'strong',
+    'b',
+    'em',
+    'i',
+    'u',
+    's',
+    'ul',
+    'ol',
+    'li',
+    'a',
+    'blockquote',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'code',
+    'pre',
+    'span',
+    'div'
+  ],
+  allowedAttributes: {
+    a: ['href', 'title', 'target', 'rel'],
+    '*': ['class']
+  },
+  allowedSchemes: ['http', 'https', 'mailto'],
+  transformTags: {
+    a: sanitizeHtml.simpleTransform('a', {
+      rel: 'noopener noreferrer',
+      target: '_blank'
+    })
+  }
+}
+
+/** Sanitize episode/podcast rich HTML for safe renderer display. */
+export function sanitizeRichHtml(input: string | null | undefined): string | null {
+  if (!input) return null
+  const cleaned = sanitizeHtml(input, RICH_HTML_OPTIONS).trim()
+  return cleaned.length > 0 ? cleaned : null
+}

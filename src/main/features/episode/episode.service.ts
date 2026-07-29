@@ -1,5 +1,6 @@
 import { EpisodeRepository } from './episode.repository'
 import { getDb } from '../../infra/db/client'
+import { sanitizeRichHtml } from '../../infra/sanitize/html'
 import { AppError } from '@shared/errors'
 import type { EpisodeListPage } from '@shared/episode-list'
 import type { Episode } from '@shared/types'
@@ -10,6 +11,17 @@ export class EpisodeService {
 
   listByPodcast(podcastId: string, offset = 0, limit = 50): EpisodeListPage {
     return this.episodes.listByPodcastPage(podcastId, offset, limit)
+  }
+
+  getById(episodeId: string): Episode {
+    const episode = this.episodes.findById(episodeId)
+    if (!episode) {
+      throw new AppError('NOT_FOUND', '集数不存在')
+    }
+    return {
+      ...episode,
+      descriptionHtml: sanitizeRichHtml(episode.descriptionHtml)
+    }
   }
 
   markAllPlayed(podcastId: string): number {

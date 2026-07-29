@@ -15,6 +15,7 @@ import { broadcast } from '../../ipc/register'
 
 import { DownloadQueue, type QueueTask } from './download-queue'
 import { DownloadRepository } from './download.repository'
+import { assertDownloadComplete } from './integrity'
 
 function getDownloadDir(): string {
   const configured = settingsStore.getAll().downloadPath
@@ -81,6 +82,8 @@ async function downloadToFile(
 
   await rename(partPath, finalPath)
   const fileStat = await stat(finalPath)
+  const expected = totalBytes ?? episode.fileSizeBytes ?? task.totalBytes ?? null
+  assertDownloadComplete(fileStat.size, expected)
   return { localFilePath: finalPath, totalBytes: fileStat.size }
 }
 

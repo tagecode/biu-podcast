@@ -25,6 +25,10 @@ export const MarkAllPlayedInputSchema = z.object({
   podcastId: z.string().min(1)
 })
 
+export const GetEpisodeInputSchema = z.object({
+  episodeId: z.string().min(1)
+})
+
 export const UpdateProgressInputSchema = z.object({
   episodeId: z.string().min(1),
   positionSec: z.number().min(0)
@@ -39,6 +43,7 @@ export type RemoveSubscriptionInput = z.infer<typeof RemoveSubscriptionInputSche
 export type RefreshSubscriptionInput = z.infer<typeof RefreshSubscriptionInputSchema>
 export type ListEpisodesInput = z.infer<typeof ListEpisodesInputSchema>
 export type MarkAllPlayedInput = z.infer<typeof MarkAllPlayedInputSchema>
+export type GetEpisodeInput = z.infer<typeof GetEpisodeInputSchema>
 export type UpdateProgressInput = z.infer<typeof UpdateProgressInputSchema>
 export const DownloadTaskIdInputSchema = z.object({
   taskId: z.string().min(1)
@@ -48,6 +53,12 @@ export const GetAdjacentInputSchema = z.object({
   episodeId: z.string().min(1)
 })
 
+export const ImportBackupInputSchema = z.object({
+  filePath: z.string().min(1),
+  strategy: z.enum(['skip', 'overwrite']).default('skip')
+})
+
 export type DownloadTaskIdInput = z.infer<typeof DownloadTaskIdInputSchema>
 export type GetAdjacentInput = z.infer<typeof GetAdjacentInputSchema>
 export type EnqueueDownloadInput = z.infer<typeof EnqueueDownloadInputSchema>
+export type ImportBackupInput = z.infer<typeof ImportBackupInputSchema>

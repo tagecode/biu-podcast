@@ -1,4 +1,4 @@
-import { Download, Play } from 'lucide-react'
+import { Download, Play, Settings } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -7,9 +7,11 @@ import { useDownloadStore } from '@/features/download/store'
 import { PodcastDetailPage } from '@/features/episode/pages/PodcastDetailPage'
 import { FullScreenPlayer, MiniPlayer } from '@/features/playback/components/PlayerShell'
 import { usePlaybackStore } from '@/features/playback/store'
+import { SettingsPage } from '@/features/settings/pages/SettingsPage'
 import { SubscriptionListView } from '@/features/subscription/components/SubscriptionListView'
 
-type Route = { name: 'subscriptions' } | { name: 'detail'; podcastId: string }
+type Route =
+  { name: 'subscriptions' } | { name: 'detail'; podcastId: string } | { name: 'settings' }
 
 export function AppShell(): React.JSX.Element {
   const [route, setRoute] = useState<Route>({ name: 'subscriptions' })
@@ -39,14 +41,26 @@ export function AppShell(): React.JSX.Element {
   return (
     <div className="flex h-screen flex-col bg-paper text-ink">
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line px-6">
-        <div className="flex items-center gap-2">
+        <button
+          type="button"
+          className="flex items-center gap-2"
+          onClick={() => setRoute({ name: 'subscriptions' })}
+        >
           <div className="flex size-8 items-center justify-center rounded-md bg-amber-600">
             <Play className="size-4 text-ink" strokeWidth={1.75} />
           </div>
           <span className="text-lg font-semibold">博播</span>
-        </div>
+        </button>
         <span className="text-sm text-muted">BiuPodcast</span>
         <div className="flex-1" />
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="设置"
+          onClick={() => setRoute({ name: 'settings' })}
+        >
+          <Settings className="size-4" />
+        </Button>
         <Button
           variant="ghost"
           size="icon"
@@ -67,11 +81,13 @@ export function AppShell(): React.JSX.Element {
             <SubscriptionListView
               onOpenPodcast={(podcastId) => setRoute({ name: 'detail', podcastId })}
             />
-          ) : (
+          ) : route.name === 'detail' ? (
             <PodcastDetailPage
               podcastId={route.podcastId}
               onBack={() => setRoute({ name: 'subscriptions' })}
             />
+          ) : (
+            <SettingsPage onBack={() => setRoute({ name: 'subscriptions' })} />
           )}
           <FullScreenPlayer />
         </main>
