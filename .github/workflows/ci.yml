@@ -17,9 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Reads packageManager from package.json (pnpm@10.11.0)
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - uses: actions/setup-node@v4
         with:
@@ -50,20 +49,15 @@ jobs:
         include:
           - os: windows-latest
             package_cmd: pnpm exec electron-builder --win --publish never
-            artifact_glob: dist/*.{exe,yml}
           - os: macos-latest
             package_cmd: pnpm exec electron-builder --mac --publish never
-            artifact_glob: dist/*.{dmg,zip,yml}
           - os: ubuntu-latest
             package_cmd: pnpm exec electron-builder --linux AppImage deb --publish never
-            artifact_glob: dist/*.{AppImage,deb,yml}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - uses: actions/setup-node@v4
         with:
