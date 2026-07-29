@@ -10,7 +10,8 @@ import {
   MarkAllPlayedInputSchema,
   RefreshSubscriptionInputSchema,
   RemoveSubscriptionInputSchema,
-  UpdateProgressInputSchema
+  UpdateProgressInputSchema,
+  VerifyLocalInputSchema
 } from '@shared/ipc-contract'
 
 import { dataPortabilityService } from '../features/data-portability/data-portability.service'
@@ -131,6 +132,12 @@ export function registerDownloadHandlers(): void {
     async (_event, input) => {
       await downloadService.cancel(input.taskId)
     }
+  )
+
+  registerHandler(
+    IPC_CHANNELS.download.verifyLocal,
+    VerifyLocalInputSchema,
+    async (_event, input) => downloadService.verifyLocalFile(input.episodeId)
   )
 }
 

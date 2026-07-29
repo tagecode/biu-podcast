@@ -23,6 +23,7 @@ export const IPC_CHANNELS = {
     pause: 'download:pause',
     resume: 'download:resume',
     cancel: 'download:cancel',
+    verifyLocal: 'download:verify-local',
     progress: 'download:progress'
   },
   settings: {

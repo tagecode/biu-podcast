@@ -12,7 +12,8 @@ import type {
   MarkAllPlayedInput,
   RefreshSubscriptionInput,
   RemoveSubscriptionInput,
-  UpdateProgressInput
+  UpdateProgressInput,
+  VerifyLocalInput
 } from '@shared/ipc-contract'
 import type { ImportPreview } from '@shared/backup'
 import type {
@@ -86,6 +87,10 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.download.resume, input),
     cancel: (input: DownloadTaskIdInput): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC_CHANNELS.download.cancel, input),
+    verifyLocal: (
+      input: VerifyLocalInput
+    ): Promise<IpcResult<{ exists: boolean; episode: Episode }>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.download.verifyLocal, input),
     onProgress: (callback: (payload: DownloadProgressPayload) => void): (() => void) => {
       const listener = (
         _event: Electron.IpcRendererEvent,

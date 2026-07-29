@@ -88,7 +88,7 @@ export function DownloadPanel(): React.JSX.Element | null {
                       className="text-xs text-muted hover:text-ink"
                       onClick={() => void resume(task.id)}
                     >
-                      继续
+                      {task.status === 'failed' ? '重试' : '继续'}
                     </button>
                   ) : null}
                   {task.status !== 'completed' ? (

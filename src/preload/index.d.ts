@@ -9,7 +9,8 @@ import type {
   MarkAllPlayedInput,
   RefreshSubscriptionInput,
   RemoveSubscriptionInput,
-  UpdateProgressInput
+  UpdateProgressInput,
+  VerifyLocalInput
 } from '@shared/ipc-contract'
 import type { ImportPreview } from '@shared/backup'
 import type { EpisodeListPage } from '@shared/episode-list'
@@ -62,6 +63,9 @@ declare global {
         pause: (input: DownloadTaskIdInput) => Promise<IpcResult<void>>
         resume: (input: DownloadTaskIdInput) => Promise<IpcResult<void>>
         cancel: (input: DownloadTaskIdInput) => Promise<IpcResult<void>>
+        verifyLocal: (
+          input: VerifyLocalInput
+        ) => Promise<IpcResult<{ exists: boolean; episode: Episode }>>
         onProgress: (callback: (payload: DownloadProgressPayload) => void) => () => void
       }
       settings: {

@@ -38,6 +38,10 @@ export const EnqueueDownloadInputSchema = z.object({
   episodeId: z.string().min(1)
 })
 
+export const VerifyLocalInputSchema = z.object({
+  episodeId: z.string().min(1)
+})
+
 export type AddSubscriptionInput = z.infer<typeof AddSubscriptionInputSchema>
 export type RemoveSubscriptionInput = z.infer<typeof RemoveSubscriptionInputSchema>
 export type RefreshSubscriptionInput = z.infer<typeof RefreshSubscriptionInputSchema>
@@ -61,4 +65,5 @@ export const ImportBackupInputSchema = z.object({
 export type DownloadTaskIdInput = z.infer<typeof DownloadTaskIdInputSchema>
 export type GetAdjacentInput = z.infer<typeof GetAdjacentInputSchema>
 export type EnqueueDownloadInput = z.infer<typeof EnqueueDownloadInputSchema>
+export type VerifyLocalInput = z.infer<typeof VerifyLocalInputSchema>
 export type ImportBackupInput = z.infer<typeof ImportBackupInputSchema>

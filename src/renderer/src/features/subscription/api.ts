@@ -14,7 +14,11 @@ export async function addSubscription(feedUrl: string): Promise<Podcast> {
 
 export async function refreshSubscription(podcastId: string): Promise<void> {
   const result = await window.api.subscription.refresh({ podcastId })
-  if (!result.ok) throw new Error(result.error.message)
+  if (!result.ok) {
+    const error = new Error(result.error.message) as Error & { code: string }
+    error.code = result.error.code
+    throw error
+  }
 }
 
 export async function removeSubscription(podcastId: string, deleteData = false): Promise<void> {

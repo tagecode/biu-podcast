@@ -184,7 +184,7 @@ export function PodcastDetailPage({
                 <Button
                   onClick={() => {
                     const latest = episodes[0]
-                    if (latest) playEpisode(latest, podcast)
+                    if (latest) void playEpisode(latest, podcast)
                   }}
                   disabled={episodes.length === 0}
                 >
@@ -220,7 +220,7 @@ export function PodcastDetailPage({
                   episode={episode}
                   active={currentEpisodeId === episode.id}
                   selected={selectedEpisode?.id === episode.id}
-                  onPlay={() => playEpisode(episode, podcast as Podcast)}
+                  onPlay={() => void playEpisode(episode, podcast as Podcast)}
                   onDownload={() => void enqueueDownload(episode.id)}
                   onOpenDetail={() => void openEpisodeDetail(episode.id)}
                 />
@@ -240,7 +240,7 @@ export function PodcastDetailPage({
         <EpisodeDetailPanel
           episode={selectedEpisode}
           onClose={() => setSelectedEpisode(null)}
-          onPlay={() => playEpisode(selectedEpisode, podcast)}
+          onPlay={() => void playEpisode(selectedEpisode, podcast)}
           onDownload={
             selectedEpisode.isDownloaded
               ? undefined

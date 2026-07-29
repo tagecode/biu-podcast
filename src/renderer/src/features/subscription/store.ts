@@ -2,6 +2,7 @@ import type { Podcast } from '@shared/types'
 import { create } from 'zustand'
 
 import * as subscriptionApi from './api'
+import { messageForFeedError } from './lib/error-messages'
 import { filterPodcasts, sortPodcasts, type SortKey } from './lib/sort-filter'
 
 interface SubscriptionState {
@@ -17,6 +18,20 @@ interface SubscriptionState {
   setQuery: (query: string) => void
   setSortKey: (sortKey: SortKey) => void
   visiblePodcasts: () => Podcast[]
+}
+
+function mapRefreshError(error: unknown): string {
+  if (error && typeof error === 'object' && 'code' in error) {
+    return messageForFeedError(String((error as { code: string }).code))
+  }
+  if (error instanceof Error) {
+    if (/404|失效/.test(error.message)) return messageForFeedError('NOT_FOUND')
+    if (/超时/.test(error.message)) return messageForFeedError('TIMEOUT')
+    if (/解析|XML/.test(error.message)) return messageForFeedError('PARSE_ERROR')
+    if (/网络|无网络/.test(error.message)) return messageForFeedError('NETWORK_ERROR')
+    return error.message
+  }
+  return messageForFeedError('NETWORK_ERROR')
 }
 
 export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
@@ -42,8 +57,15 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     await get().load()
   },
   refresh: async (podcastId) => {
-    await subscriptionApi.refreshSubscription(podcastId)
-    await get().load()
+    try {
+      await subscriptionApi.refreshSubscription(podcastId)
+      await get().load()
+      set({ error: null })
+    } catch (error) {
+      const mapped = mapRefreshError(error)
+      set({ error: mapped })
+      throw new Error(mapped)
+    }
   },
   remove: async (podcastId, deleteData = false) => {
     await subscriptionApi.removeSubscription(podcastId, deleteData)

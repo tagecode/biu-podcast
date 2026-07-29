@@ -1,4 +1,5 @@
 import { createWriteStream } from 'fs'
+import { existsSync } from 'fs'
 import { mkdir, rename, rm, stat } from 'fs/promises'
 import { join } from 'path'
 import { pipeline } from 'stream/promises'
@@ -10,7 +11,7 @@ import { getDb } from '../../infra/db/client'
 import { settingsStore } from '../../infra/settings/store'
 import { AppError } from '@shared/errors'
 import { IPC_CHANNELS } from '@shared/ipc-channels'
-import type { DownloadTask } from '@shared/types'
+import type { DownloadTask, Episode } from '@shared/types'
 import { broadcast } from '../../ipc/register'
 
 import { DownloadQueue, type QueueTask } from './download-queue'
@@ -118,10 +119,16 @@ export class DownloadService {
         event.status === 'queued' ||
         event.status === 'paused'
       ) {
-        this.downloads.update(event.taskId, { status: event.status })
+        this.downloads.update(event.taskId, {
+          status: event.status,
+          retryCount: event.retryCount
+        })
         this.episodes.setDownloadStatus(event.episodeId, event.status)
       } else if (event.status === 'failed') {
-        this.downloads.update(event.taskId, { status: 'failed' })
+        this.downloads.update(event.taskId, {
+          status: 'failed',
+          retryCount: event.retryCount
+        })
         this.episodes.setDownloadStatus(event.episodeId, 'failed')
       } else if (event.status === 'completed') {
         this.downloads.update(event.taskId, { status: 'completed' })
@@ -153,7 +160,8 @@ export class DownloadService {
         episodeId: interrupted.episodeId,
         status: 'queued',
         progressBytes: interrupted.progressBytes,
-        totalBytes: interrupted.totalBytes
+        totalBytes: interrupted.totalBytes,
+        retryCount: interrupted.retryCount
       })
     }
 
@@ -164,7 +172,8 @@ export class DownloadService {
           episodeId: queued.episodeId,
           status: 'queued',
           progressBytes: queued.progressBytes,
-          totalBytes: queued.totalBytes
+          totalBytes: queued.totalBytes,
+          retryCount: queued.retryCount
         })
       }
     }
@@ -187,7 +196,8 @@ export class DownloadService {
       episodeId,
       status: 'queued',
       progressBytes: 0,
-      totalBytes: episode.fileSizeBytes
+      totalBytes: episode.fileSizeBytes,
+      retryCount: 0
     })
     return { ...task, episodeTitle: episode.title }
   }
@@ -202,6 +212,23 @@ export class DownloadService {
 
   resume(taskId: string): void {
     this.queue.resume(taskId)
+  }
+
+  verifyLocalFile(episodeId: string): { exists: boolean; episode: Episode } {
+    const episode = this.episodes.findById(episodeId)
+    if (!episode) throw new AppError('NOT_FOUND', '集数不存在')
+    if (!episode.isDownloaded || !episode.localFilePath) {
+      return { exists: false, episode }
+    }
+    if (!existsSync(episode.localFilePath)) {
+      this.episodes.clearDownload(episodeId)
+      const updated = this.episodes.findById(episodeId)
+      return {
+        exists: false,
+        episode: updated ?? { ...episode, isDownloaded: false, localFilePath: null }
+      }
+    }
+    return { exists: true, episode }
   }
 
   async cancel(taskId: string): Promise<void> {

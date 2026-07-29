@@ -14,7 +14,11 @@ interface PlaybackState {
   hasPrevious: boolean
   hasNext: boolean
   playbackError: string | null
-  playEpisode: (episode: Episode, podcast: Podcast, options?: { fromSec?: number }) => boolean
+  playEpisode: (
+    episode: Episode,
+    podcast: Podcast,
+    options?: { fromSec?: number }
+  ) => Promise<boolean>
   restoreSession: (episode: Episode, podcast: Podcast, positionSec: number) => void
   togglePlay: () => void
   pause: () => void
@@ -56,9 +60,28 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   hasPrevious: false,
   hasNext: false,
   playbackError: null,
-  playEpisode: (episode, podcast, options) => {
+  playEpisode: async (episode, podcast, options) => {
     const online = typeof navigator === 'undefined' ? true : navigator.onLine
-    const guard = canPlayEpisode(episode, online)
+    let playable = episode
+
+    if (episode.isDownloaded) {
+      const verified = await window.api.download.verifyLocal({ episodeId: episode.id })
+      if (!verified.ok) {
+        set({ playbackError: verified.error.message })
+        return false
+      }
+      if (!verified.data.exists) {
+        set({
+          playbackError: '文件已丢失，请重新下载',
+          currentEpisode: verified.data.episode,
+          currentPodcast: podcast
+        })
+        return false
+      }
+      playable = verified.data.episode
+    }
+
+    const guard = canPlayEpisode(playable, online)
     if (!guard.ok) {
       set({ playbackError: guard.message })
       return false
@@ -66,19 +89,19 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
 
     const audio = getAudio()
     const prev = get().currentEpisode
-    if (prev && prev.id !== episode.id) {
+    if (prev && prev.id !== playable.id) {
       void persistNow(prev.id, audio.currentTime)
     }
 
-    const fromSec = options?.fromSec ?? episode.playbackPositionSec
-    if (get().currentEpisode?.id !== episode.id) {
-      audio.src = resolveMediaUrl(episode)
+    const fromSec = options?.fromSec ?? playable.playbackPositionSec
+    if (get().currentEpisode?.id !== playable.id) {
+      audio.src = resolveMediaUrl(playable)
       audio.currentTime = fromSec
       set({
-        currentEpisode: episode,
+        currentEpisode: playable,
         currentPodcast: podcast,
         currentTimeSec: fromSec,
-        durationSec: episode.durationSec ?? 0,
+        durationSec: playable.durationSec ?? 0,
         hasPrevious: false,
         hasNext: false,
         playbackError: null
@@ -139,14 +162,14 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     if (!currentEpisode || !currentPodcast) return
     const result = await window.api.episode.getAdjacent({ episodeId: currentEpisode.id })
     if (!result.ok || !result.data.previous) return
-    get().playEpisode(result.data.previous, currentPodcast, { fromSec: 0 })
+    await get().playEpisode(result.data.previous, currentPodcast, { fromSec: 0 })
   },
   playNext: async () => {
     const { currentEpisode, currentPodcast } = get()
     if (!currentEpisode || !currentPodcast) return
     const result = await window.api.episode.getAdjacent({ episodeId: currentEpisode.id })
     if (!result.ok || !result.data.next) return
-    get().playEpisode(result.data.next, currentPodcast, { fromSec: 0 })
+    await get().playEpisode(result.data.next, currentPodcast, { fromSec: 0 })
   },
   refreshAdjacent: async () => {
     const episode = get().currentEpisode

@@ -25,7 +25,8 @@ describe('DownloadQueue', () => {
       episodeId: id,
       status: 'queued',
       progressBytes: 0,
-      totalBytes: 10
+      totalBytes: 10,
+      retryCount: 0
     })
 
     for (const id of ['a', 'b', 'c', 'd', 'e']) {
@@ -51,14 +52,16 @@ describe('DownloadQueue', () => {
       episodeId: 'e1',
       status: 'queued',
       progressBytes: 0,
-      totalBytes: 1
+      totalBytes: 1,
+      retryCount: 0
     })
     queue.enqueue({
       id: 't2',
       episodeId: 'e2',
       status: 'queued',
       progressBytes: 0,
-      totalBytes: 1
+      totalBytes: 1,
+      retryCount: 0
     })
 
     await wait(20)
