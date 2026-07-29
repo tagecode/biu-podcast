@@ -581,41 +581,43 @@ E0 工程基础设施
 
 ### Epic E9：安全基线与发布验收
 
+> **本轮落地策略（方案 B）**：以 Vitest 安全回归 + GitHub Actions 三平台构建产物为主；Playwright E2E（T9.1 冒烟 / T9.2 进程级安全断言 / T9.4 黄金路径）延后，见 `mdocs/Mvp-Acceptance-Report.md`。
+
 #### T9.1 三平台构建产物基础验收（Windows/macOS/Linux）
 
 - **依赖**：E0~E8 全部完成　**规模**：M
-- **描述**：接入 `electron-builder` 三平台构建到 CI 矩阵（`windows-latest`/`macos-latest`/`ubuntu-latest`），执行 `pnpm build:{win,mac,linux}` 并验证产物生成；补充三平台 E2E 冒烟用例（安装/启动/播放/下载四个基础动作，见 Arch.md §12.5）。
+- **描述**：接入 `electron-builder` 三平台构建到 CI 矩阵（`windows-latest`/`macos-latest`/`ubuntu-latest`），执行平台打包并验证产物生成。Playwright 三平台 E2E 冒烟延后。
 - **验收标准**：
-  - Given CI 三平台矩阵触发，When 构建完成，Then 每个平台均产出对应安装包格式（NSIS/DMG/AppImage 或 deb），且 Playwright 冒烟用例在对应平台上通过。
-- **测试要求**：E2E 冒烟集在三平台 CI runner 上并行执行（对应 Arch.md §12.5 CI 矩阵设计）。
-- **交付物**：CI 配置扩展、`tests/e2e/smoke/{platform-basic}.spec.ts`。
+  - Given CI 三平台矩阵触发，When 构建完成，Then 每个平台均产出对应安装包格式（NSIS / DMG / AppImage 或 deb）。
+- **测试要求**：CI `package` job 在产物缺失时失败（`if-no-files-found: error`）。
+- **交付物**：`.github/workflows/ci.yml`；E2E 冒烟路径待补 `tests/e2e/smoke/`。
 
 #### T9.2 安全基线回归验证（对应 Arch.md §15 清单前 4 项）
 
 - **依赖**：T2.2　**规模**：S
-- **描述**：编写自动化回归测试固化 T2.2 的安全配置，防止未来重构时被无意改回不安全默认值；覆盖：`sandbox`/`contextIsolation`/`nodeIntegration` 运行时实际生效值、CSP 响应头存在性、集数描述 HTML 净化生效。
+- **描述**：编写自动化回归测试固化 T2.2 的安全配置，防止未来重构时被无意改回不安全默认值；覆盖：`sandbox`/`contextIsolation`/`nodeIntegration`、CSP 生产策略、集数描述 HTML 净化。本轮以 Vitest 固化（配置单一真源 + 源码接线断言）；Playwright 运行时断言延后。
 - **验收标准**：
-  - Given CI 每次运行，When 执行本回归测试，Then 上述四项安全配置均被验证为生效状态；任一项被意外改动都会导致该测试失败。
-- **测试要求**：本任务即为测试本身，纳入 CI 必跑项（非可选）。
-- **交付物**：`tests/e2e/security-baseline.spec.ts`。
+  - Given CI 每次运行，When 执行本回归测试，Then 上述安全配置均被验证；任一项被意外改动都会导致该测试失败。
+- **测试要求**：纳入 CI 必跑项（`pnpm test`）。
+- **交付物**：`src/main/infra/security/security-baseline.test.ts`（替代本阶段的 `tests/e2e/security-baseline.spec.ts`）。
 
 #### T9.3 代码签名前置条件核对（不含实际签名执行）
 
 - **依赖**：无　**规模**：S
-- **描述**：MVP 阶段不强制要求已完成真实的证书采购与 Notarization（属组织行政流程，非纯技术任务），但需在 `electron-builder.yml` 中预留签名配置位（`win.certificateFile`/`mac.notarize` 等），并在 README 或本文档中明确记录"发布前必须完成"的清单项，避免临上线才发现阻塞（对应 PRD §13 风险项、Arch.md §11/§15）。
+- **描述**：MVP 阶段不强制要求已完成真实的证书采购与 Notarization（属组织行政流程，非纯技术任务），但需在 `electron-builder.yml` 中预留签名配置位（`win` CSC 环境变量说明 / `mac.notarize` 等），并在 README 中明确记录"发布前必须完成"的清单项，避免临上线才发现阻塞（对应 PRD §13 风险项、Arch.md §11/§15）。
 - **验收标准**：
-  - Given 评审本任务交付物，When 检查 `electron-builder.yml`，Then 签名相关配置字段已预留（即使当前值为占位/未启用），且有明确的文档说明"正式发布前需替换为真实凭据"。
+  - Given 评审本任务交付物，When 检查 `electron-builder.yml`，Then 签名相关配置字段/注释已预留（即使当前值为占位/未启用），且有明确的文档说明"正式发布前需替换为真实凭据"。
 - **测试要求**：无自动化测试，人工评审清单条目是否完整。
-- **交付物**：`electron-builder.yml` 补充注释、`mdocs/Mvp.md` 本节勾选说明（见第 6 章）。
+- **交付物**：`electron-builder.yml` 补充注释、`README.md` 发布签名清单。
 
 #### T9.4 MVP 整体验收：核心用户旅程完整走查
 
 - **依赖**：E0~E8 全部完成　**规模**：M
-- **描述**：对照 PRD §2.2 用户旅程 1/3/4（首次使用、断网通勤、数据搬家）与 §12.1 三大原则专项测试表，执行一次完整的手动+自动化混合走查，产出验收报告。
+- **描述**：对照 PRD §2.2 用户旅程 1/3/4（首次使用、断网通勤、数据搬家）与 §12.1 三大原则专项测试表，执行一次完整的手动走查，产出验收报告。自动化黄金路径 E2E 延后。
 - **验收标准**：
-  - Given MVP 全部任务完成，When 依次执行"添加订阅→浏览→播放→下载→断网播放已下载内容→导出数据→清空→导入验证完整"全链路，Then 每一步均符合 PRD 对应验收标准，无阻断性缺陷。
-- **测试要求**：串联此前所有 E2E 用例形成一条完整的"黄金路径"回归套件，作为 MVP 发布门禁的最后一道关卡。
-- **交付物**：`tests/e2e/golden-path.spec.ts`、验收报告（记录走查结果，附在 PR 描述或独立 `mdocs/Mvp-Acceptance-Report.md`）。
+  - Given MVP 功能任务完成，When 依次执行"添加订阅→浏览→播放→下载→断网播放已下载内容→导出数据→清空→导入验证完整"全链路，Then 每一步均符合 PRD 对应验收标准，无阻断性缺陷。
+- **测试要求**：本阶段以验收报告清单人工勾选；后续接入 Playwright 后再作为 CI 门禁。
+- **交付物**：`mdocs/Mvp-Acceptance-Report.md`（`tests/e2e/golden-path.spec.ts` 待补）。
 
 ---
 

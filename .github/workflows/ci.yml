@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: lint · typecheck · test · build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit / integration tests
+        run: pnpm test
+
+      - name: Compile (electron-vite)
+        run: pnpm exec electron-vite build
+
+  package:
+    name: package (${{ matrix.os }})
+    needs: quality
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            package_cmd: pnpm exec electron-builder --win --publish never
+            artifact_glob: dist/*.{exe,yml}
+          - os: macos-latest
+            package_cmd: pnpm exec electron-builder --mac --publish never
+            artifact_glob: dist/*.{dmg,zip,yml}
+          - os: ubuntu-latest
+            package_cmd: pnpm exec electron-builder --linux AppImage deb --publish never
+            artifact_glob: dist/*.{AppImage,deb,yml}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Compile (electron-vite)
+        run: pnpm exec electron-vite build
+
+      - name: Package installer
+        run: ${{ matrix.package_cmd }}
+        env:
+          # Unsigned CI artifacts are expected until T9.3 secrets are provisioned.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: biu-podcast-${{ matrix.os }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.yml
+          if-no-files-found: error

@@ -11,6 +11,7 @@ import { closeDb, getDb } from './infra/db/client'
 import { migrateDatabase } from './infra/db/migrate'
 import { installApplicationMenu } from './infra/menu'
 import { applyContentSecurityPolicy } from './infra/security/csp'
+import { createMainWindowWebPreferences } from './infra/security/web-preferences'
 import { ensureSingleInstance } from './infra/window/single-instance'
 import { loadWindowState, trackWindowState } from './infra/window/window-state-store'
 
@@ -45,12 +46,7 @@ if (!ensureSingleInstance(() => mainWindowRef)) {
       autoHideMenuBar: true,
       title: '博播 BiuPodcast',
       ...(process.platform === 'linux' ? { icon } : {}),
-      webPreferences: {
-        preload: join(__dirname, '../preload/index.js'),
-        sandbox: true,
-        contextIsolation: true,
-        nodeIntegration: false
-      }
+      webPreferences: createMainWindowWebPreferences(join(__dirname, '../preload/index.js'))
     })
 
     if (state.isMaximized) {

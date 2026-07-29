@@ -724,13 +724,13 @@ lint → typecheck → 单元测试(renderer+main, 并行) → 集成测试 → 
 
 ## 15. 安全清单（发布前必须逐项确认）
 
-- [ ] `webPreferences.sandbox` 设为 `true`（当前脚手架默认值为 `false`，需在实现阶段修正）
-- [ ] `contextIsolation: true`、`nodeIntegration: false` 已生效并有回归测试覆盖
-- [ ] CSP 头已配置且移动到生产环境仍生效（非仅开发环境注入）
-- [ ] 集数描述 HTML 已经过服务端（主进程）净化后才传给渲染进程
+- [x] `webPreferences.sandbox` 设为 `true`（当前脚手架默认值为 `false`，需在实现阶段修正）
+- [x] `contextIsolation: true`、`nodeIntegration: false` 已生效并有回归测试覆盖
+- [x] CSP 头已配置且移动到生产环境仍生效（非仅开发环境注入）
+- [x] 集数描述 HTML 已经过服务端（主进程）净化后才传给渲染进程
 - [ ] 私有 Feed 凭据、云备份凭据使用系统级安全存储（Keychain/Credential Manager/libsecret），不明文写入 `electron-store`
-- [ ] macOS 构建 `notarize` 从 `false` 改为真实签名配置并验证 Gatekeeper 放行
-- [ ] Windows 构建接入代码签名证书
+- [ ] macOS 构建 `notarize` 从 `false` 改为真实签名配置并验证 Gatekeeper 放行（配置位已预留，见 `electron-builder.yml` / README）
+- [ ] Windows 构建接入代码签名证书（CSC 环境变量说明已预留）
 - [ ] 深链接协议处理函数对外部传入参数做合法性校验，防止恶意构造的 `biu-podcast://` URL 触发非预期行为
 - [ ] 依赖包定期跑 `pnpm audit` / Dependabot，第三方原生模块版本锁定并记录来源
 

@@ -16,6 +16,16 @@ asarUnpack:
   - resources/**
 win:
   executableName: biu-podcast
+  # --- Code signing (T9.3 / Arch.md §15) ---
+  # Formal release MUST sign the Windows installer. Prefer env vars that
+  # electron-builder reads automatically (do not commit cert files):
+  #   CSC_LINK              — path or base64 of .pfx / .p12
+  #   CSC_KEY_PASSWORD      — certificate password
+  # Optional explicit fields (uncomment when wiring local CI secrets):
+  # certificateFile: ${env.WIN_CSC_LINK}
+  # certificatePassword: ${env.WIN_CSC_KEY_PASSWORD}
+  # signingHashAlgorithms: [sha256]
+  # publisherName: 'Your Legal Entity Name'
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -28,13 +38,18 @@ mac:
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+  # --- Code signing & notarization (T9.3 / Arch.md §15) ---
+  # Formal release MUST enable notarization and provide Apple credentials via env:
+  #   APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID
+  #   (or ASC_API_KEY_ID / ASC_API_KEY_ISSUER_ID / ASC_API_KEY path)
+  # Keep false for unsigned CI / local packaging only.
   notarize: false
+  # identity: null  # set to Developer ID Application: … for release builds
 dmg:
   artifactName: ${name}-${version}.${ext}
 linux:
   target:
     - AppImage
-    - snap
     - deb
   maintainer: electronjs.org
   category: Utility

@@ -342,7 +342,7 @@
 - [ ] 可关闭诊断日志与崩溃上报
 - [ ] 系统媒体控件 / 托盘显示内容可配置（隐藏节目标题与封面），与隐身收听模式共用一组隐私开关
 - [ ] 隐身收听模式：不记录播放历史与进度
-- [ ] 渲染进程安全基线（`contextIsolation: true`、`sandbox` 启用、禁用 `nodeIntegration`、合理 CSP），作为发布前不可回退的验收项而非可选项
+- [x] 渲染进程安全基线（`contextIsolation: true`、`sandbox` 启用、禁用 `nodeIntegration`、合理 CSP），作为发布前不可回退的验收项而非可选项
 - [ ] 代码签名与发布验证：Windows 代码签名证书、macOS 签名 + Notarization，构建流程中做自检（未签名不允许发布）
 
 ### 11.5 可观测与诊断
