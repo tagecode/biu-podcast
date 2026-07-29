@@ -3,6 +3,8 @@ import Parser from 'rss-parser'
 import { AppError } from '@shared/errors'
 import type { ParsedFeed, ParsedFeedEpisode } from '@shared/types'
 
+import { htmlToPlainText } from '../../infra/sanitize/html'
+
 const parser = new Parser({
   customFields: {
     item: ['itunes:duration', 'enclosure']
@@ -88,7 +90,7 @@ export async function fetchAndParseFeed(feedUrl: string): Promise<ParsedFeed> {
 
     return {
       title: feed.title?.trim() || '未命名播客',
-      description: feed.description ?? feed.itunes?.summary ?? null,
+      description: htmlToPlainText(feed.description ?? feed.itunes?.summary ?? null),
       coverUrl: feed.itunes?.image ?? feed.image?.url ?? null,
       author: feed.itunes?.author ?? feed.creator ?? null,
       language: feed.language ?? null,
@@ -114,7 +116,7 @@ export async function fetchAndParseFeed(feedUrl: string): Promise<ParsedFeed> {
 export function parseFeedXml(xml: string): Promise<ParsedFeed> {
   return parser.parseString(xml).then((feed) => ({
     title: feed.title?.trim() || '未命名播客',
-    description: feed.description ?? feed.itunes?.summary ?? null,
+    description: htmlToPlainText(feed.description ?? feed.itunes?.summary ?? null),
     coverUrl: feed.itunes?.image ?? feed.image?.url ?? null,
     author: feed.itunes?.author ?? feed.creator ?? null,
     language: feed.language ?? null,

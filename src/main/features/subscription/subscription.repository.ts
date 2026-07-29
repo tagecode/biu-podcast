@@ -2,6 +2,7 @@ import { eq, isNull, sql } from 'drizzle-orm'
 
 import type { AppDatabase } from '../../infra/db/client'
 import { episodes, podcasts } from '../../infra/db/schema'
+import { htmlToPlainText } from '../../infra/sanitize/html'
 import type { FetchStatus, Podcast } from '@shared/types'
 
 export function normalizeFeedUrl(feedUrl: string): string {
@@ -92,7 +93,7 @@ export class SubscriptionRepository {
       id: row.id,
       feedUrl: row.feedUrl,
       title: row.title,
-      description: row.description,
+      description: htmlToPlainText(row.description),
       coverUrl: row.coverUrl,
       author: row.author,
       language: row.language,
