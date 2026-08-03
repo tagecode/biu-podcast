@@ -14,17 +14,21 @@ import {
 import { AppError } from '@shared/errors'
 import type { AppSettings } from '@shared/types'
 
-import { getDb } from '../../infra/db/client'
+import { getDb, type AppDatabase } from '../../infra/db/client'
 import { downloadTasks, episodes, podcasts } from '../../infra/db/schema'
-import { settingsStore } from '../../infra/settings/store'
+import { settingsStore, SettingsStore } from '../../infra/settings/store'
 import { previewImport } from './preview'
 
-function collectBackupData(): BackupData {
-  const db = getDb()
+export interface DataPortabilityServiceDeps {
+  db?: AppDatabase
+  settings?: SettingsStore
+}
+
+function collectBackupData(db: AppDatabase, settings: SettingsStore): BackupData {
   const podcastRows = db.select().from(podcasts).all()
   const episodeRows = db.select().from(episodes).all()
   const taskRows = db.select().from(downloadTasks).all()
-  const settings = settingsStore.getAll()
+  const settingsData = settings.getAll()
 
   return {
     podcasts: podcastRows.map((row) => ({
@@ -67,7 +71,7 @@ function collectBackupData(): BackupData {
       retryCount: row.retryCount,
       updatedAt: row.updatedAt
     })),
-    settings
+    settings: settingsData
   }
 }
 
@@ -79,7 +83,12 @@ async function packBackup(bundle: BackupBundle): Promise<Buffer> {
 }
 
 async function unpackBackup(buffer: Buffer): Promise<BackupBundle> {
-  const zip = await JSZip.loadAsync(buffer)
+  let zip: JSZip
+  try {
+    zip = await JSZip.loadAsync(buffer)
+  } catch {
+    throw new AppError('INVALID_BACKUP', '备份文件损坏，无法解析')
+  }
   const manifestFile = zip.file('manifest.json')
   const dataFile = zip.file('data.json')
   if (!manifestFile || !dataFile) {
@@ -108,12 +117,11 @@ async function unpackBackup(buffer: Buffer): Promise<BackupBundle> {
   return { manifest, data }
 }
 
-function localIdSets(): {
+function localIdSets(db: AppDatabase): {
   podcastIds: Set<string>
   episodeIds: Set<string>
   downloadTaskIds: Set<string>
 } {
-  const db = getDb()
   return {
     podcastIds: new Set(
       db
@@ -140,6 +148,14 @@ function localIdSets(): {
 }
 
 export class DataPortabilityService {
+  private readonly db: AppDatabase
+  private readonly settings: SettingsStore
+
+  constructor(deps: DataPortabilityServiceDeps = {}) {
+    this.db = deps.db ?? getDb()
+    this.settings = deps.settings ?? settingsStore
+  }
+
   async exportToFile(): Promise<{ filePath: string } | null> {
     const defaultName = `biu-podcast-backup-${new Date().toISOString().slice(0, 10)}.biubackup`
     const result = await dialog.showSaveDialog({
@@ -156,7 +172,7 @@ export class DataPortabilityService {
         schemaVersion: BACKUP_SCHEMA_VERSION,
         exportedAt: Date.now()
       },
-      data: collectBackupData()
+      data: collectBackupData(this.db, this.settings)
     }
 
     const buffer = await packBackup(bundle)
@@ -175,16 +191,16 @@ export class DataPortabilityService {
     const filePath = result.filePaths[0]
     const buffer = await readFile(filePath)
     const bundle = await unpackBackup(buffer)
-    const preview = previewImport(bundle.data, localIdSets())
+    const preview = previewImport(bundle.data, localIdSets(this.db))
     return { filePath, preview }
   }
 
   async importFromFile(filePath: string, strategy: ImportStrategy): Promise<ImportPreview> {
     const buffer = await readFile(filePath)
     const bundle = await unpackBackup(buffer)
-    const local = localIdSets()
+    const local = localIdSets(this.db)
     const preview = previewImport(bundle.data, local)
-    const db = getDb()
+    const db = this.db
 
     db.transaction((tx) => {
       for (const podcast of bundle.data.podcasts) {
@@ -262,11 +278,11 @@ export class DataPortabilityService {
     })
 
     const settings = bundle.data.settings as AppSettings
-    settingsStore.set('downloadPath', settings.downloadPath)
-    settingsStore.set('resumeOnLaunch', settings.resumeOnLaunch)
-    settingsStore.set('lastEpisodeId', settings.lastEpisodeId)
-    settingsStore.set('lastPodcastId', settings.lastPodcastId)
-    settingsStore.set('lastPositionSec', settings.lastPositionSec)
+    this.settings.set('downloadPath', settings.downloadPath)
+    this.settings.set('resumeOnLaunch', settings.resumeOnLaunch)
+    this.settings.set('lastEpisodeId', settings.lastEpisodeId)
+    this.settings.set('lastPodcastId', settings.lastPodcastId)
+    this.settings.set('lastPositionSec', settings.lastPositionSec)
 
     return preview
   }

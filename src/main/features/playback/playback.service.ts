@@ -1,14 +1,26 @@
 import { EpisodeRepository } from '../episode/episode.repository'
 import { SubscriptionRepository } from '../subscription/subscription.repository'
-import { getDb } from '../../infra/db/client'
-import { settingsStore } from '../../infra/settings/store'
+import { getDb, type AppDatabase } from '../../infra/db/client'
+import { settingsStore, SettingsStore } from '../../infra/settings/store'
 import { AppError } from '@shared/errors'
 import type { Episode, PlaybackSession } from '@shared/types'
 
+export interface PlaybackServiceDeps {
+  db?: AppDatabase
+  settings?: SettingsStore
+}
+
 export class PlaybackService {
-  private readonly db = getDb()
-  private readonly episodes = new EpisodeRepository(this.db)
-  private readonly subscriptions = new SubscriptionRepository(this.db)
+  private readonly episodes: EpisodeRepository
+  private readonly subscriptions: SubscriptionRepository
+  private readonly settings: SettingsStore
+
+  constructor(deps: PlaybackServiceDeps = {}) {
+    const db = deps.db ?? getDb()
+    this.episodes = new EpisodeRepository(db)
+    this.subscriptions = new SubscriptionRepository(db)
+    this.settings = deps.settings ?? settingsStore
+  }
 
   updateProgress(episodeId: string, positionSec: number): void {
     const episode = this.episodes.findById(episodeId)
@@ -17,7 +29,7 @@ export class PlaybackService {
     }
     this.episodes.updateProgress(episodeId, positionSec)
     this.subscriptions.findById(episode.podcastId)
-    settingsStore.setLastSession(episodeId, episode.podcastId, positionSec)
+    this.settings.setLastSession(episodeId, episode.podcastId, positionSec)
   }
 
   getAdjacent(episodeId: string): { previous: Episode | null; next: Episode | null } {
@@ -25,7 +37,7 @@ export class PlaybackService {
   }
 
   getLastSession(): PlaybackSession | null {
-    const settings = settingsStore.getAll()
+    const settings = this.settings.getAll()
     if (!settings.lastEpisodeId || !settings.lastPodcastId) return null
     const episode = this.episodes.findById(settings.lastEpisodeId)
     const podcast = this.subscriptions.findById(settings.lastPodcastId)

@@ -16,10 +16,20 @@ const Store = ((ElectronStore as unknown as { default?: typeof ElectronStore }).
   ElectronStore) as typeof ElectronStore
 
 export class SettingsStore {
-  private readonly store = new Store<AppSettings>({
-    name: 'settings',
-    defaults
-  })
+  private readonly store: ElectronStore<AppSettings>
+
+  constructor(options: { cwd?: string } = {}) {
+    // conf@15 requires projectName at runtime; electron-store's published
+    // types omit it (Except<...,'projectName'>), so cast through unknown.
+    const storeOptions = {
+      name: 'settings',
+      projectName: 'biu-podcast',
+      defaults,
+      ...(options.cwd ? { cwd: options.cwd } : {})
+    } as unknown as ConstructorParameters<typeof ElectronStore<AppSettings>>[0]
+
+    this.store = new Store<AppSettings>(storeOptions)
+  }
 
   getAll(): AppSettings {
     return {

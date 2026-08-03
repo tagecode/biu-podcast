@@ -7,33 +7,40 @@ import { Readable } from 'stream'
 import { app } from 'electron'
 
 import { EpisodeRepository } from '../episode/episode.repository'
-import { getDb } from '../../infra/db/client'
-import { settingsStore } from '../../infra/settings/store'
+import { getDb, type AppDatabase } from '../../infra/db/client'
+import { settingsStore, SettingsStore } from '../../infra/settings/store'
 import { AppError } from '@shared/errors'
 import { IPC_CHANNELS } from '@shared/ipc-channels'
 import type { DownloadTask, Episode } from '@shared/types'
 import { broadcast } from '../../ipc/register'
 
-import { DownloadQueue, type QueueTask } from './download-queue'
+import { DownloadQueue, type QueueTask, type DownloadRunner } from './download-queue'
 import { DownloadRepository } from './download.repository'
 import { assertDownloadComplete } from './integrity'
 
-function getDownloadDir(): string {
-  const configured = settingsStore.getAll().downloadPath
+export interface DownloadServiceDeps {
+  db?: AppDatabase
+  settings?: SettingsStore
+  runner?: DownloadRunner
+}
+
+function getDownloadDir(settings: SettingsStore): string {
+  const configured = settings.getAll().downloadPath
   if (configured) return configured
   return join(app.getPath('userData'), 'downloads')
 }
 
-async function downloadToFile(
+export async function downloadToFile(
   task: QueueTask,
   signal: AbortSignal,
   onProgress: (progressBytes: number, totalBytes: number | null) => void,
-  episodeRepo: EpisodeRepository
+  episodeRepo: EpisodeRepository,
+  settings: SettingsStore
 ): Promise<{ localFilePath: string; totalBytes: number | null }> {
   const episode = episodeRepo.findById(task.episodeId)
   if (!episode) throw new AppError('NOT_FOUND', '集数不存在')
 
-  const dir = join(getDownloadDir(), episode.podcastId)
+  const dir = join(getDownloadDir(settings), episode.podcastId)
   await mkdir(dir, { recursive: true })
   const finalPath = join(dir, `${episode.id}.mp3`)
   const partPath = `${finalPath}.part`
@@ -89,23 +96,24 @@ async function downloadToFile(
 }
 
 export class DownloadService {
-  private readonly db = getDb()
-  private readonly downloads = new DownloadRepository(this.db)
-  private readonly episodes = new EpisodeRepository(this.db)
+  private readonly db: AppDatabase
+  private readonly settings: SettingsStore
+  private readonly downloads: DownloadRepository
+  private readonly episodes: EpisodeRepository
   private readonly queue: DownloadQueue
   private started = false
 
-  constructor() {
-    this.queue = new DownloadQueue(async (task, signal, onProgress) => {
-      const result = await downloadToFile(task, signal, onProgress, this.episodes)
-      this.downloads.update(task.id, {
-        status: 'completed',
-        progressBytes: result.totalBytes ?? task.progressBytes,
-        totalBytes: result.totalBytes
-      })
-      this.episodes.markDownloaded(task.episodeId, result.localFilePath)
-      return result
-    })
+  constructor(deps: DownloadServiceDeps = {}) {
+    this.db = deps.db ?? getDb()
+    this.settings = deps.settings ?? settingsStore
+    this.downloads = new DownloadRepository(this.db)
+    this.episodes = new EpisodeRepository(this.db)
+
+    const defaultRunner: DownloadRunner = async (task, signal, onProgress) => {
+      return downloadToFile(task, signal, onProgress, this.episodes, this.settings)
+    }
+
+    this.queue = new DownloadQueue(deps.runner ?? defaultRunner)
 
     this.queue.onEvent((event) => {
       if (event.type === 'progress') {
@@ -131,7 +139,14 @@ export class DownloadService {
         })
         this.episodes.setDownloadStatus(event.episodeId, 'failed')
       } else if (event.status === 'completed') {
-        this.downloads.update(event.taskId, { status: 'completed' })
+        this.downloads.update(event.taskId, {
+          status: 'completed',
+          progressBytes: event.progressBytes,
+          totalBytes: event.totalBytes
+        })
+        if (event.localFilePath) {
+          this.episodes.markDownloaded(event.episodeId, event.localFilePath)
+        }
       }
 
       broadcast(IPC_CHANNELS.download.progress, {
@@ -240,7 +255,7 @@ export class DownloadService {
     this.downloads.delete(taskId)
     this.episodes.clearDownload(task.episodeId)
     if (episode) {
-      const finalPath = join(getDownloadDir(), episode.podcastId, `${episode.id}.mp3`)
+      const finalPath = join(getDownloadDir(this.settings), episode.podcastId, `${episode.id}.mp3`)
       await rm(`${finalPath}.part`, { force: true })
     }
   }

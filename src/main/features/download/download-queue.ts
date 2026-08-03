@@ -23,6 +23,7 @@ export type QueueListener = (event: {
   progressBytes: number
   totalBytes: number | null
   retryCount?: number
+  localFilePath?: string
 }) => void
 
 export interface RetryOptions {
@@ -180,7 +181,7 @@ export class DownloadQueue {
       current.status = 'completed'
       current.progressBytes = result.totalBytes ?? current.progressBytes
       current.totalBytes = result.totalBytes
-      this.emit(taskId)
+      this.emit(taskId, 'status', result.localFilePath)
     } catch (error) {
       const current = this.tasks.get(taskId)
       if (!current) return
@@ -208,7 +209,11 @@ export class DownloadQueue {
     }
   }
 
-  private emit(taskId: string, type: 'progress' | 'status' = 'status'): void {
+  private emit(
+    taskId: string,
+    type: 'progress' | 'status' = 'status',
+    localFilePath?: string
+  ): void {
     const task = this.tasks.get(taskId)
     if (!task) return
     for (const listener of this.listeners) {
@@ -219,7 +224,8 @@ export class DownloadQueue {
         status: task.status,
         progressBytes: task.progressBytes,
         totalBytes: task.totalBytes,
-        retryCount: task.retryCount
+        retryCount: task.retryCount,
+        ...(localFilePath ? { localFilePath } : {})
       })
     }
   }

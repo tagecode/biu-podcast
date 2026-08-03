@@ -36,5 +36,8 @@ jobs:
       - name: Unit / integration tests
         run: pnpm test
 
+      - name: Coverage gate (core domain ≥ 85%)
+        run: pnpm test:coverage
+
       - name: Compile (electron-vite)
         run: pnpm exec electron-vite build

@@ -192,7 +192,7 @@ E0 工程基础设施
 - **测试要求**：集成测试——每个 Repository 方法在 `:memory:` SQLite 上做真实 CRUD 验证，覆盖率 ≥ 85%（对应 Arch.md §12.3 核心业务域门槛）。
 - **交付物**：`subscription.repository.ts` / `episode.repository.ts` / `download.repository.ts` 及各自 `.test.ts`。
 
-#### T1.5 电config `electron-store` 落地 AppSettings
+#### T1.5 接入 `electron-store` 落地 AppSettings
 
 - **依赖**：T0.1　**规模**：S
 - **描述**：安装 `electron-store`，建立 `src/main/infra/settings/store.ts` 封装单例配置读写（默认下载质量、续播偏好等 MVP 阶段需要的最小字段集），提供类型安全的 getter/setter。

@@ -5,6 +5,22 @@ import { resolve } from 'path'
 
 export default defineConfig({
   test: {
+    coverage: {
+      provider: 'v8',
+      include: [
+        'src/main/features/subscription/*.ts',
+        'src/main/features/episode/*.ts',
+        'src/main/features/playback/*.ts',
+        'src/main/features/download/*.ts',
+        'src/main/features/data-portability/*.ts'
+      ],
+      thresholds: {
+        statements: 85,
+        lines: 85,
+        functions: 80,
+        branches: 60
+      }
+    },
     projects: [
       {
         extends: true,
@@ -27,7 +43,12 @@ export default defineConfig({
         test: {
           name: 'main',
           environment: 'node',
-          include: ['src/main/**/*.test.ts', 'src/shared/**/*.test.ts']
+          include: ['src/main/**/*.test.ts', 'src/shared/**/*.test.ts'],
+          env: {
+            // Module-level singletons (getDb) run at import time; give them a
+            // safe in-memory DB instead of touching a real userData path.
+            BIU_PODCAST_DB_PATH: ':memory:'
+          }
         },
         resolve: {
           alias: {

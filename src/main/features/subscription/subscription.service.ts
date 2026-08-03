@@ -4,24 +4,37 @@ import { rm } from 'fs/promises'
 import { app } from 'electron'
 
 import { EpisodeRepository } from '../episode/episode.repository'
-import { getDb } from '../../infra/db/client'
-import { settingsStore } from '../../infra/settings/store'
+import { getDb, type AppDatabase } from '../../infra/db/client'
+import { settingsStore, SettingsStore } from '../../infra/settings/store'
 import { AppError } from '@shared/errors'
 import type { FetchStatus, Podcast } from '@shared/types'
 
 import { fetchAndParseFeed } from './feed-parser'
 import { normalizeFeedUrl, SubscriptionRepository } from './subscription.repository'
 
-function getDownloadDir(): string {
-  const configured = settingsStore.getAll().downloadPath
+export interface SubscriptionServiceDeps {
+  db?: AppDatabase
+  settings?: SettingsStore
+}
+
+function getDownloadDir(settings: SettingsStore): string {
+  const configured = settings.getAll().downloadPath
   if (configured) return configured
   return join(app.getPath('userData'), 'downloads')
 }
 
 export class SubscriptionService {
-  private readonly db = getDb()
-  private readonly subscriptions = new SubscriptionRepository(this.db)
-  private readonly episodes = new EpisodeRepository(this.db)
+  private readonly db: AppDatabase
+  private readonly settings: SettingsStore
+  private readonly subscriptions: SubscriptionRepository
+  private readonly episodes: EpisodeRepository
+
+  constructor(deps: SubscriptionServiceDeps = {}) {
+    this.db = deps.db ?? getDb()
+    this.settings = deps.settings ?? settingsStore
+    this.subscriptions = new SubscriptionRepository(this.db)
+    this.episodes = new EpisodeRepository(this.db)
+  }
 
   async add(feedUrl: string): Promise<Podcast> {
     const existing = this.subscriptions.findByFeedUrl(feedUrl)
@@ -127,7 +140,7 @@ export class SubscriptionService {
         await rm(filePath, { force: true })
         await rm(`${filePath}.part`, { force: true })
       }
-      await rm(join(getDownloadDir(), podcastId), { recursive: true, force: true })
+      await rm(join(getDownloadDir(this.settings), podcastId), { recursive: true, force: true })
     } else {
       this.subscriptions.softUnsubscribe(podcastId)
     }

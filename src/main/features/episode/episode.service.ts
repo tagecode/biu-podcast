@@ -1,13 +1,21 @@
 import { EpisodeRepository } from './episode.repository'
-import { getDb } from '../../infra/db/client'
+import { getDb, type AppDatabase } from '../../infra/db/client'
 import { sanitizeRichHtml } from '../../infra/sanitize/html'
 import { AppError } from '@shared/errors'
 import type { EpisodeListPage } from '@shared/episode-list'
 import type { Episode } from '@shared/types'
 
+export interface EpisodeServiceDeps {
+  db?: AppDatabase
+}
+
 export class EpisodeService {
-  private readonly db = getDb()
-  private readonly episodes = new EpisodeRepository(this.db)
+  private readonly episodes: EpisodeRepository
+
+  constructor(deps: EpisodeServiceDeps = {}) {
+    const db = deps.db ?? getDb()
+    this.episodes = new EpisodeRepository(db)
+  }
 
   listByPodcast(podcastId: string, offset = 0, limit = 50): EpisodeListPage {
     return this.episodes.listByPodcastPage(podcastId, offset, limit)
