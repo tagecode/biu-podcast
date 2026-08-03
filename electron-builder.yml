@@ -46,7 +46,7 @@ mac:
   notarize: false
   # identity: null  # set to Developer ID Application: … for release builds
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${name}-${version}-${arch}.${ext}
 linux:
   target:
     - AppImage

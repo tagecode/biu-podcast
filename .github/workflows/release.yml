@@ -34,6 +34,11 @@ jobs:
             platform: mac
             arch: arm64
             build_cmd: pnpm exec electron-builder --mac --publish never
+          # macos-26-intel = macOS x64 (Intel)；在 Apple Silicon runner 上交叉编译
+          - os: macos-26-intel
+            platform: mac
+            arch: x64
+            build_cmd: pnpm exec electron-builder --mac --publish never
           - os: ubuntu-latest
             platform: linux
             arch: x64
@@ -81,7 +86,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: biu-podcast-${{ matrix.platform }}
+          name: biu-podcast-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
             dist/*.exe
             dist/*.dmg
@@ -106,11 +111,29 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: echo "version=v$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
-      - name: Download all artifacts
+      - name: Download artifacts (Windows x64)
         uses: actions/download-artifact@v7
         with:
+          name: biu-podcast-win-x64
           path: artifacts
-          merge-multiple: true
+
+      - name: Download artifacts (macOS arm64)
+        uses: actions/download-artifact@v7
+        with:
+          name: biu-podcast-mac-arm64
+          path: artifacts/mac-arm64
+
+      - name: Download artifacts (macOS x64)
+        uses: actions/download-artifact@v7
+        with:
+          name: biu-podcast-mac-x64
+          path: artifacts/mac-x64
+
+      - name: Download artifacts (Linux x64)
+        uses: actions/download-artifact@v7
+        with:
+          name: biu-podcast-linux-x64
+          path: artifacts
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
@@ -133,6 +156,7 @@ jobs:
             |------|------|------|
             | Windows | x64 | `.exe`（NSIS 安装包） |
             | macOS | arm64 | `.dmg` / `.zip`（Apple Silicon） |
+            | macOS | x64 | `.dmg` / `.zip`（Intel） |
             | Linux | x64 | `.AppImage` / `.deb` |
 
             > 未签名构建：macOS 首次打开需在「系统设置 → 隐私与安全性」中允许；Windows 若有 SmartScreen 提示，选择「更多信息 → 仍要运行」。
