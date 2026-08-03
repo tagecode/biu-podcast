@@ -1,0 +1,138 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+jobs:
+  build:
+    name: Build (${{ matrix.platform }} / ${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # windows-2022 ships VS 2022 that node-gyp recognizes.
+          # windows-latest currently has VS 18, which breaks better-sqlite3 rebuild.
+          - os: windows-2022
+            platform: win
+            arch: x64
+            build_cmd: pnpm exec electron-builder --win --publish never
+          # macos-latest = macOS arm64 (Apple Silicon)
+          - os: macos-latest
+            platform: mac
+            arch: arm64
+            build_cmd: pnpm exec electron-builder --mac --publish never
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            build_cmd: pnpm exec electron-builder --linux AppImage deb --publish never
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify tag matches package.json version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Tag ${TAG_VERSION} does not match package.json version ${PKG_VERSION}"
+            exit 1
+          fi
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Match CI; release only packages, but keep the same toolchain.
+          node-version: 22
+          cache: pnpm
+
+      - name: Setup MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Compile (electron-vite)
+        run: pnpm exec electron-vite build
+
+      - name: Package installer
+        run: ${{ matrix.build_cmd }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: biu-podcast-${{ matrix.platform }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.yml
+          if-no-files-found: error
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version (manual run)
+        id: version
+        if: github.event_name == 'workflow_dispatch'
+        run: echo "version=v$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && steps.version.outputs.version || github.ref_name }}
+          files: |
+            artifacts/**/*.dmg
+            artifacts/**/*.zip
+            artifacts/**/*.exe
+            artifacts/**/*.AppImage
+            artifacts/**/*.deb
+            artifacts/**/*.yml
+          generate_release_notes: true
+          body: |
+            ## 安装说明
+
+            产物命名：`biu-podcast-{version}-...`（Windows 为 `biu-podcast-{version}-setup.exe`）
+
+            | 平台 | 架构 | 格式 |
+            |------|------|------|
+            | Windows | x64 | `.exe`（NSIS 安装包） |
+            | macOS | arm64 | `.dmg` / `.zip`（Apple Silicon） |
+            | Linux | x64 | `.AppImage` / `.deb` |
+
+            > 未签名构建：macOS 首次打开需在「系统设置 → 隐私与安全性」中允许；Windows 若有 SmartScreen 提示，选择「更多信息 → 仍要运行」。
