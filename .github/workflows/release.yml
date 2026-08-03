@@ -150,7 +150,7 @@ jobs:
           body: |
             ## 安装说明
 
-            产物命名：`biu-podcast-{version}-...`（Windows 为 `biu-podcast-{version}-setup.exe`）
+            产物命名：`biu-podcast-v{version}-...`（Windows 为 `biu-podcast-v{version}-setup.exe`）
 
             | 平台 | 架构 | 格式 |
             |------|------|------|

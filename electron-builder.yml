@@ -27,7 +27,7 @@ win:
   # signingHashAlgorithms: [sha256]
   # publisherName: 'Your Legal Entity Name'
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
+  artifactName: ${name}-v${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
@@ -46,7 +46,7 @@ mac:
   notarize: false
   # identity: null  # set to Developer ID Application: … for release builds
 dmg:
-  artifactName: ${name}-${version}-${arch}.${ext}
+  artifactName: ${name}-v${version}-${arch}.${ext}
 linux:
   target:
     - AppImage
@@ -54,7 +54,7 @@ linux:
   maintainer: electronjs.org
   category: Utility
 appImage:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${name}-v${version}.${ext}
 npmRebuild: false
 publish:
   provider: generic
