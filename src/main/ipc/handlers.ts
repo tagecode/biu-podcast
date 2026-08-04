@@ -1,3 +1,4 @@
+import { BrowserWindow } from 'electron'
 import {
   AddSubscriptionInputSchema,
   DownloadTaskIdInputSchema,
@@ -11,7 +12,8 @@ import {
   RefreshSubscriptionInputSchema,
   RemoveSubscriptionInputSchema,
   UpdateProgressInputSchema,
-  VerifyLocalInputSchema
+  VerifyLocalInputSchema,
+  WindowActionInputSchema
 } from '@shared/ipc-contract'
 
 import { dataPortabilityService } from '../features/data-portability/data-portability.service'
@@ -161,10 +163,40 @@ export function registerDataPortabilityHandlers(): void {
   )
 }
 
+export function registerWindowHandlers(): void {
+  const windowOf = (event: Electron.IpcMainInvokeEvent): BrowserWindow | null =>
+    BrowserWindow.fromWebContents(event.sender)
+
+  registerVoidHandler(IPC_CHANNELS.window.minimize, WindowActionInputSchema, (event) => {
+    windowOf(event)?.minimize()
+  })
+
+  registerVoidHandler(IPC_CHANNELS.window.maximize, WindowActionInputSchema, (event) => {
+    const win = windowOf(event)
+    if (!win) return
+    if (win.isMaximized()) {
+      win.unmaximize()
+    } else {
+      win.maximize()
+    }
+  })
+
+  registerVoidHandler(IPC_CHANNELS.window.close, WindowActionInputSchema, (event) => {
+    windowOf(event)?.close()
+  })
+
+  registerHandler(
+    IPC_CHANNELS.window.isMaximized,
+    WindowActionInputSchema,
+    (event) => windowOf(event)?.isMaximized() ?? false
+  )
+}
+
 export function registerAllHandlers(): void {
   registerSubscriptionHandlers()
   registerEpisodeHandlers()
   registerPlaybackHandlers()
   registerDownloadHandlers()
   registerDataPortabilityHandlers()
+  registerWindowHandlers()
 }

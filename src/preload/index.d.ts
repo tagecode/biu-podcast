@@ -76,6 +76,12 @@ declare global {
         previewImport: () => Promise<IpcResult<{ filePath: string; preview: ImportPreview } | null>>
         import: (input: ImportBackupInput) => Promise<IpcResult<ImportPreview>>
       }
+      window: {
+        minimize: () => Promise<IpcResult<void>>
+        maximize: () => Promise<IpcResult<void>>
+        close: () => Promise<IpcResult<void>>
+        isMaximized: () => Promise<IpcResult<boolean>>
+      }
     }
   }
 }

@@ -2,6 +2,7 @@ import { Download, Play, Settings } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { TitleBar } from '@/app/TitleBar'
 import { DownloadPanel } from '@/features/download/components/DownloadPanel'
 import { useDownloadStore } from '@/features/download/store'
 import { PodcastDetailPage } from '@/features/episode/pages/PodcastDetailPage'
@@ -40,6 +41,7 @@ export function AppShell(): React.JSX.Element {
 
   return (
     <div className="flex h-screen flex-col bg-paper text-ink">
+      <TitleBar />
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line px-6">
         <button
           type="button"

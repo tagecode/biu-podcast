@@ -120,6 +120,15 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.dataPortability.previewImport),
     import: (input: ImportBackupInput): Promise<IpcResult<ImportPreview>> =>
       ipcRenderer.invoke(IPC_CHANNELS.dataPortability.import, input)
+  },
+  window: {
+    minimize: (): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.window.minimize),
+    maximize: (): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.window.maximize),
+    close: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC_CHANNELS.window.close),
+    isMaximized: (): Promise<IpcResult<boolean>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.window.isMaximized)
   }
 }
 

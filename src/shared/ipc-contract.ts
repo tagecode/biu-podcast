@@ -67,3 +67,7 @@ export type GetAdjacentInput = z.infer<typeof GetAdjacentInputSchema>
 export type EnqueueDownloadInput = z.infer<typeof EnqueueDownloadInputSchema>
 export type VerifyLocalInput = z.infer<typeof VerifyLocalInputSchema>
 export type ImportBackupInput = z.infer<typeof ImportBackupInputSchema>
+
+/** Window controls from the custom title bar (no payload needed). */
+export const WindowActionInputSchema = z.object({})
+export type WindowActionInput = z.infer<typeof WindowActionInputSchema>

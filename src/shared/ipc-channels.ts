@@ -34,5 +34,12 @@ export const IPC_CHANNELS = {
     export: 'data-portability:export',
     previewImport: 'data-portability:preview-import',
     import: 'data-portability:import'
+  },
+  window: {
+    minimize: 'window:minimize',
+    maximize: 'window:maximize',
+    close: 'window:close',
+    isMaximized: 'window:is-maximized',
+    maximizedChanged: 'window:maximized-changed'
   }
 } as const

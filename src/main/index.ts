@@ -35,6 +35,7 @@ if (!ensureSingleInstance(() => mainWindowRef)) {
 } else {
   function createWindow(): BrowserWindow {
     const state = loadWindowState()
+    const isMac = process.platform === 'darwin'
     const mainWindow = new BrowserWindow({
       x: state.x,
       y: state.y,
@@ -43,8 +44,13 @@ if (!ensureSingleInstance(() => mainWindowRef)) {
       minWidth: 960,
       minHeight: 640,
       show: false,
-      autoHideMenuBar: true,
       title: '博播 BiuPodcast',
+      backgroundColor: '#FAF7F2',
+      // Custom title bar: frameless on Windows/Linux, hiddenInset on macOS
+      // (keeps the traffic-light buttons but removes the native bar).
+      ...(isMac
+        ? { titleBarStyle: 'hiddenInset' as const }
+        : { frame: false, autoHideMenuBar: true }),
       ...(process.platform === 'linux' ? { icon } : {}),
       webPreferences: createMainWindowWebPreferences(join(__dirname, '../preload/index.js'))
     })
