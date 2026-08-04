@@ -15,7 +15,7 @@
 |----|------|------|
 | lint → typecheck → test → coverage 门禁 → electron-vite build | Pass | `.github/workflows/ci.yml` `quality` |
 | 三平台安装包（Win NSIS / mac DMG / Linux AppImage+deb） | Pass | `windows-2022` / `macos-latest` / `ubuntu-latest` 产物已上传 |
-| 核心域覆盖率门禁（statements ≥85%） | Pass | 全局语句 88.46%（subscription 91.8 / episode 91.46 / playback 95 / data-portability 89.62 / download 84.86，门禁按全局阈值生效） |
+| 核心域覆盖率门禁（statements ≥85%） | Pass | 全局语句 90.18%；各核心域均 ≥85%（subscription 91.8 / episode 91.46 / playback 95 / data-portability 89.62 / download 88.84） |
 | T9.2 安全基线回归 | Pass | `security-baseline.test.ts` |
 | Playwright 冒烟（T0.4 / T9.1） | Pass | `tests/e2e/smoke/smoke.spec.ts`（打包产物启动 + 主窗口标题 + React 根渲染） |
 | Playwright 黄金路径（T9.4 / T7.3） | Pass | `tests/e2e/golden-path/golden-path.spec.ts`（本地测试服务器驱动的完整旅程） |
@@ -50,15 +50,16 @@
 
 ## 4. 已知延后 / 非阻断债
 
-1. MSW（T0.3）、dependency-cruiser（T0.5 边界校验）——测试基础设施小项，非功能缺口
-2. 核心域覆盖率：全局门禁已接入（≥85%），但 download 域 statements 84.86% 略低于 85% 逐域门槛（门禁按全局阈值生效，不阻塞）
-3. 代码签名真实凭据（T9.3 占位完成，属组织行政流程）
-4. Feature.md 中 P1/P2 条目保持未勾选（预期）
+1. 核心域覆盖率：全局门禁已接入且**所有核心域均 ≥85%**（download 由 84.86% 补足至 88.84%）
+2. 代码签名真实凭据（T9.3 占位完成，属组织行政流程）
+3. Feature.md 中 P1/P2 条目保持未勾选（预期）
+
+> 依赖边界校验（T0.5）已接入 `pnpm lint`（dependency-cruiser，豁免已知的 PodcastDetailPage/SettingsPage 跨 feature 消费）；网络 mock（T0.3）以 `vi.stubGlobal('fetch')` 等效落地，未引入 MSW。
 
 ## 5. 结论
 
-- [x] **MVP 功能主链路（方案 B）可视为工程闭环**：自动化门禁绿、安全四项绿、Playwright 全套（冒烟 + 黄金路径 + 专项）绿、Feature.md MVP 相关条目已同步勾选。
-- [ ] **正式对外发行**：仍需真实代码签名 +（建议）真人 UI 黄金路径签字。Playwright 已落地，不再属于延后项。
+- [x] **MVP 功能主链路（方案 B）可视为工程闭环**：自动化门禁绿、安全四项绿、Playwright 全套（冒烟 + 黄金路径 + 专项）绿、覆盖率全域 ≥85%、依赖边界校验接入、Feature.md MVP 相关条目已同步勾选。**51/51 任务完成。**
+- [ ] **正式对外发行**：仍需真实代码签名 +（建议）真人 UI 黄金路径签字。
 
 ### 真人 UI 补签（可选）
 

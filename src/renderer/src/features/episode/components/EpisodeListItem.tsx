@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import type { Episode } from '@shared/types'
 import { cn } from '@/lib/utils'
 
-import { formatDate, formatDuration, formatFileSize } from '../lib/format'
+import { formatDate, formatDuration, formatFileSize } from '@/lib/format'
 
 interface EpisodeListItemProps {
   episode: Episode

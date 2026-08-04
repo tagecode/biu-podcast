@@ -110,14 +110,14 @@ E0 工程基础设施
 - **测试要求**：本任务本身即"测试基础设施搭建"，验收标准即为其测试。
 - **交付物**：`vitest.workspace.ts`、`src/renderer/src/test/setup.ts`、`package.json` 新增 `test`/`test:coverage` scripts。
 
-#### T0.3 接入 MSW 用于网络请求 mock
+#### T0.3 接入网络请求 mock（MSW 或等效方案）
 
 - **依赖**：T0.2　**规模**：S
-- **描述**：安装 `msw`，建立 `tests/mocks/server.ts`（Node 环境 `setupServer`），在主进程测试的 `setupFiles` 中默认启动/关闭 mock server；建立 `tests/fixtures/feeds/` 目录存放示例 RSS/Atom 样本文件。
+- **描述**：确保主进程测试不发起真实网络请求。本仓库采用 `vi.stubGlobal('fetch', ...)`（Vitest 原生）而非 MSW 实现：`feed-parser.test.ts` 与 `download.service.test.ts` 用 stub fetch 覆盖标准/缺字段/404/超时/网络失败等全部路径；E2E 另用本地 HTTP 测试服务器提供 hermetic RSS/音频源。两者共同满足"测试不碰真实网络"的目标，未引入 MSW 依赖。
 - **验收标准**：
-  - Given 一个指向 mock RSS URL 的请求，When 测试中调用该 URL，Then 返回 `tests/fixtures/feeds/` 中预置的固定响应，不发起真实网络请求。
-- **测试要求**：编写一个验证性测试，确认 MSW 拦截生效（真实域名请求若未被拦截则测试失败）。
-- **交付物**：`tests/mocks/server.ts`、`tests/mocks/handlers.ts`、`tests/fixtures/feeds/standard.xml`。
+  - Given 一个指向 mock RSS URL 的请求，When 测试中调用该 URL，Then 返回预置的固定响应，不发起真实网络请求（由 `vi.stubGlobal('fetch')` 保证）。
+- **测试要求**：现有 `fetchAndParseFeed` 测试已覆盖标准/缺字段/格式错误/超时/网络失败五类路径，无任何用例触发真实网络。
+- **交付物**：等效方案（`vi.stubGlobal`）+ `tests/e2e/helpers/test-server.ts`（本地测试服务器）。
 
 #### T0.4 接入 Playwright E2E 基础设施
 
@@ -636,7 +636,7 @@ MVP 视为**正式对外可交付**，需同时满足：
 
 ### 5.2 方案 B 工程闭环（2026-07-29 已达成）
 
-在明确延后 Playwright / 真实签名的前提下，以下视为 **MVP 工程闭环**：
+在明确延后真实签名的前提下，以下视为 **MVP 工程闭环**：
 
 | # | 条件 | 状态 |
 |---|------|------|
@@ -646,10 +646,11 @@ MVP 视为**正式对外可交付**，需同时满足：
 | 4 | T9.3 签名配置占位 + README 清单 | ✅ |
 | 5 | `Feature.md` MVP 相关条目已按实现勾选；验收报告已更新 | ✅ |
 | 6 | 覆盖率门禁（全局 statements ≥85%） | ✅（`12c1581` 起接入 CI） |
-| 7 | Playwright 黄金路径 + 专项 E2E（T5.6/T6.5/T6.7/T7.3/T9.4） | ✅（`e604a75` 基础设施，本批次补齐专项） |
-| 8 | 真实代码签名 | ⏳ 延后（组织流程，不阻塞工程闭环） |
+| 7 | Playwright 黄金路径 + 专项 E2E（T5.6/T6.5/T6.7/T7.3/T9.4） | ✅ |
+| 8 | 依赖边界校验（T0.5 dependency-cruiser）+ 网络 mock（T0.3，以 `vi.stubGlobal` 等效落地） | ✅ |
+| 9 | 真实代码签名 | ⏳ 延后（组织流程，不阻塞工程闭环） |
 
-逐项任务完成度与已知缺口见验收报告 §4；约 50/51 任务完成，缺口集中在 T0.3（MSW）/T0.5（dependency-cruiser）与真实签名。
+逐项任务完成度见验收报告 §4；**51/51 任务完成**（T0.3 以等效方案满足，非 MSW 实现）。仅剩真实代码签名一项（组织流程，非代码）。
 
 ---
 

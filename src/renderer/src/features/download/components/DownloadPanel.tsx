@@ -1,7 +1,7 @@
 import { X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { formatFileSize } from '@/features/episode/lib/format'
+import { formatFileSize } from '@/lib/format'
 import type { DownloadTask } from '@shared/types'
 
 import { useDownloadStore } from '../store'

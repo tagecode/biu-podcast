@@ -3,7 +3,7 @@ import { Download, Play, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Episode } from '@shared/types'
 
-import { formatDate, formatDuration, formatFileSize } from '../lib/format'
+import { formatDate, formatDuration, formatFileSize } from '@/lib/format'
 
 interface EpisodeDetailPanelProps {
   episode: Episode

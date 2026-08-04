@@ -8,7 +8,8 @@
   "packageManager": "pnpm@10.11.0",
   "scripts": {
     "format": "prettier --write .",
-    "lint": "eslint --cache .",
+    "lint": "eslint --cache . && npm run lint:boundaries",
+    "lint:boundaries": "depcruise src/main src/renderer/src src/shared --config .dependency-cruiser.cjs",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
@@ -64,6 +65,7 @@
     "@types/sanitize-html": "^2.16.1",
     "@vitejs/plugin-react": "^5.1.1",
     "@vitest/coverage-v8": "^4.1.10",
+    "dependency-cruiser": "^18.1.1",
     "drizzle-kit": "^0.31.10",
     "electron": "^39.2.6",
     "electron-builder": "^26.0.12",
