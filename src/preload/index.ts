@@ -123,12 +123,12 @@ const api = {
   },
   window: {
     minimize: (): Promise<IpcResult<void>> =>
-      ipcRenderer.invoke(IPC_CHANNELS.window.minimize),
+      ipcRenderer.invoke(IPC_CHANNELS.window.minimize, {}),
     maximize: (): Promise<IpcResult<void>> =>
-      ipcRenderer.invoke(IPC_CHANNELS.window.maximize),
-    close: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC_CHANNELS.window.close),
+      ipcRenderer.invoke(IPC_CHANNELS.window.maximize, {}),
+    close: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC_CHANNELS.window.close, {}),
     isMaximized: (): Promise<IpcResult<boolean>> =>
-      ipcRenderer.invoke(IPC_CHANNELS.window.isMaximized)
+      ipcRenderer.invoke(IPC_CHANNELS.window.isMaximized, {})
   }
 }
 
