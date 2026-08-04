@@ -43,7 +43,7 @@ jobs:
         run: pnpm exec electron-vite build
 
   e2e:
-    name: e2e (Electron smoke)
+    name: e2e (Electron golden path + smoke)
     needs: quality
     runs-on: ubuntu-latest
     steps:
@@ -60,5 +60,5 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # Electron needs a display; xvfb-run is preinstalled on ubuntu runners.
-      - name: E2E smoke (Playwright _electron)
+      - name: E2E (Playwright _electron)
         run: xvfb-run -a pnpm test:e2e

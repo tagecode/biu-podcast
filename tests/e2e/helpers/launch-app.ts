@@ -13,13 +13,15 @@ function resolveMainEntry(): string {
 /**
  * Launch the packaged main process under Playwright with a throwaway userData
  * directory, so runs never share state (SQLite DB, settings, single-instance
- * lock). The app creates the DB under userData via `app.getPath('userData')`;
- * we only point that path at a fresh temp dir and let the app do the rest.
+ * lock). The app creates the DB under userData via `app.getPath('userData')`.
+ *
+ * Pass `userDataDir` to reuse a directory (restart scenarios); otherwise a
+ * fresh temp dir is created.
  */
-export async function launchApp(): Promise<ElectronApplication> {
-  const userDataDir = mkdtempSync(join(tmpdir(), 'biu-podcast-e2e-'))
+export async function launchApp(options?: { userDataDir?: string }): Promise<ElectronApplication> {
+  const userDataDir = options?.userDataDir ?? mkdtempSync(join(tmpdir(), 'biu-podcast-e2e-'))
   const app = await electron.launch({
-    args: [resolveMainEntry()],
+    args: [resolveMainEntry(), `--user-data-dir=${userDataDir}`],
     cwd: join(__dirname, '..', '..', '..')
   })
   ;(app as unknown as Record<symbol, string>)[USER_DATA_SYMBOL] = userDataDir
@@ -30,4 +32,42 @@ export async function launchApp(): Promise<ElectronApplication> {
 export function cleanupUserData(app: ElectronApplication): void {
   const dir = (app as unknown as Record<symbol, string>)[USER_DATA_SYMBOL]
   if (dir) rmSync(dir, { recursive: true, force: true })
+}
+
+/** Remove a userData directory by explicit path (for restart scenarios). */
+export function removeUserDataDir(dir: string): void {
+  rmSync(dir, { recursive: true, force: true })
+}
+
+export interface DialogMockOptions {
+  /** Path the save dialog should return (export). */
+  exportPath?: string
+  /** Path the open dialog should return (import preview). */
+  importPath?: string
+  /** When true, showSaveDialog resolves canceled. */
+  exportCancelled?: boolean
+  /** When true, showOpenDialog resolves canceled. */
+  importCancelled?: boolean
+}
+
+/**
+ * Monkeypatch Electron's `dialog` module in the main process so the
+ * file-chooser flows (export/import) can be driven headlessly. `evaluate`'s
+ * first argument is the live `electron` module of the main process.
+ */
+export async function mockNativeDialogs(
+  app: ElectronApplication,
+  options: DialogMockOptions
+): Promise<void> {
+  await app.evaluate((electronModule, opts) => {
+    const electronMod = electronModule as typeof import('electron')
+    electronMod.dialog.showSaveDialog = async () =>
+      opts.exportCancelled
+        ? { canceled: true, filePath: undefined }
+        : { canceled: false, filePath: opts.exportPath }
+    electronMod.dialog.showOpenDialog = async () =>
+      opts.importCancelled
+        ? { canceled: true, filePaths: [] }
+        : { canceled: false, filePaths: opts.importPath ? [opts.importPath] : [] }
+  }, options)
 }
