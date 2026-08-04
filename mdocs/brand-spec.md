@@ -252,13 +252,13 @@ shadcn/ui 依赖一套语义化 CSS 变量（`--background`/`--foreground`/`--pr
 
 ---
 
-## 11. 应用图标与 Logo（待办事项，非本次覆盖范围）
+## 11. 应用图标与 Logo
 
-> ⚠️ 当前仓库 `resources/icon.png` 与 `build/icon.{ico,icns,png}` 仍是 electron-vite 脚手架自带的深蓝底青色原子图标，**与本文档定义的暖琥珀色板完全不符**，是脚手架遗留项，非本次品牌规范设计范围，但发布前必须替换，登记于此处避免遗漏：
+> ✅ 已落地（2026-08-04）：`build/icon.{ico,icns,png}` 与 `resources/icon.png` 已替换为品牌图标——暖黑圆角底（`#1C1917`）+ 琥珀圆（`#C67C14`）+ 深色播放三角，符合下方规格。生成路径：`brand-spec` §11 概念 → SVG → sharp 栅格化 PNG（1024/512）→ `icon-gen` 出 ICO（16–256）与 ICNS（16–1024）。
 
-- 概念方向建议：以"声波/播放三角"与"琥珀圆形"结合，暖底深色描边（呼应 `--ink` 底 + `--amber-600`/`--amber-400` 线形图案），风格与 lucide 图标线宽保持一致（避免图标是细线风格、Logo 却是粗体渐变风格的割裂）。
-- 交付规格：跟随 electron-builder 三端要求准备 `icon.icns`（macOS，含 16~1024px 多尺寸）、`icon.ico`（Windows，含 16/32/48/256px）、`icon.png`（Linux，512×512 或 1024×1024），安全区域内边距不小于图标画布的 10%。
-- 落地后需同步替换 `resources/icon.png`、`build/icon.*`，并检查 `electron-builder.yml` 中对应路径引用无误。
+- 概念方向：以"声波/播放三角"与"琥珀圆形"结合，暖底深色描边（呼应 `--ink` 底 + `--amber-600`/`--amber-400` 线形图案），风格与 lucide 图标线宽保持一致。
+- 交付规格：`icon.icns`（macOS，含 16~1024px 多尺寸）、`icon.ico`（Windows，含 16/32/48/256px）、`icon.png`（Linux，512×512 或 1024×1024），安全区域内边距不小于图标画布的 10%。
+- 后续如需调整视觉，更新 SVG 源后重新栅格化即可。
 
 ---
 
