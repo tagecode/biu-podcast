@@ -232,4 +232,28 @@ describe('SubscriptionService', () => {
     const service = new SubscriptionService({ db, settings })
     await expect(service.remove('nope', true)).rejects.toThrow('播客不存在')
   })
+
+  it('add: re-activates a soft-unsubscribed podcast instead of UNIQUE conflict', async () => {
+    const { db, sqlite, settings } = setup()
+    mockFetch.mockResolvedValue(makeFeed())
+    const service = new SubscriptionService({ db, settings })
+
+    // Subscribe, then soft-unsubscribe (keep data).
+    const podcast = await service.add('https://example.com/feed.xml')
+    await service.remove(podcast.id, false)
+
+    // Re-subscribe with the same feed URL.
+    mockFetch.mockResolvedValueOnce(makeFeed({ title: 'Re-activated' }))
+    const reactivated = await service.add('https://example.com/feed.xml')
+
+    // Same record, re-activated; feed_url UNIQUE was not violated.
+    expect(reactivated.id).toBe(podcast.id)
+    expect(reactivated.title).toBe('Re-activated')
+    const rows = db.select().from(schema.podcasts).all()
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.unsubscribedAt).toBeNull()
+    // Episodes kept and merged without duplicates.
+    expect(db.select().from(schema.episodes).all()).toHaveLength(1)
+    sqlite.close()
+  })
 })

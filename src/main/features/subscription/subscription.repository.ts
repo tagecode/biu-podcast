@@ -42,6 +42,38 @@ export class SubscriptionRepository {
     return row ? this.toPodcast(row) : null
   }
 
+  /**
+   * Find any record with this feed URL, including soft-unsubscribed ones.
+   * Used to re-activate a previous subscription instead of hitting the
+   * feed_url UNIQUE constraint.
+   */
+  findAnyByFeedUrl(feedUrl: string): Podcast | null {
+    const normalized = normalizeFeedUrl(feedUrl)
+    const rows = this.db.select().from(podcasts).all()
+    const row = rows.find((item) => normalizeFeedUrl(item.feedUrl) === normalized)
+    return row ? this.toPodcast(row) : null
+  }
+
+  /** Re-activate a soft-unsubscribed podcast and refresh its metadata. */
+  reactivatePodcast(
+    id: string,
+    input: {
+      title: string
+      description: string | null
+      coverUrl: string | null
+      author: string | null
+      language: string | null
+      lastFetchedAt: number
+      lastFetchStatus: FetchStatus
+    }
+  ): void {
+    this.db
+      .update(podcasts)
+      .set({ ...input, unsubscribedAt: null })
+      .where(eq(podcasts.id, id))
+      .run()
+  }
+
   findById(id: string): Podcast | null {
     const row = this.db.select().from(podcasts).where(eq(podcasts.id, id)).get()
     return row ? this.toPodcast(row) : null

@@ -44,6 +44,37 @@ export class SubscriptionService {
 
     const parsed = await fetchAndParseFeed(feedUrl)
     const now = Date.now()
+
+    // A previously soft-unsubscribed record may still hold the feed_url (kept
+    // because the user chose "保留数据"). Re-activate it instead of inserting,
+    // which would trip the feed_url UNIQUE constraint.
+    const softDeleted = this.subscriptions.findAnyByFeedUrl(feedUrl)
+    if (softDeleted) {
+      this.subscriptions.reactivatePodcast(softDeleted.id, {
+        title: parsed.title,
+        description: parsed.description,
+        coverUrl: parsed.coverUrl,
+        author: parsed.author,
+        language: parsed.language,
+        lastFetchedAt: now,
+        lastFetchStatus: 'ok'
+      })
+      this.episodes.insertMany(softDeleted.id, parsed.episodes)
+      return {
+        ...softDeleted,
+        title: parsed.title,
+        description: parsed.description,
+        coverUrl: parsed.coverUrl,
+        author: parsed.author,
+        language: parsed.language,
+        isPaused: false,
+        subscribedAt: softDeleted.subscribedAt,
+        lastFetchedAt: now,
+        lastFetchStatus: 'ok',
+        unreadCount: this.episodes.countUnread(softDeleted.id)
+      }
+    }
+
     const podcast: Podcast = {
       id: ulid(),
       feedUrl: normalizeFeedUrl(feedUrl),
