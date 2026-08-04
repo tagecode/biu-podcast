@@ -5,7 +5,7 @@
 | 产品名称 | 博播 BiuPodcast（`biu-podcast`）                                                                                                                                            |
 | 文档版本 | v1.1                                                                                                                                                                        |
 | 更新日期 | 2026-07-29                                                                                                                                                                  |
-| 状态     | MVP 工程闭环（方案 B）— 功能主链路已交付；覆盖率门禁已接入（全局 ≥85%）；Playwright E2E / 真实签名仍为已知延后项；详见 [`Mvp-Acceptance-Report.md`](./Mvp-Acceptance-Report.md)   |
+| 状态     | MVP 工程闭环（方案 B）— 功能主链路已交付；覆盖率门禁已接入（全局 ≥85%）；Playwright E2E 已接入；代码签名为可选增强项；详见 [`Mvp-Acceptance-Report.md`](./Mvp-Acceptance-Report.md)   |
 | 关联文档 | [`mdocs/Prd.md`](./Prd.md)（需求来源，§5.1 P0 范围）、[`mdocs/Feature.md`](./Feature.md)（功能条目对照）、[`mdocs/Arch.md`](./Arch.md)（技术方案，任务的目录结构/分层依据） |
 | 文档定位 | 把 PRD §5.1 的 MVP 范围拆解为**可独立开发、可独立验收**的任务清单，供排期与逐项验收使用                                                                                     |
 
@@ -32,7 +32,7 @@
 - 本地数据：SQLite 落地全部核心数据、完整导出/导入（JSON/zip）
 - 错误恢复：App 重启恢复播放进度、下载断点续传、Feed 拉取失败提示
 - 桌面基础：单实例锁定、窗口状态记忆、原生菜单
-- 安全与发布基线：渲染进程安全配置（`contextIsolation`/`sandbox`/`nodeIntegration`）、代码签名前置条件
+- 安全与发布基线：渲染进程安全配置（`contextIsolation`/`sandbox`/`nodeIntegration`）、代码签名配置占位（可选）
 
 ### 1.4 MVP 范围外（OUT，明确推迟到 P1/P2）
 
@@ -601,14 +601,14 @@ E0 工程基础设施
 - **测试要求**：纳入 CI 必跑项（`pnpm test`）。
 - **交付物**：`src/main/infra/security/security-baseline.test.ts`（替代本阶段的 `tests/e2e/security-baseline.spec.ts`）。
 
-#### T9.3 代码签名前置条件核对（不含实际签名执行）
+#### T9.3 代码签名配置占位（可选增强，不阻断发布）
 
 - **依赖**：无　**规模**：S
-- **描述**：MVP 阶段不强制要求已完成真实的证书采购与 Notarization（属组织行政流程，非纯技术任务），但需在 `electron-builder.yml` 中预留签名配置位（`win` CSC 环境变量说明 / `mac.notarize` 等），并在 README 中明确记录"发布前必须完成"的清单项，避免临上线才发现阻塞（对应 PRD §13 风险项、Arch.md §11/§15）。
+- **描述**：代码签名属**可选增强项**（未签名也可正式发布，仅影响 Windows SmartScreen / macOS Gatekeeper 的"未知发布者"提示，用户手动允许一次即可）。在 `electron-builder.yml` 中预留签名配置位（`win` CSC 环境变量说明 / `mac.notarize` 等），并在 README 中记录各平台签名启用方式（开源项目可走 SignPath Foundation 免费方案；macOS 无免费通道）。
 - **验收标准**：
-  - Given 评审本任务交付物，When 检查 `electron-builder.yml`，Then 签名相关配置字段/注释已预留（即使当前值为占位/未启用），且有明确的文档说明"正式发布前需替换为真实凭据"。
-- **测试要求**：无自动化测试，人工评审清单条目是否完整。
-- **交付物**：`electron-builder.yml` 补充注释、`README.md` 发布签名清单。
+  - Given 评审本任务交付物，When 检查 `electron-builder.yml`，Then 签名相关配置字段/注释已预留（即使当前值为占位/未启用），且有明确的文档说明签名是可选项及其启用方式。
+- **测试要求**：无自动化测试，人工评审配置位是否完整。
+- **交付物**：`electron-builder.yml` 补充注释、`README.md` 发布签名说明。
 
 #### T9.4 MVP 整体验收：核心用户旅程完整走查
 
@@ -631,26 +631,26 @@ MVP 视为**正式对外可交付**，需同时满足：
 2. CI 流水线（lint → typecheck → 单元 → 集成 → build → E2E 冒烟）在三平台矩阵上全部通过；
 3. T9.4 黄金路径 E2E 套件稳定通过（允许的 flaky 重试次数需在 CI 配置中明确，不允许"重跑到通过为止"掩盖真实缺陷）；
 4. 覆盖率达到 Arch.md §12.3 门槛：核心业务域（订阅/下载/播放进度/数据导入导出）语句覆盖率 ≥ 85%；
-5. 第 15 章安全清单（引用 Arch.md §15）中标记为"MVP 阶段必须完成"的条目（`sandbox`/`contextIsolation`/CSP/HTML 净化四项）已通过 T9.2 自动化验证，签名类条目已完成前置条件核对（T9.3）但可延后到实际发布前补齐真实凭据；
+5. 第 15 章安全清单（引用 Arch.md §15）中标记为"MVP 阶段必须完成"的条目（`sandbox`/`contextIsolation`/CSP/HTML 净化四项）已通过 T9.2 自动化验证；签名属可选增强项（T9.3 配置占位完成），不构成发布前置条件；
 6. `Feature.md` 中对应 P0 条目的勾选框已全部更新为 `[x]`，保持三份文档（Feature/Prd/Arch/Mvp）与实际实现状态一致。
 
 ### 5.2 方案 B 工程闭环（2026-07-29 已达成）
 
-在明确延后真实签名的前提下，以下视为 **MVP 工程闭环**：
+代码签名作为**可选增强项**（不阻塞发布），以下视为 **MVP 工程闭环**：
 
 | # | 条件 | 状态 |
 |---|------|------|
 | 1 | 主链路功能（E1–E8）已实现，关键路径有 Vitest 覆盖 | ✅ |
 | 2 | CI：lint → typecheck → test → coverage 门禁 → build，且 Win/mac/Linux 安装包产物产出 | ✅ |
 | 3 | T9.2 安全四项 Vitest 回归 | ✅ |
-| 4 | T9.3 签名配置占位 + README 清单 | ✅ |
+| 4 | T9.3 签名配置占位 + README 说明 | ✅ |
 | 5 | `Feature.md` MVP 相关条目已按实现勾选；验收报告已更新 | ✅ |
 | 6 | 覆盖率门禁（全局 statements ≥85%） | ✅（`12c1581` 起接入 CI） |
 | 7 | Playwright 黄金路径 + 专项 E2E（T5.6/T6.5/T6.7/T7.3/T9.4） | ✅ |
 | 8 | 依赖边界校验（T0.5 dependency-cruiser）+ 网络 mock（T0.3，以 `vi.stubGlobal` 等效落地） | ✅ |
-| 9 | 真实代码签名 | ⏳ 延后（组织流程，不阻塞工程闭环） |
+| 9 | 代码签名（可选） | ⏳ 未启用（不影响发布；有预算或接免费方案时按 README 启用） |
 
-逐项任务完成度见验收报告 §4；**51/51 任务完成**（T0.3 以等效方案满足，非 MSW 实现）。仅剩真实代码签名一项（组织流程，非代码）。
+逐项任务完成度见验收报告 §4；**51/51 任务完成**（T0.3 以等效方案满足，非 MSW 实现）。代码签名是可选项，不构成任何发布前置条件。
 
 ---
 

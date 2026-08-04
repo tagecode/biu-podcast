@@ -16,9 +16,11 @@ asarUnpack:
   - resources/**
 win:
   executableName: biu-podcast
-  # --- Code signing (T9.3 / Arch.md §15) ---
-  # Formal release MUST sign the Windows installer. Prefer env vars that
-  # electron-builder reads automatically (do not commit cert files):
+  # --- Code signing (optional enhancement, T9.3 / Arch.md §15) ---
+  # Signing is OPTIONAL: unsigned installers work but trigger a SmartScreen
+  # "unknown publisher" prompt (user clicks "More info → Run anyway").
+  # Prefer env vars that electron-builder reads automatically (do not commit
+  # cert files). Open-source projects can apply to SignPath Foundation (free):
   #   CSC_LINK              — path or base64 of .pfx / .p12
   #   CSC_KEY_PASSWORD      — certificate password
   # Optional explicit fields (uncomment when wiring local CI secrets):
@@ -38,13 +40,14 @@ mac:
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  # --- Code signing & notarization (T9.3 / Arch.md §15) ---
-  # Formal release MUST enable notarization and provide Apple credentials via env:
+  # --- Code signing & notarization (optional, T9.3 / Arch.md §15) ---
+  # OPTIONAL: unsigned builds open after the user right-clicks → Open (or
+  # "Privacy & Security" allow once). To enable, provide Apple credentials via
+  # env (requires a paid Apple Developer Program — no free path):
   #   APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID
   #   (or ASC_API_KEY_ID / ASC_API_KEY_ISSUER_ID / ASC_API_KEY path)
-  # Keep false for unsigned CI / local packaging only.
   notarize: false
-  # identity: null  # set to Developer ID Application: … for release builds
+  # identity: null  # set to Developer ID Application: … when enabling signing
 dmg:
   artifactName: ${name}-v${version}-${arch}.${ext}
 linux:

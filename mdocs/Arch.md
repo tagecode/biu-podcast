@@ -584,7 +584,7 @@ export const downloadTasks = sqliteTable('download_tasks', {
 - `main/infra/updater/` 封装 `electron-updater`：启动后延迟数秒静默检查（避免与冷启动关键路径抢占带宽/CPU），检查结果通过 IPC 广播给渲染进程用于展示"有新版本"提示；
 - Windows 走 NSIS 静默下载 + 重启安装；macOS 下载完成后弹出确认对话框，用户确认后再退出重启（Squirrel.Mac 机制）；
 - 更新失败（网络中断/签名校验失败）分别捕获 `electron-updater` 的 `error` 事件并映射为用户可读文案，不影响当前版本继续运行；
-- 发布物签名：Windows 使用代码签名证书（`electron-builder` 的 `win.certificateFile` 等配置），macOS 使用 `notarize: true` 走 Apple Notarization（当前 `electron-builder.yml` 中为 `notarize: false`，落地上线前必须改为启用并接入签名凭据，此项同时登记在第 15 章安全清单）。
+- 发布物签名（可选增强项）：Windows 使用代码签名证书（`electron-builder` 的 `win.certificateFile` 等配置），macOS 使用 `notarize: true` 走 Apple Notarization。当前 `electron-builder.yml` 中为 `notarize: false`，未签名发布仅影响"未知发布者"提示（用户手动允许一次），不构成发布前置条件；将来启用见 README 签名说明。
 
 ---
 
@@ -729,8 +729,8 @@ lint → typecheck → 单元测试(renderer+main, 并行) → 集成测试 → 
 - [x] CSP 头已配置且移动到生产环境仍生效（非仅开发环境注入）
 - [x] 集数描述 HTML 已经过服务端（主进程）净化后才传给渲染进程
 - [ ] 私有 Feed 凭据、云备份凭据使用系统级安全存储（Keychain/Credential Manager/libsecret），不明文写入 `electron-store`
-- [ ] macOS 构建 `notarize` 从 `false` 改为真实签名配置并验证 Gatekeeper 放行（配置位已预留，见 `electron-builder.yml` / README）
-- [ ] Windows 构建接入代码签名证书（CSC 环境变量说明已预留）
+- [ ] macOS 构建 `notarize` 从 `false` 改为真实签名配置并验证 Gatekeeper 放行（可选增强项，未签名也可发布；配置位已预留，见 `electron-builder.yml` / README）
+- [ ] Windows 构建接入代码签名证书（可选增强项；CSC 环境变量说明已预留，开源项目可走 SignPath Foundation 免费签名）
 - [ ] 深链接协议处理函数对外部传入参数做合法性校验，防止恶意构造的 `biu-podcast://` URL 触发非预期行为
 - [ ] 依赖包定期跑 `pnpm audit` / Dependabot，第三方原生模块版本锁定并记录来源
 
