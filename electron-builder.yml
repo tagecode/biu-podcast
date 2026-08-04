@@ -54,8 +54,8 @@ linux:
   target:
     - AppImage
     - deb
-  maintainer: electronjs.org
-  category: Utility
+  maintainer: tagecode
+  category: Audio
 appImage:
   artifactName: ${name}-v${version}.${ext}
 npmRebuild: false

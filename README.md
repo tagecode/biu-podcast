@@ -1,63 +1,72 @@
-# biu-podcast
+# 博播 BiuPodcast
 
-博播 BiuPodcast — Electron + React + TypeScript 桌面播客客户端。
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue.svg)
 
-## Recommended IDE Setup
+**博播（BiuPodcast）** 是一款本地优先（Local-first）、离线优先（Offline-first）的桌面播客客户端。所有订阅、播放进度与下载内容都保存在本机，无需账号，数据完全由你掌控。
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+> 暖琥珀色的设计语言，聚焦"数据在本机、离线可用"的踏实感。数据可完整导出/导入，永不锁死。
 
-## Project Setup
+## ✨ 功能特性
 
-### Install
+- **订阅管理** — 输入 RSS 地址添加订阅，自动解析元数据，检测重复，手动刷新，取消订阅（可选保留数据）
+- **播客浏览** — 详情页展示简介/封面/作者，集数列表带已听/未听、已下载/未下载独立状态标识，富文本安全渲染
+- **音频播放** — 迷你播放器 + 全屏播放器，播放/暂停/上下集/进度拖拽，播放进度持久化，重启后恢复（不自动出声）
+- **离线下载** — 单集下载、并发队列、暂停/继续/取消、断点续传、重启自动恢复、文件完整性校验
+- **本地数据** — SQLite 本地存储全部核心数据，`.biubackup` 一键导出/导入（含冲突预览）
+- **桌面体验** — 单实例锁定、窗口状态记忆、原生应用菜单、离线状态指示
+- **隐私安全** — 渲染进程沙箱/隔离、CSP、HTML 净化，数据不出本机
+
+## 📦 安装
+
+从 [Releases](https://github.com/tagecode/biu-podcast/releases) 下载对应平台的安装包：
+
+| 平台 | 架构 | 格式 |
+|------|------|------|
+| Windows | x64 | `.exe`（NSIS 安装包） |
+| macOS | arm64 | `.dmg` / `.zip`（Apple Silicon） |
+| macOS | x64 | `.dmg` / `.zip`（Intel） |
+| Linux | x64 | `.AppImage` / `.deb` |
+
+> 安装包目前未签名：macOS 首次打开需在「系统设置 → 隐私与安全性」中允许；Windows 若有 SmartScreen 提示，选择「更多信息 → 仍要运行」。
+
+## 🔨 从源码构建
+
+环境要求：[Node.js](https://nodejs.org/) ≥ 20、[pnpm](https://pnpm.io/) ≥ 10。
 
 ```bash
-$ pnpm install
+# 安装依赖
+pnpm install
+
+# 开发模式（热重载）
+pnpm dev
+
+# 运行测试（单元 + 集成 + 覆盖率）
+pnpm test
+pnpm test:coverage
+
+# 端到端测试（Playwright，驱动打包产物）
+pnpm test:e2e
+
+# 构建当前平台安装包
+pnpm build:win    # Windows
+pnpm build:mac    # macOS
+pnpm build:linux  # Linux（AppImage + deb）
 ```
 
-### Development
+## 🧪 质量保障
 
-```bash
-$ pnpm dev
-```
+- **三层测试**：单元测试（Vitest + Testing Library）+ 主进程集成测试 + Playwright E2E（冒烟 / 黄金路径 / 续播 / 续传 / 离线播放）
+- **覆盖率门禁**：核心业务域语句覆盖率 ≥ 85%（当前 90%+）
+- **依赖边界校验**：dependency-cruiser 防止 feature 间越权引用
+- **CI 门禁**：`lint → 依赖边界 → typecheck → 单元测试 → 覆盖率 → 构建 → E2E`，三平台安装包自动产出
 
-### Build
+## 🤝 贡献
 
-```bash
-# For windows
-$ pnpm build:win
+欢迎参与贡献！请先阅读 [CONTRIBUTING.md](./CONTRIBUTING.md) 与 [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)。
 
-# For macOS
-$ pnpm build:mac
+开发架构文档见 `mdocs/`：产品需求（[Prd.md](./mdocs/Prd.md)）、技术方案（[Arch.md](./mdocs/Arch.md)）、功能清单（[Feature.md](./mdocs/Feature.md)）、MVP 任务拆解（[Mvp.md](./mdocs/Mvp.md)）、品牌规范（[brand-spec.md](./mdocs/brand-spec.md)）。
 
-# For Linux (AppImage + deb)
-$ pnpm build:linux
-```
+## 📄 许可证
 
-### CI
-
-GitHub Actions（`.github/workflows/ci.yml`）门禁顺序：`lint → typecheck → test → electron-vite build`，随后在 Windows / macOS / Linux 矩阵打包安装产物。Playwright E2E 尚未接入。
-
-## 发布签名（可选增强，不阻塞发布）
-
-代码签名是**可选增强项**：未签名也可正式发布，仅对 Windows SmartScreen / macOS Gatekeeper 的"未知发布者"提示有影响（用户需手动允许一次）。当前 MVP 以未签名发布为主，配置位已预留，将来有预算或接入免费方案（如 SignPath Foundation 开源计划）时按下列步骤启用：
-
-### Windows（可选）
-
-1. 准备代码签名证书（`.pfx` / `.p12`）及密码；开源项目可申请 SignPath Foundation 免费签名。
-2. 在发布流水线注入环境变量（勿提交证书文件）：
-   - `CSC_LINK` — 证书路径或 base64
-   - `CSC_KEY_PASSWORD` — 证书密码
-3. 确认 `electron-builder.yml` 中 `win` 段签名相关注释已启用；构建后用 SmartScreen / `signtool verify` 校验。
-
-### macOS（可选，需付费）
-
-1. 准备 Apple Developer ID Application 证书与 Notary 凭据（Apple Developer Program 订阅，无免费通道）。
-2. 将 `electron-builder.yml` 中 `mac.notarize` 设为 `true`。
-3. 注入 `APPLE_ID` / `APPLE_APP_SPECIFIC_PASSWORD` / `APPLE_TEAM_ID`（或 App Store Connect API Key 等价变量）。
-4. 验证 Gatekeeper 可打开安装包。
-5. 无预算时保持未签名发布，在安装说明中提示用户手动允许。
-
-### 文档对照
-
-- 架构安全清单：`mdocs/Arch.md` §15
-- MVP 验收走查：`mdocs/Mvp-Acceptance-Report.md`
+[MIT](./LICENSE) © 2026 tagecode

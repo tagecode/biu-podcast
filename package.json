@@ -1,10 +1,27 @@
 {
   "name": "biu-podcast",
   "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "description": "Local-first / offline-first desktop podcast client. 博播 —— 数据留在本地的桌面播客客户端。",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "author": "tagecode",
+  "license": "MIT",
+  "homepage": "https://github.com/tagecode/biu-podcast",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tagecode/biu-podcast.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tagecode/biu-podcast/issues"
+  },
+  "keywords": [
+    "podcast",
+    "rss",
+    "electron",
+    "offline-first",
+    "local-first",
+    "桌面播客",
+    "播客"
+  ],
   "packageManager": "pnpm@10.11.0",
   "scripts": {
     "format": "prettier --write .",

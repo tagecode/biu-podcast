@@ -1,0 +1,7 @@
+# 博播 BiuPodcast 开发仓库
+
+欢迎！提交 issue 前请先阅读 [CONTRIBUTING.md](../../CONTRIBUTING.md) 与 [CODE_OF_CONDUCT.md](../../CODE_OF_CONDUCT.md)。
+
+- **Bug 报告** → 使用 [Bug 模板](./ISSUE_TEMPLATE/bug_report.md)
+- **功能请求** → 使用 [功能请求模板](./ISSUE_TEMPLATE/feature_request.md)
+- **安全漏洞** → 请勿公开提交，见 [SECURITY.md](../../SECURITY.md)
