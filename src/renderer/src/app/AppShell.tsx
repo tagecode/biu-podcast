@@ -1,8 +1,9 @@
 import { Download, Play, Settings } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { TitleBar } from '@/app/TitleBar'
+import { WindowControls } from '@/app/WindowControls'
 import { DownloadPanel } from '@/features/download/components/DownloadPanel'
 import { useDownloadStore } from '@/features/download/store'
 import { PodcastDetailPage } from '@/features/episode/pages/PodcastDetailPage'
@@ -10,6 +11,17 @@ import { FullScreenPlayer, MiniPlayer } from '@/features/playback/components/Pla
 import { usePlaybackStore } from '@/features/playback/store'
 import { SettingsPage } from '@/features/settings/pages/SettingsPage'
 import { SubscriptionListView } from '@/features/subscription/components/SubscriptionListView'
+
+declare module 'react' {
+  interface CSSProperties {
+    /** Non-standard Electron property; enables window dragging regions. */
+    WebkitAppRegion?: 'drag' | 'no-drag'
+  }
+}
+
+/** -webkit-app-region is non-standard; Electron reads it for window dragging. */
+const dragRegion: CSSProperties = { WebkitAppRegion: 'drag' }
+const noDragRegion: CSSProperties = { WebkitAppRegion: 'no-drag' }
 
 type Route =
   { name: 'subscriptions' } | { name: 'detail'; podcastId: string } | { name: 'settings' }
@@ -41,40 +53,46 @@ export function AppShell(): React.JSX.Element {
 
   return (
     <div className="flex h-screen flex-col bg-paper text-ink">
-      <TitleBar />
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line px-6">
+      <header
+        className="flex h-12 shrink-0 select-none items-center gap-3 border-b border-line bg-surface px-3"
+        style={dragRegion}
+      >
         <button
           type="button"
           className="flex items-center gap-2"
           onClick={() => setRoute({ name: 'subscriptions' })}
         >
-          <div className="flex size-8 items-center justify-center rounded-md bg-amber-600">
-            <Play className="size-4 text-ink" strokeWidth={1.75} />
+          <div className="flex size-7 items-center justify-center rounded-md bg-amber-600">
+            <Play className="size-3.5 text-ink" strokeWidth={1.75} />
           </div>
-          <span className="text-lg font-semibold">博播</span>
+          <span className="text-base font-semibold">博播</span>
         </button>
         <span className="text-sm text-muted">BiuPodcast</span>
-        <div className="flex-1" />
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="设置"
-          onClick={() => setRoute({ name: 'settings' })}
-        >
-          <Settings className="size-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="下载队列"
-          className="relative"
-          onClick={() => setPanelOpen(!panelOpen)}
-        >
-          <Download className="size-4" />
-          {tasks.length > 0 ? (
-            <span className="absolute top-1 right-1 size-1.5 rounded-full bg-amber-600" />
-          ) : null}
-        </Button>
+        <div className="min-w-0 flex-1" />
+        <div className="flex h-full items-center gap-1" style={noDragRegion}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="设置"
+            onClick={() => setRoute({ name: 'settings' })}
+          >
+            <Settings className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="下载队列"
+            className="relative"
+            onClick={() => setPanelOpen(!panelOpen)}
+          >
+            <Download className="size-4" />
+            {tasks.length > 0 ? (
+              <span className="absolute top-1 right-1 size-1.5 rounded-full bg-amber-600" />
+            ) : null}
+          </Button>
+          <div className="mx-1 h-4 w-px bg-line" />
+          <WindowControls />
+        </div>
       </header>
 
       <div className="flex min-h-0 flex-1">
