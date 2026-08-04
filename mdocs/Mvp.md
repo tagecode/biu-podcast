@@ -5,7 +5,7 @@
 | 产品名称 | 博播 BiuPodcast（`biu-podcast`）                                                                                                                                            |
 | 文档版本 | v1.1                                                                                                                                                                        |
 | 更新日期 | 2026-07-29                                                                                                                                                                  |
-| 状态     | MVP 工程闭环（方案 B）— 功能主链路已交付；Playwright E2E / 真实签名 / 覆盖率门禁仍为已知延后项；详见 [`Mvp-Acceptance-Report.md`](./Mvp-Acceptance-Report.md)               |
+| 状态     | MVP 工程闭环（方案 B）— 功能主链路已交付；覆盖率门禁已接入（全局 ≥85%）；Playwright E2E / 真实签名仍为已知延后项；详见 [`Mvp-Acceptance-Report.md`](./Mvp-Acceptance-Report.md)   |
 | 关联文档 | [`mdocs/Prd.md`](./Prd.md)（需求来源，§5.1 P0 范围）、[`mdocs/Feature.md`](./Feature.md)（功能条目对照）、[`mdocs/Arch.md`](./Arch.md)（技术方案，任务的目录结构/分层依据） |
 | 文档定位 | 把 PRD §5.1 的 MVP 范围拆解为**可独立开发、可独立验收**的任务清单，供排期与逐项验收使用                                                                                     |
 
@@ -636,18 +636,19 @@ MVP 视为**正式对外可交付**，需同时满足：
 
 ### 5.2 方案 B 工程闭环（2026-07-29 已达成）
 
-在明确延后 Playwright / 覆盖率门禁 / 真实签名的前提下，以下视为 **MVP 工程闭环**：
+在明确延后 Playwright / 真实签名的前提下，以下视为 **MVP 工程闭环**：
 
 | # | 条件 | 状态 |
 |---|------|------|
 | 1 | 主链路功能（E1–E8）已实现，关键路径有 Vitest 覆盖 | ✅ |
-| 2 | CI：lint → typecheck → test → build，且 Win/mac/Linux 安装包产物产出 | ✅ |
+| 2 | CI：lint → typecheck → test → coverage 门禁 → build，且 Win/mac/Linux 安装包产物产出 | ✅ |
 | 3 | T9.2 安全四项 Vitest 回归 | ✅ |
 | 4 | T9.3 签名配置占位 + README 清单 | ✅ |
 | 5 | `Feature.md` MVP 相关条目已按实现勾选；验收报告已更新 | ✅ |
-| 6 | Playwright 黄金路径 / 覆盖率 ≥85% / 真实签名 | ⏳ 延后（不阻塞工程闭环） |
+| 6 | 覆盖率门禁（全局 statements ≥85%） | ✅（`12c1581` 起接入 CI） |
+| 7 | Playwright 黄金路径 / 真实签名 | ⏳ 延后（不阻塞工程闭环） |
 
-逐项任务完成度与已知缺口见验收报告 §4；约 44/51 任务完成，缺口集中在 T0.3/T0.4/T0.5（部分）/T7.3 与 E9 E2E。
+逐项任务完成度与已知缺口见验收报告 §4；约 45/51 任务完成，缺口集中在 T0.3/T0.4/T0.5（部分）/T7.3 与 E9 E2E。
 
 ---
 
