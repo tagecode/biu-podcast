@@ -95,7 +95,13 @@ if (!ensureSingleInstance(() => mainWindowRef)) {
     migrateDatabase()
     getDb()
     registerAllHandlers()
-    downloadService.start()
+    // Download-queue startup must never block window creation: a migration or
+    // stale-task failure here would otherwise white-screen the whole app.
+    try {
+      downloadService.start()
+    } catch (error) {
+      console.error('DownloadService.start() failed:', error)
+    }
 
     app.on('browser-window-created', (_, window) => {
       optimizer.watchWindowShortcuts(window)

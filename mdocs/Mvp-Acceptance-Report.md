@@ -4,10 +4,10 @@
 |------|------|
 | 应用 | 博播 BiuPodcast |
 | 对照文档 | `mdocs/Mvp.md`、`mdocs/Prd.md` §2.2 / §12.1、`mdocs/Arch.md` §15、`mdocs/Feature.md` |
-| 验收策略 | **方案 B**：Vitest + CI 三平台构建 + 覆盖率门禁；Playwright E2E 延后 |
-| 报告日期 | 2026-07-29（§1/§4 已同步至 2026-08-04 代码基线 `12c1581`） |
-| 代码基线 | `12c1581`（含覆盖率门禁的当前 `main` HEAD） |
-| 核验方式 | 代码静态对照 + `pnpm test`（21 文件 / 94 用例）+ `pnpm test:coverage`（全局语句 88.46%）+ GitHub Actions 全绿（run [30462402827](https://github.com/tagecode/biu-podcast/actions/runs/30462402827)） |
+| 验收策略 | **方案 B**：Vitest + CI 三平台构建 + 覆盖率门禁；Playwright 冒烟已接入，黄金路径 E2E 延后 |
+| 报告日期 | 2026-07-29（§1/§4 已同步至 2026-08-04） |
+| 代码基线 | `main` @ 2026-08-04（T0.4 Playwright 冒烟接入后） |
+| 核验方式 | 代码静态对照 + `pnpm test`（21 文件 / 94 用例）+ `pnpm test:coverage`（全局语句 88.46%）+ `pnpm test:e2e`（Electron 冒烟）+ GitHub Actions 全绿（run [30462402827](https://github.com/tagecode/biu-podcast/actions/runs/30462402827)） |
 
 ## 1. 自动化门禁
 
@@ -17,7 +17,7 @@
 | 三平台安装包（Win NSIS / mac DMG / Linux AppImage+deb） | Pass | `windows-2022` / `macos-latest` / `ubuntu-latest` 产物已上传 |
 | 核心域覆盖率门禁（statements ≥85%） | Pass | 全局语句 88.46%（subscription 91.8 / episode 91.46 / playback 95 / data-portability 89.62 / download 84.86，门禁按全局阈值生效） |
 | T9.2 安全基线回归 | Pass | `security-baseline.test.ts` |
-| Playwright 冒烟 / 黄金路径 E2E | Skip（延后） | 见 §4 |
+| Playwright 冒烟（T0.4 / T9.1） | Pass | `tests/e2e/smoke/smoke.spec.ts`（打包产物启动 + 主窗口标题 + React 根渲染） |
 
 ## 2. 黄金路径走查（代码 + CI 核验）
 
@@ -48,7 +48,7 @@
 
 ## 4. 已知延后 / 非阻断债
 
-1. Playwright E2E（T0.4 / T7.3 / T9.1 冒烟 / T9.4 自动化黄金路径）
+1. Playwright 黄金路径 E2E（T9.4 / T7.3 / T5.6-T6.7 专项 spec，`tests/e2e/smoke/` 以外）
 2. MSW（T0.3）、dependency-cruiser（T0.5 边界校验）
 3. 核心域覆盖率：全局门禁已接入（≥85%），但 download 域 statements 84.86% 略低于 85% 逐域门槛（门禁按全局阈值生效，不阻塞）
 4. 代码签名真实凭据

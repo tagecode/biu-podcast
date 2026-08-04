@@ -41,3 +41,24 @@ jobs:
 
       - name: Compile (electron-vite)
         run: pnpm exec electron-vite build
+
+  e2e:
+    name: e2e (Electron smoke)
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Electron needs a display; xvfb-run is preinstalled on ubuntu runners.
+      - name: E2E smoke (Playwright _electron)
+        run: xvfb-run -a pnpm test:e2e

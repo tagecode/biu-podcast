@@ -1,15 +1,23 @@
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { app } from 'electron'
-import { is } from '@electron-toolkit/utils'
 
 import { getDatabasePath, getSqlite } from './client'
 
 function getMigrationsDir(): string {
-  if (is.dev) {
-    return join(app.getAppPath(), 'drizzle')
+  const candidates = [
+    // Packaged: drizzle/ ships as extraResources alongside the app bundle.
+    join(process.resourcesPath, 'drizzle'),
+    // electron-vite dev / preview: repo root drizzle/ next to out/main.
+    join(__dirname, '..', '..', 'drizzle'),
+    // Fallback to app.getAppPath() when neither of the above is laid out
+    // conventionally (e.g. running from a custom entry dir).
+    join(app.getAppPath(), 'drizzle')
+  ]
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate
   }
-  return join(process.resourcesPath, 'drizzle')
+  return candidates[1] ?? candidates[0] ?? candidates[2]
 }
 
 function runSqlStatements(sql: string): void {
