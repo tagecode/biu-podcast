@@ -77,13 +77,15 @@ test.describe('MVP golden path', () => {
     await expect(window.getByText('第一集')).toBeVisible()
 
     // 4. Download an episode
-    // Each episode row has a button aria-label="下载" (the header one is
-    // aria-label="下载队列"). Click the first episode download button.
-    await window.getByRole('button', { name: '下载', exact: true }).first().click()
-    // Download panel opens
-    await expect(window.getByText('下载队列 · 1 项')).toBeVisible()
-    // Wait for completion (task disappears from active list)
-    await expect(window.getByText('下载队列 · 0 项')).toBeVisible({ timeout: 15_000 })
+    // Episode rows are div.rounded-md.border (EpisodeListItem root). Click the
+    // first row's download button (exact match — the header button is
+    // aria-label="下载队列"). The download-complete signal is deterministic:
+    // once isDownloaded flips true the row's download button disappears.
+    const firstRow = window.locator('div.rounded-md.border').first()
+    await firstRow.getByRole('button', { name: '下载', exact: true }).click()
+    await expect(firstRow.getByRole('button', { name: '下载', exact: true })).toBeHidden({
+      timeout: 15_000
+    })
 
     // 5. Export data (dialog mocked to a temp path)
     await mockNativeDialogs(app!, { exportPath: backupPath })

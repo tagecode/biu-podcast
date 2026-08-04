@@ -55,9 +55,12 @@ test.describe('offline playback', () => {
 
     // Open detail and download the first episode fully.
     await window.getByRole('button', { name: /离线测试播客/ }).click()
-    await window.getByRole('button', { name: '下载', exact: true }).first().click()
-    await expect(window.getByText('下载队列 · 1 项')).toBeVisible()
-    await expect(window.getByText('下载队列 · 0 项')).toBeVisible({ timeout: 15_000 })
+    const firstRow = window.locator('div.rounded-md.border').first()
+    await firstRow.getByRole('button', { name: '下载', exact: true }).click()
+    // Deterministic completion signal: the row's download button disappears.
+    await expect(firstRow.getByRole('button', { name: '下载', exact: true })).toBeHidden({
+      timeout: 15_000
+    })
     // Close the download panel.
     await window.getByRole('button', { name: '关闭下载队列' }).click()
 

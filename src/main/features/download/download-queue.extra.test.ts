@@ -21,15 +21,12 @@ function makeTask(id: string, overrides: Partial<QueueTask> = {}): QueueTask {
 describe('DownloadQueue progress + lifecycle coverage', () => {
   it('forwards progress events to listeners with running totals', async () => {
     const seen: Array<{ progressBytes: number; totalBytes: number | null }> = []
-    const queue = new DownloadQueue(
-      async (_task, _signal, onProgress) => {
-        onProgress(30, 100)
-        onProgress(70, 100)
-        await wait(10)
-        return { localFilePath: '/tmp/a.mp3', totalBytes: 100 }
-      },
-      1
-    )
+    const queue = new DownloadQueue(async (_task, _signal, onProgress) => {
+      onProgress(30, 100)
+      onProgress(70, 100)
+      await wait(10)
+      return { localFilePath: '/tmp/a.mp3', totalBytes: 100 }
+    }, 1)
     queue.onEvent((event) => {
       if (event.type === 'progress') {
         seen.push({ progressBytes: event.progressBytes, totalBytes: event.totalBytes })
@@ -110,14 +107,11 @@ describe('DownloadQueue progress + lifecycle coverage', () => {
   })
 
   it('pause on a non-downloading task is a no-op', async () => {
-    const queue = new DownloadQueue(
-      async (task, signal) => {
-        await wait(50)
-        if (signal.aborted) throw new Error('aborted')
-        return { localFilePath: `/tmp/${task.id}`, totalBytes: 1 }
-      },
-      1
-    )
+    const queue = new DownloadQueue(async (task, signal) => {
+      await wait(50)
+      if (signal.aborted) throw new Error('aborted')
+      return { localFilePath: `/tmp/${task.id}`, totalBytes: 1 }
+    }, 1)
     queue.enqueue(makeTask('t1'))
     // Pause a task id that is neither queued nor downloading here.
     queue.pause('missing-id')
