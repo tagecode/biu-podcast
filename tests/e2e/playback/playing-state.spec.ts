@@ -3,13 +3,10 @@ import { launchApp } from '../helpers/launch-app'
 import { startTestServer } from '../helpers/test-server'
 
 test('episode play button reflects playing state', async () => {
-  const server = await startTestServer(
-    { title: '状态测试播客', author: 'T' },
-    [
-      { title: '集一', audioBytes: 256 * 1024, publishedDaysAgo: 1, durationSec: 300 },
-      { title: '集二', audioBytes: 128 * 1024, publishedDaysAgo: 0, durationSec: 120 }
-    ]
-  )
+  const server = await startTestServer({ title: '状态测试播客', author: 'T' }, [
+    { title: '集一', audioBytes: 256 * 1024, publishedDaysAgo: 1, durationSec: 300 },
+    { title: '集二', audioBytes: 128 * 1024, publishedDaysAgo: 0, durationSec: 120 }
+  ])
   const app = await launchApp()
   const window = await app.firstWindow()
   await window.waitForLoadState('domcontentloaded')

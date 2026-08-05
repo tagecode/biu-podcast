@@ -17,7 +17,10 @@ test('sort select switches the sort key', async () => {
 
   // Re-open: 名称 is checked, 最近更新 is not.
   await trigger.click()
-  await expect(window.getByRole('option', { name: '名称' })).toHaveAttribute('data-state', 'checked')
+  await expect(window.getByRole('option', { name: '名称' })).toHaveAttribute(
+    'data-state',
+    'checked'
+  )
   await expect(window.getByRole('option', { name: '最近更新' })).toHaveAttribute(
     'data-state',
     'unchecked'

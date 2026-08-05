@@ -3,10 +3,9 @@ import { launchApp } from '../helpers/launch-app'
 import { startTestServer } from '../helpers/test-server'
 
 test('unsubscribing with delete clears the mini player', async () => {
-  const server = await startTestServer(
-    { title: '删除播客', author: 'T' },
-    [{ title: '播放集', audioBytes: 256 * 1024, publishedDaysAgo: 1, durationSec: 300 }]
-  )
+  const server = await startTestServer({ title: '删除播客', author: 'T' }, [
+    { title: '播放集', audioBytes: 256 * 1024, publishedDaysAgo: 1, durationSec: 300 }
+  ])
   const app = await launchApp()
   const window = await app.firstWindow()
   await window.waitForLoadState('domcontentloaded')
