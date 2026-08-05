@@ -32,6 +32,8 @@ interface PlaybackState {
   refreshAdjacent: () => Promise<void>
   persistProgress: () => void
   clearPlaybackError: () => void
+  /** Stop playback and clear the player if it's playing an episode of this podcast. */
+  stopIfPlayingPodcast: (podcastId: string) => void
 }
 
 let audioElement: HTMLAudioElement | null = null
@@ -188,6 +190,24 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     const episode = get().currentEpisode
     if (!episode) return
     void persistNow(episode.id, getAudio().currentTime)
+  },
+  stopIfPlayingPodcast: (podcastId) => {
+    const episode = get().currentEpisode
+    if (!episode || episode.podcastId !== podcastId) return
+    const audio = getAudio()
+    audio.pause()
+    audio.removeAttribute('src')
+    audio.load()
+    set({
+      currentEpisode: null,
+      currentPodcast: null,
+      isPlaying: false,
+      currentTimeSec: 0,
+      durationSec: 0,
+      hasPrevious: false,
+      hasNext: false,
+      playbackError: null
+    })
   }
 }))
 

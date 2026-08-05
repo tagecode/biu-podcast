@@ -43,6 +43,7 @@ export function PodcastDetailPage({
   const currentEpisodeId = usePlaybackStore((state) => state.currentEpisode?.id)
   const isPlaying = usePlaybackStore((state) => state.isPlaying)
   const togglePlay = usePlaybackStore((state) => state.togglePlay)
+  const stopIfPlayingPodcast = usePlaybackStore((state) => state.stopIfPlayingPodcast)
   const enqueueDownload = useDownloadStore((state) => state.enqueue)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -271,6 +272,9 @@ export function PodcastDetailPage({
         onOpenChange={setUnsubscribeOpen}
         onConfirm={async (deleteData) => {
           await removeSubscription(podcastId, deleteData)
+          // If this podcast's episode was playing, the mini player must not
+          // keep showing data that no longer exists.
+          if (deleteData) stopIfPlayingPodcast(podcastId)
           onBack()
         }}
       />
