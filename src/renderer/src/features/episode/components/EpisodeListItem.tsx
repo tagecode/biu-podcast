@@ -80,7 +80,12 @@ export function EpisodeListItem({
             <Download className="size-4" />
           </Button>
         ) : null}
-        <Button variant="ghost" size="icon" aria-label={isCurrentPlaying ? '暂停' : '播放'} onClick={onPlay}>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={isCurrentPlaying ? '暂停' : '播放'}
+          onClick={onPlay}
+        >
           {isCurrentPlaying ? <Pause className="size-4" /> : <Play className="size-4" />}
         </Button>
       </div>
