@@ -9,6 +9,7 @@ import {
   IPC_CHANNELS,
   ListEpisodesInputSchema,
   MarkAllPlayedInputSchema,
+  MarkPlayedInputSchema,
   RefreshSubscriptionInputSchema,
   RemoveSubscriptionInputSchema,
   UpdateProgressInputSchema,
@@ -78,6 +79,22 @@ export function registerEpisodeHandlers(): void {
       broadcast(IPC_CHANNELS.episode.changed, { podcastId: input.podcastId })
       broadcast(IPC_CHANNELS.subscription.changed, subscriptionService.list())
       return { updated }
+    }
+  )
+
+  registerHandler(
+    IPC_CHANNELS.episode.markPlayed,
+    MarkPlayedInputSchema,
+    async (_event, input) => {
+      // markPlayed already validates the episode exists and is idempotent
+      // (WHERE is_played = false). Return its podcastId so we can broadcast
+      // the unread-count refresh without a second lookup.
+      const result = episodeService.markPlayedWithPodcast(input.episodeId)
+      if (result.changed) {
+        broadcast(IPC_CHANNELS.episode.changed, { podcastId: result.podcastId })
+        broadcast(IPC_CHANNELS.subscription.changed, subscriptionService.list())
+      }
+      return { changed: result.changed }
     }
   )
 

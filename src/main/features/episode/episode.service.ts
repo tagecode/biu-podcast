@@ -36,6 +36,24 @@ export class EpisodeService {
     return this.episodes.markAllPlayed(podcastId)
   }
 
+  markPlayed(episodeId: string): boolean {
+    const episode = this.episodes.findById(episodeId)
+    if (!episode) {
+      throw new AppError('NOT_FOUND', '集数不存在')
+    }
+    return this.episodes.markPlayed(episodeId)
+  }
+
+  /** Like markPlayed but returns the podcastId for unread-count refresh. */
+  markPlayedWithPodcast(episodeId: string): { changed: boolean; podcastId: string } {
+    const episode = this.episodes.findById(episodeId)
+    if (!episode) {
+      throw new AppError('NOT_FOUND', '集数不存在')
+    }
+    const changed = this.episodes.markPlayed(episodeId)
+    return { changed, podcastId: episode.podcastId }
+  }
+
   updateProgress(episodeId: string, positionSec: number): void {
     const episode = this.episodes.findById(episodeId)
     if (!episode) {

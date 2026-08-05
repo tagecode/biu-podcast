@@ -10,6 +10,7 @@ import { createTestDb } from '../../test-utils/db'
 import { EpisodeService } from './episode.service'
 import { EpisodeRepository } from './episode.repository'
 import * as schema from '../../infra/db/schema'
+import { eq } from 'drizzle-orm'
 
 function seedOne(db: ReturnType<typeof createTestDb>['db']): string {
   const repo = new EpisodeRepository(db)
@@ -90,6 +91,30 @@ describe('EpisodeService', () => {
     expect(changed).toBe(2)
     const after = db.select().from(schema.episodes).all()
     expect(after.every((e) => e.isPlayed)).toBe(true)
+  })
+
+  it('markPlayed marks a single episode played and is idempotent', () => {
+    const { db } = createTestDb()
+    seedOne(db)
+    const service = new EpisodeService({ db })
+
+    const episodeId = db.select().from(schema.episodes).get()!.id
+    const first = service.markPlayedWithPodcast(episodeId)
+    expect(first.changed).toBe(true)
+    expect(first.podcastId).toBe('pod-1')
+
+    const row = db.select().from(schema.episodes).where(eq(schema.episodes.id, episodeId)).get()
+    expect(row?.isPlayed).toBe(true)
+
+    // Second call changes nothing (already played).
+    const second = service.markPlayedWithPodcast(episodeId)
+    expect(second.changed).toBe(false)
+  })
+
+  it('markPlayed throws NOT_FOUND for missing episode', () => {
+    const { db } = createTestDb()
+    const service = new EpisodeService({ db })
+    expect(() => service.markPlayed('nope')).toThrow('集数不存在')
   })
 
   it('updateProgress throws NOT_FOUND for missing episode', () => {

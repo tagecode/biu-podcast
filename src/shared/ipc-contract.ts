@@ -25,6 +25,10 @@ export const MarkAllPlayedInputSchema = z.object({
   podcastId: z.string().min(1)
 })
 
+export const MarkPlayedInputSchema = z.object({
+  episodeId: z.string().min(1)
+})
+
 export const GetEpisodeInputSchema = z.object({
   episodeId: z.string().min(1)
 })
@@ -47,6 +51,7 @@ export type RemoveSubscriptionInput = z.infer<typeof RemoveSubscriptionInputSche
 export type RefreshSubscriptionInput = z.infer<typeof RefreshSubscriptionInputSchema>
 export type ListEpisodesInput = z.infer<typeof ListEpisodesInputSchema>
 export type MarkAllPlayedInput = z.infer<typeof MarkAllPlayedInputSchema>
+export type MarkPlayedInput = z.infer<typeof MarkPlayedInputSchema>
 export type GetEpisodeInput = z.infer<typeof GetEpisodeInputSchema>
 export type UpdateProgressInput = z.infer<typeof UpdateProgressInputSchema>
 export const DownloadTaskIdInputSchema = z.object({

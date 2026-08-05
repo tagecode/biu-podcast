@@ -7,6 +7,7 @@ import type {
   ImportBackupInput,
   ListEpisodesInput,
   MarkAllPlayedInput,
+  MarkPlayedInput,
   RefreshSubscriptionInput,
   RemoveSubscriptionInput,
   UpdateProgressInput,
@@ -48,6 +49,7 @@ declare global {
         listByPodcast: (input: ListEpisodesInput) => Promise<IpcResult<EpisodeListPage>>
         getById: (input: GetEpisodeInput) => Promise<IpcResult<Episode>>
         markAllPlayed: (input: MarkAllPlayedInput) => Promise<IpcResult<{ updated: number }>>
+        markPlayed: (input: MarkPlayedInput) => Promise<IpcResult<{ changed: boolean }>>
         getAdjacent: (
           input: GetAdjacentInput
         ) => Promise<IpcResult<{ previous: Episode | null; next: Episode | null }>>

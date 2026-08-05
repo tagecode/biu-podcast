@@ -10,6 +10,7 @@ export const IPC_CHANNELS = {
     listByPodcast: 'episode:list-by-podcast',
     getById: 'episode:get-by-id',
     markAllPlayed: 'episode:mark-all-played',
+    markPlayed: 'episode:mark-played',
     getAdjacent: 'episode:get-adjacent',
     changed: 'episode:changed'
   },

@@ -10,6 +10,7 @@ import type {
   ImportBackupInput,
   ListEpisodesInput,
   MarkAllPlayedInput,
+  MarkPlayedInput,
   RefreshSubscriptionInput,
   RemoveSubscriptionInput,
   UpdateProgressInput,
@@ -60,6 +61,8 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.episode.getById, input),
     markAllPlayed: (input: MarkAllPlayedInput): Promise<IpcResult<{ updated: number }>> =>
       ipcRenderer.invoke(IPC_CHANNELS.episode.markAllPlayed, input),
+    markPlayed: (input: MarkPlayedInput): Promise<IpcResult<{ changed: boolean }>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.episode.markPlayed, input),
     getAdjacent: (
       input: GetAdjacentInput
     ): Promise<IpcResult<{ previous: Episode | null; next: Episode | null }>> =>

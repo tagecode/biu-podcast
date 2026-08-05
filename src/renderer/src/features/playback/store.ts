@@ -191,8 +191,8 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   }
 }))
 
-export function bindAudioEvents(): () => void {
-  const audio = getAudio()
+export function bindAudioEvents(target?: HTMLAudioElement): () => void {
+  const audio = target ?? getAudio()
 
   const onTimeUpdate = (): void => {
     const state = usePlaybackStore.getState()
@@ -209,6 +209,11 @@ export function bindAudioEvents(): () => void {
   const onEnded = (): void => {
     const state = usePlaybackStore.getState()
     state.persistProgress()
+    // Finished playing → mark the episode as played (updates unread count).
+    const finished = state.currentEpisode
+    if (finished) {
+      void window.api.episode.markPlayed({ episodeId: finished.id })
+    }
     if (state.hasNext) {
       void state.playNext()
     } else {

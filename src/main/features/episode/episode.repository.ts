@@ -164,6 +164,16 @@ export class EpisodeRepository {
     return result.changes
   }
 
+  /** Mark a single episode as played (idempotent: only if currently unplayed). */
+  markPlayed(episodeId: string): boolean {
+    const result = this.db
+      .update(episodes)
+      .set({ isPlayed: true })
+      .where(and(eq(episodes.id, episodeId), eq(episodes.isPlayed, false)))
+      .run()
+    return result.changes > 0
+  }
+
   countUnread(podcastId: string): number {
     const row = this.db
       .select({ value: count() })
