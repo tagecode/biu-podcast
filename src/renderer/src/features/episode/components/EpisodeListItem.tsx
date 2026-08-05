@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Download, Play } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Download, Pause, Play } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import type { Episode } from '@shared/types'
@@ -10,6 +10,8 @@ interface EpisodeListItemProps {
   episode: Episode
   active?: boolean
   selected?: boolean
+  /** This episode is the current track AND audio is playing — show a pause button. */
+  isCurrentPlaying?: boolean
   onPlay: () => void
   onDownload?: () => void
   onOpenDetail?: () => void
@@ -19,6 +21,7 @@ export function EpisodeListItem({
   episode,
   active,
   selected,
+  isCurrentPlaying,
   onPlay,
   onDownload,
   onOpenDetail
@@ -77,8 +80,8 @@ export function EpisodeListItem({
             <Download className="size-4" />
           </Button>
         ) : null}
-        <Button variant="ghost" size="icon" aria-label="播放" onClick={onPlay}>
-          <Play className="size-4" />
+        <Button variant="ghost" size="icon" aria-label={isCurrentPlaying ? '暂停' : '播放'} onClick={onPlay}>
+          {isCurrentPlaying ? <Pause className="size-4" /> : <Play className="size-4" />}
         </Button>
       </div>
     </div>

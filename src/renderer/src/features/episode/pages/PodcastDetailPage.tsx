@@ -41,6 +41,8 @@ export function PodcastDetailPage({
   const [detailLoading, setDetailLoading] = useState(false)
   const playEpisode = usePlaybackStore((state) => state.playEpisode)
   const currentEpisodeId = usePlaybackStore((state) => state.currentEpisode?.id)
+  const isPlaying = usePlaybackStore((state) => state.isPlaying)
+  const togglePlay = usePlaybackStore((state) => state.togglePlay)
   const enqueueDownload = useDownloadStore((state) => state.enqueue)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -219,8 +221,15 @@ export function PodcastDetailPage({
                   key={episode.id}
                   episode={episode}
                   active={currentEpisodeId === episode.id}
+                  isCurrentPlaying={currentEpisodeId === episode.id && isPlaying}
                   selected={selectedEpisode?.id === episode.id}
-                  onPlay={() => void playEpisode(episode, podcast as Podcast)}
+                  onPlay={() => {
+                    if (currentEpisodeId === episode.id) {
+                      togglePlay()
+                    } else {
+                      void playEpisode(episode, podcast as Podcast)
+                    }
+                  }}
                   onDownload={() => void enqueueDownload(episode.id)}
                   onOpenDetail={() => void openEpisodeDetail(episode.id)}
                 />
@@ -240,7 +249,14 @@ export function PodcastDetailPage({
         <EpisodeDetailPanel
           episode={selectedEpisode}
           onClose={() => setSelectedEpisode(null)}
-          onPlay={() => void playEpisode(selectedEpisode, podcast)}
+          isCurrentPlaying={currentEpisodeId === selectedEpisode.id && isPlaying}
+          onPlay={() => {
+            if (currentEpisodeId === selectedEpisode.id) {
+              togglePlay()
+            } else {
+              void playEpisode(selectedEpisode, podcast)
+            }
+          }}
           onDownload={
             selectedEpisode.isDownloaded
               ? undefined

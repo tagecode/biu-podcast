@@ -1,4 +1,4 @@
-import { Download, Play, X } from 'lucide-react'
+import { Download, Pause, Play, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import type { Episode } from '@shared/types'
@@ -10,13 +10,16 @@ interface EpisodeDetailPanelProps {
   onClose: () => void
   onPlay: () => void
   onDownload?: () => void
+  /** This episode is the current track AND audio is playing — show pause. */
+  isCurrentPlaying?: boolean
 }
 
 export function EpisodeDetailPanel({
   episode,
   onClose,
   onPlay,
-  onDownload
+  onDownload,
+  isCurrentPlaying
 }: EpisodeDetailPanelProps): React.JSX.Element {
   return (
     <aside className="flex w-[360px] shrink-0 flex-col border-l border-line bg-surface">
@@ -35,8 +38,8 @@ export function EpisodeDetailPanel({
 
       <div className="flex gap-2 border-b border-line px-4 py-3">
         <Button onClick={onPlay}>
-          <Play className="size-4" />
-          播放
+          {isCurrentPlaying ? <Pause className="size-4" /> : <Play className="size-4" />}
+          {isCurrentPlaying ? '暂停' : '播放'}
         </Button>
         {!episode.isDownloaded && onDownload ? (
           <Button variant="secondary" onClick={onDownload}>
