@@ -1,4 +1,4 @@
-import { Plus, RefreshCw, Search } from 'lucide-react'
+import { ChevronDown, Plus, RefreshCw, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -50,15 +50,19 @@ export function SubscriptionListView({
             onChange={(event) => setQuery(event.target.value)}
           />
         </div>
-        <select
-          className="h-10 rounded-md border border-line bg-surface px-3 text-sm text-muted"
-          value={sortKey}
-          onChange={(event) => setSortKey(event.target.value as typeof sortKey)}
-        >
-          <option value="recent">最近更新</option>
-          <option value="unread">未听数量</option>
-          <option value="title">名称</option>
-        </select>
+        <div className="relative shrink-0">
+          <select
+            aria-label="排序方式"
+            className="h-10 cursor-pointer appearance-none rounded-md border border-line bg-surface py-0 pr-9 pl-3 text-sm text-ink outline-none transition-colors hover:border-amber-600/60 focus-visible:border-amber-600 focus-visible:ring-[3px] focus-visible:ring-amber-600/15"
+            value={sortKey}
+            onChange={(event) => setSortKey(event.target.value as typeof sortKey)}
+          >
+            <option value="recent">最近更新</option>
+            <option value="unread">未听数量</option>
+            <option value="title">名称</option>
+          </select>
+          <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-muted" strokeWidth={1.75} />
+        </div>
         <div className="flex-1" />
         <Button variant="ghost" size="icon" onClick={() => void load()} aria-label="刷新全部">
           <RefreshCw className="size-4" />
