@@ -71,7 +71,8 @@ export class SubscriptionService {
         subscribedAt: softDeleted.subscribedAt,
         lastFetchedAt: now,
         lastFetchStatus: 'ok',
-        unreadCount: this.episodes.countUnread(softDeleted.id)
+        unreadCount: this.episodes.countUnread(softDeleted.id),
+        playedCount: this.episodes.countPlayed(softDeleted.id)
       }
     }
 
@@ -103,7 +104,7 @@ export class SubscriptionService {
     })
     this.episodes.insertMany(podcast.id, parsed.episodes)
 
-    return { ...podcast, unreadCount: parsed.episodes.length }
+    return { ...podcast, unreadCount: parsed.episodes.length, playedCount: 0 }
   }
 
   list(): Podcast[] {
@@ -133,7 +134,11 @@ export class SubscriptionService {
       if (!updated) throw new AppError('NOT_FOUND', '播客不存在')
       return {
         addedCount,
-        podcast: { ...updated, unreadCount: this.episodes.countUnread(podcastId) }
+        podcast: {
+          ...updated,
+          unreadCount: this.episodes.countUnread(podcastId),
+          playedCount: this.episodes.countPlayed(podcastId)
+        }
       }
     } catch (error) {
       const status: FetchStatus =

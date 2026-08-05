@@ -183,6 +183,15 @@ export class EpisodeRepository {
     return Number(row?.value ?? 0)
   }
 
+  countPlayed(podcastId: string): number {
+    const row = this.db
+      .select({ value: count() })
+      .from(episodes)
+      .where(and(eq(episodes.podcastId, podcastId), eq(episodes.isPlayed, true)))
+      .get()
+    return Number(row?.value ?? 0)
+  }
+
   countByPodcast(podcastId: string): number {
     const row = this.db
       .select({ value: count() })

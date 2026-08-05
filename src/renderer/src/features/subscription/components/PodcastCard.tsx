@@ -39,6 +39,11 @@ export function PodcastCard({ podcast, onClick }: PodcastCardProps): React.JSX.E
       <div className="space-y-1 p-3">
         <h3 className="line-clamp-2 text-sm font-medium text-ink">{podcast.title}</h3>
         <p className="text-xs text-muted">{formatRelativeTime(podcast.lastFetchedAt)}</p>
+        <p className="text-xs text-muted">
+          <span className="text-amber-700">{podcast.unreadCount ?? 0} 集未听</span>
+          <span className="mx-1 text-line">·</span>
+          <span>{podcast.playedCount ?? 0} 集已听</span>
+        </p>
       </div>
     </button>
   )

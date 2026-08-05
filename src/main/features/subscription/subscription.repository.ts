@@ -83,7 +83,8 @@ export class SubscriptionRepository {
     const rows = this.db
       .select({
         podcast: podcasts,
-        unreadCount: sql<number>`sum(case when ${episodes.isPlayed} = 0 then 1 else 0 end)`
+        unreadCount: sql<number>`sum(case when ${episodes.isPlayed} = 0 then 1 else 0 end)`,
+        playedCount: sql<number>`sum(case when ${episodes.isPlayed} = 1 then 1 else 0 end)`
       })
       .from(podcasts)
       .leftJoin(episodes, eq(episodes.podcastId, podcasts.id))
@@ -91,9 +92,10 @@ export class SubscriptionRepository {
       .groupBy(podcasts.id)
       .all()
 
-    return rows.map(({ podcast, unreadCount }) => ({
+    return rows.map(({ podcast, unreadCount, playedCount }) => ({
       ...this.toPodcast(podcast),
-      unreadCount: Number(unreadCount ?? 0)
+      unreadCount: Number(unreadCount ?? 0),
+      playedCount: Number(playedCount ?? 0)
     }))
   }
 

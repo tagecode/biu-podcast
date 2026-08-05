@@ -16,6 +16,8 @@ export interface Podcast {
   lastFetchedAt: number | null
   lastFetchStatus: FetchStatus | null
   unreadCount?: number
+  /** Number of episodes marked as played (dynamically computed with unreadCount). */
+  playedCount?: number
 }
 
 export interface Episode {
