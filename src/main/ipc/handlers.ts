@@ -82,21 +82,17 @@ export function registerEpisodeHandlers(): void {
     }
   )
 
-  registerHandler(
-    IPC_CHANNELS.episode.markPlayed,
-    MarkPlayedInputSchema,
-    async (_event, input) => {
-      // markPlayed already validates the episode exists and is idempotent
-      // (WHERE is_played = false). Return its podcastId so we can broadcast
-      // the unread-count refresh without a second lookup.
-      const result = episodeService.markPlayedWithPodcast(input.episodeId)
-      if (result.changed) {
-        broadcast(IPC_CHANNELS.episode.changed, { podcastId: result.podcastId })
-        broadcast(IPC_CHANNELS.subscription.changed, subscriptionService.list())
-      }
-      return { changed: result.changed }
+  registerHandler(IPC_CHANNELS.episode.markPlayed, MarkPlayedInputSchema, async (_event, input) => {
+    // markPlayed already validates the episode exists and is idempotent
+    // (WHERE is_played = false). Return its podcastId so we can broadcast
+    // the unread-count refresh without a second lookup.
+    const result = episodeService.markPlayedWithPodcast(input.episodeId)
+    if (result.changed) {
+      broadcast(IPC_CHANNELS.episode.changed, { podcastId: result.podcastId })
+      broadcast(IPC_CHANNELS.subscription.changed, subscriptionService.list())
     }
-  )
+    return { changed: result.changed }
+  })
 
   registerHandler(IPC_CHANNELS.episode.getAdjacent, GetAdjacentInputSchema, async (_event, input) =>
     playbackService.getAdjacent(input.episodeId)
