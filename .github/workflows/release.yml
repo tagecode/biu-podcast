@@ -106,11 +106,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Resolve version (manual run)
-        id: version
-        if: github.event_name == 'workflow_dispatch'
-        run: echo "version=v$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
-
       - name: Download artifacts (Windows x64)
         uses: actions/download-artifact@v7
         with:
@@ -135,28 +130,61 @@ jobs:
           name: biu-podcast-linux-x64
           path: artifacts
 
+      - name: Resolve release tag
+        id: tag
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "name=v$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Write release notes
+        shell: bash
+        run: |
+          cat > NOTES.md <<'EOF'
+          ## 安装说明
+
+          产物命名：`biu-podcast-v{version}-...`（Windows 为 `biu-podcast-v{version}-setup.exe`）
+
+          | 平台 | 架构 | 格式 |
+          |------|------|------|
+          | Windows | x64 | `.exe`（NSIS 安装包，可选择安装目录） |
+          | macOS | arm64 | `.dmg` / `.zip`（Apple Silicon） |
+          | macOS | x64 | `.dmg` / `.zip`（Intel） |
+          | Linux | x64 | `.AppImage` / `.deb` |
+
+          > 未签名构建：macOS 首次打开需在「系统设置 → 隐私与安全性」中允许；Windows 若有 SmartScreen 提示，选择「更多信息 → 仍要运行」。
+          EOF
+
+      # gh is preinstalled on runners and auto-auth'd via GITHUB_TOKEN
+      # (permissions: contents: write). Delete-then-create is idempotent:
+      # a re-run deletes the previous draft/release and recreates it fresh,
+      # unlike softprops/action-gh-release which 404s updating existing assets.
+      - name: Delete existing release (idempotent)
+        shell: bash
+        run: |
+          gh release delete "${{ steps.tag.outputs.name }}" --yes --repo "${{ github.repository }}" \
+            || echo "No existing release to delete — creating fresh"
+
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ github.event_name == 'workflow_dispatch' && steps.version.outputs.version || github.ref_name }}
-          files: |
-            artifacts/**/*.dmg
-            artifacts/**/*.zip
-            artifacts/**/*.exe
-            artifacts/**/*.AppImage
-            artifacts/**/*.deb
-            artifacts/**/*.yml
-          generate_release_notes: true
-          body: |
-            ## 安装说明
-
-            产物命名：`biu-podcast-v{version}-...`（Windows 为 `biu-podcast-v{version}-setup.exe`）
-
-            | 平台 | 架构 | 格式 |
-            |------|------|------|
-            | Windows | x64 | `.exe`（NSIS 安装包） |
-            | macOS | arm64 | `.dmg` / `.zip`（Apple Silicon） |
-            | macOS | x64 | `.dmg` / `.zip`（Intel） |
-            | Linux | x64 | `.AppImage` / `.deb` |
-
-            > 未签名构建：macOS 首次打开需在「系统设置 → 隐私与安全性」中允许；Windows 若有 SmartScreen 提示，选择「更多信息 → 仍要运行」。
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Collect artifacts to upload. mac-arm64 and mac-x64 each produce a
+          # latest-mac.yml; both would flatten to the same filename, so keep
+          # only the x64 one (mirrors what the previous release published).
+          FILES="$(find artifacts -type f \
+            \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' \
+               -o -name '*.AppImage' -o -name '*.deb' -o -name '*.yml' \) \
+            ! -path 'artifacts/mac-arm64/latest-mac.yml' | sort)"
+          echo "Uploading:"
+          echo "$FILES"
+          # shellcheck disable=SC2046
+          gh release create "${{ steps.tag.outputs.name }}" \
+            --repo "${{ github.repository }}" \
+            --title "${{ steps.tag.outputs.name }}" \
+            --notes-file NOTES.md \
+            $FILES
