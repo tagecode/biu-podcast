@@ -46,7 +46,10 @@ test('capture README screenshots', async () => {
 
   const userDataDir = mkdtempSync(join(tmpdir(), 'biu-shot-'))
   const app = await electron.launch({
-    args: [join(__dirname, '..', '..', 'out', 'main', 'index.js'), `--user-data-dir=${userDataDir}`],
+    args: [
+      join(__dirname, '..', '..', 'out', 'main', 'index.js'),
+      `--user-data-dir=${userDataDir}`
+    ],
     cwd: join(__dirname, '..', '..')
   })
   const window = await app.firstWindow()
@@ -58,7 +61,9 @@ test('capture README screenshots', async () => {
     await window.getByRole('dialog').getByLabel('RSS Feed 地址').fill(server.feedUrl)
     await window.getByRole('button', { name: '解析并添加' }).click()
     // The just-added podcast card appears (any of the four titles).
-    await expect(window.getByRole('button', { name: /技术周刊|深夜电台|产品经理|历史深处/ }).first()).toBeVisible()
+    await expect(
+      window.getByRole('button', { name: /技术周刊|深夜电台|产品经理|历史深处/ }).first()
+    ).toBeVisible()
   }
 
   // Screenshot 1: subscription list.
