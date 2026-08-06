@@ -176,15 +176,19 @@ jobs:
           # Collect artifacts to upload. mac-arm64 and mac-x64 each produce a
           # latest-mac.yml; both would flatten to the same filename, so keep
           # only the x64 one (mirrors what the previous release published).
-          FILES="$(find artifacts -type f \
-            \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' \
-               -o -name '*.AppImage' -o -name '*.deb' -o -name '*.yml' \) \
-            ! -path 'artifacts/mac-arm64/latest-mac.yml' | sort)"
+          # Read into a bash array to preserve filenames with spaces (e.g.
+          # "博播 BiuPodcast-1.0.0-mac.zip").
+          mapfile -t FILES < <(
+            find artifacts -type f \
+              \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' \
+                 -o -name '*.AppImage' -o -name '*.deb' -o -name 'latest*.yml' \) \
+              ! -path 'artifacts/mac-arm64/latest-mac.yml' \
+              ! -name 'builder-debug.yml' | sort
+          )
           echo "Uploading:"
-          echo "$FILES"
-          # shellcheck disable=SC2046
+          printf '  %s\n' "${FILES[@]}"
           gh release create "${{ steps.tag.outputs.name }}" \
             --repo "${{ github.repository }}" \
             --title "${{ steps.tag.outputs.name }}" \
             --notes-file NOTES.md \
-            $FILES
+            "${FILES[@]}"
