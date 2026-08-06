@@ -15,6 +15,22 @@ export const RefreshSubscriptionInputSchema = z.object({
   podcastId: z.string().min(1)
 })
 
+export const SetPausedInputSchema = z.object({
+  podcastId: z.string().min(1),
+  paused: z.boolean()
+})
+
+/** No payload — dialog-based OPML import/export. */
+export const OpmlActionInputSchema = z.object({})
+
+/** Result of an OPML import. */
+export interface OpmlImportResult {
+  filePath: string
+  added: number
+  skipped: number
+  failed: Array<{ title: string; error: string }>
+}
+
 export const ListEpisodesInputSchema = z.object({
   podcastId: z.string().min(1),
   offset: z.number().int().min(0).optional().default(0),
@@ -49,6 +65,8 @@ export const VerifyLocalInputSchema = z.object({
 export type AddSubscriptionInput = z.infer<typeof AddSubscriptionInputSchema>
 export type RemoveSubscriptionInput = z.infer<typeof RemoveSubscriptionInputSchema>
 export type RefreshSubscriptionInput = z.infer<typeof RefreshSubscriptionInputSchema>
+export type SetPausedInput = z.infer<typeof SetPausedInputSchema>
+export type OpmlActionInput = z.infer<typeof OpmlActionInputSchema>
 export type ListEpisodesInput = z.infer<typeof ListEpisodesInputSchema>
 export type MarkAllPlayedInput = z.infer<typeof MarkAllPlayedInputSchema>
 export type MarkPlayedInput = z.infer<typeof MarkPlayedInputSchema>
@@ -76,3 +94,9 @@ export type ImportBackupInput = z.infer<typeof ImportBackupInputSchema>
 /** Window controls from the custom title bar (no payload needed). */
 export const WindowActionInputSchema = z.object({})
 export type WindowActionInput = z.infer<typeof WindowActionInputSchema>
+
+export const SetSettingInputSchema = z.object({
+  key: z.enum(['autoRefreshMinutes']),
+  value: z.union([z.number().nullable(), z.string(), z.boolean()])
+})
+export type SetSettingInput = z.infer<typeof SetSettingInputSchema>

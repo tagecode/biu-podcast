@@ -82,6 +82,8 @@ export interface AppSettings {
   lastEpisodeId: string | null
   lastPodcastId: string | null
   lastPositionSec: number
+  /** Auto-refresh interval in minutes; null/0 = manual. */
+  autoRefreshMinutes: number | null
 }
 
 export interface PlaybackSession {

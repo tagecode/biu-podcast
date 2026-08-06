@@ -118,6 +118,10 @@ export class SubscriptionRepository {
     this.db.update(podcasts).set({ unsubscribedAt: Date.now() }).where(eq(podcasts.id, id)).run()
   }
 
+  setPaused(id: string, paused: boolean): void {
+    this.db.update(podcasts).set({ isPaused: paused }).where(eq(podcasts.id, id)).run()
+  }
+
   deletePodcast(id: string): void {
     this.db.delete(podcasts).where(eq(podcasts.id, id)).run()
   }

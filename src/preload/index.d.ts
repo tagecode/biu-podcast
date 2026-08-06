@@ -8,8 +8,11 @@ import type {
   ListEpisodesInput,
   MarkAllPlayedInput,
   MarkPlayedInput,
+  OpmlImportResult,
   RefreshSubscriptionInput,
   RemoveSubscriptionInput,
+  SetPausedInput,
+  SetSettingInput,
   UpdateProgressInput,
   VerifyLocalInput
 } from '@shared/ipc-contract'
@@ -43,6 +46,10 @@ declare global {
         refresh: (
           input: RefreshSubscriptionInput
         ) => Promise<IpcResult<{ addedCount: number; podcast: Podcast }>>
+        refreshAll: () => Promise<IpcResult<Array<{ podcastId: string; addedCount: number }>>>
+        setPaused: (input: SetPausedInput) => Promise<IpcResult<void>>
+        importOpml: () => Promise<IpcResult<OpmlImportResult | null>>
+        exportOpml: () => Promise<IpcResult<{ filePath: string } | null>>
         onChanged: (callback: (podcasts: Podcast[]) => void) => () => void
       }
       episode: {
@@ -72,6 +79,7 @@ declare global {
       }
       settings: {
         get: () => Promise<IpcResult<AppSettings>>
+        set: (input: SetSettingInput) => Promise<IpcResult<void>>
       }
       dataPortability: {
         export: () => Promise<IpcResult<{ filePath: string } | null>>

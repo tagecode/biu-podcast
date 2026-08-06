@@ -10,8 +10,11 @@ import {
   ListEpisodesInputSchema,
   MarkAllPlayedInputSchema,
   MarkPlayedInputSchema,
+  OpmlActionInputSchema,
   RefreshSubscriptionInputSchema,
   RemoveSubscriptionInputSchema,
+  SetPausedInputSchema,
+  SetSettingInputSchema,
   UpdateProgressInputSchema,
   VerifyLocalInputSchema,
   WindowActionInputSchema
@@ -21,6 +24,8 @@ import { dataPortabilityService } from '../features/data-portability/data-portab
 import { downloadService } from '../features/download/download.service'
 import { episodeService } from '../features/episode/episode.service'
 import { playbackService } from '../features/playback/playback.service'
+import { settingsStore } from '../infra/settings/store'
+import { autoRefreshScheduler } from '../features/subscription/auto-refresh'
 import { subscriptionService } from '../features/subscription/subscription.service'
 import { broadcast, registerHandler, registerNoInputHandler, registerVoidHandler } from './register'
 
@@ -55,6 +60,27 @@ export function registerSubscriptionHandlers(): void {
       broadcast(IPC_CHANNELS.episode.changed, { podcastId: input.podcastId })
       return result
     }
+  )
+
+  registerVoidHandler(
+    IPC_CHANNELS.subscription.setPaused,
+    SetPausedInputSchema,
+    async (_event, input) => {
+      subscriptionService.setPaused(input.podcastId, input.paused)
+      broadcast(IPC_CHANNELS.subscription.changed, subscriptionService.list())
+    }
+  )
+
+  registerNoInputHandler(IPC_CHANNELS.subscription.refreshAll, () =>
+    subscriptionService.refreshAll()
+  )
+
+  registerHandler(IPC_CHANNELS.subscription.importOpml, OpmlActionInputSchema, async () =>
+    subscriptionService.importOpmlFromFile()
+  )
+
+  registerHandler(IPC_CHANNELS.subscription.exportOpml, OpmlActionInputSchema, async () =>
+    subscriptionService.exportOpmlToFile()
   )
 }
 
@@ -205,11 +231,23 @@ export function registerWindowHandlers(): void {
   )
 }
 
+export function registerSettingsHandlers(): void {
+  registerNoInputHandler(IPC_CHANNELS.settings.get, () => settingsStore.getAll())
+
+  registerVoidHandler(IPC_CHANNELS.settings.set, SetSettingInputSchema, (_event, input) => {
+    settingsStore.set(input.key, input.value as never)
+    if (input.key === 'autoRefreshMinutes') {
+      autoRefreshScheduler.restart()
+    }
+  })
+}
+
 export function registerAllHandlers(): void {
   registerSubscriptionHandlers()
   registerEpisodeHandlers()
   registerPlaybackHandlers()
   registerDownloadHandlers()
   registerDataPortabilityHandlers()
+  registerSettingsHandlers()
   registerWindowHandlers()
 }

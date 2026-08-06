@@ -1,7 +1,7 @@
 import { ulid } from 'ulid'
 import { join } from 'path'
-import { rm } from 'fs/promises'
-import { app } from 'electron'
+import { rm, readFile, writeFile } from 'fs/promises'
+import { app, dialog } from 'electron'
 
 import { EpisodeRepository } from '../episode/episode.repository'
 import { getDb, type AppDatabase } from '../../infra/db/client'
@@ -11,6 +11,7 @@ import type { FetchStatus, Podcast } from '@shared/types'
 
 import { fetchAndParseFeed } from './feed-parser'
 import { normalizeFeedUrl, SubscriptionRepository } from './subscription.repository'
+import { buildOpml, parseOpml } from './opml'
 
 export interface SubscriptionServiceDeps {
   db?: AppDatabase
@@ -180,6 +181,89 @@ export class SubscriptionService {
     } else {
       this.subscriptions.softUnsubscribe(podcastId)
     }
+  }
+
+  setPaused(podcastId: string, paused: boolean): void {
+    const podcast = this.subscriptions.findById(podcastId)
+    if (!podcast) {
+      throw new AppError('NOT_FOUND', '播客不存在')
+    }
+    this.subscriptions.setPaused(podcastId, paused)
+  }
+
+  /**
+   * Import subscriptions from an OPML file (dialog-based). Each entry is
+   * added via add(); per-entry failures don't block the rest. Returns counts
+   * of added / skipped (already subscribed) / failed.
+   */
+  async importOpmlFromFile(): Promise<{
+    filePath: string
+    added: number
+    skipped: number
+    failed: Array<{ title: string; error: string }>
+  } | null> {
+    const result = await dialog.showOpenDialog({
+      title: '导入 OPML 订阅',
+      properties: ['openFile'],
+      filters: [{ name: 'OPML', extensions: ['opml', 'xml'] }]
+    })
+    if (result.canceled || !result.filePaths[0]) return null
+
+    const filePath = result.filePaths[0]
+    const xml = await readFile(filePath, 'utf8')
+    const outlines = parseOpml(xml)
+
+    let added = 0
+    let skipped = 0
+    const failed: Array<{ title: string; error: string }> = []
+    for (const outline of outlines) {
+      try {
+        await this.add(outline.feedUrl)
+        added += 1
+      } catch (error) {
+        if (error instanceof AppError && error.code === 'ALREADY_SUBSCRIBED') {
+          skipped += 1
+        } else {
+          failed.push({
+            title: outline.title || outline.feedUrl,
+            error: error instanceof Error ? error.message : '未知错误'
+          })
+        }
+      }
+    }
+    return { filePath, added, skipped, failed }
+  }
+
+  /** Export all active subscriptions to an OPML file (dialog-based). */
+  async exportOpmlToFile(): Promise<{ filePath: string } | null> {
+    const result = await dialog.showSaveDialog({
+      title: '导出 OPML 订阅',
+      defaultPath: 'biu-podcast-subscriptions.opml',
+      filters: [{ name: 'OPML', extensions: ['opml'] }]
+    })
+    if (result.canceled || !result.filePath) return null
+
+    const feeds = this.list().map((p) => ({ title: p.title, feedUrl: p.feedUrl }))
+    const xml = buildOpml(feeds)
+    await writeFile(result.filePath, xml, 'utf8')
+    return { filePath: result.filePath }
+  }
+
+  /** Refresh all active (non-paused, non-unsubscribed) podcasts. */
+  async refreshAll(): Promise<Array<{ podcastId: string; addedCount: number }>> {
+    const all = this.subscriptions.listWithUnreadCount()
+    const active = all.filter((p) => !p.isPaused)
+    const results: Array<{ podcastId: string; addedCount: number }> = []
+    for (const podcast of active) {
+      try {
+        const result = await this.refresh(podcast.id)
+        results.push({ podcastId: podcast.id, addedCount: result.addedCount })
+      } catch {
+        // Individual refresh failures don't block the rest.
+        results.push({ podcastId: podcast.id, addedCount: 0 })
+      }
+    }
+    return results
   }
 }
 

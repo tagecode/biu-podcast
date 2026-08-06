@@ -29,6 +29,7 @@ export function PodcastDetailPage({
   )
   const refreshSubscription = useSubscriptionStore((state) => state.refresh)
   const removeSubscription = useSubscriptionStore((state) => state.remove)
+  const setSubscriptionPaused = useSubscriptionStore((state) => state.setPaused)
   const [episodes, setEpisodes] = useState<Episode[]>([])
   const [total, setTotal] = useState(0)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -195,6 +196,12 @@ export function PodcastDetailPage({
                 </Button>
                 <Button variant="secondary" onClick={() => setUnsubscribeOpen(true)}>
                   取消订阅
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => void setSubscriptionPaused(podcastId, !podcast.isPaused)}
+                >
+                  {podcast.isPaused ? '恢复订阅' : '暂停订阅'}
                 </Button>
               </div>
             </div>

@@ -11,8 +11,11 @@ import type {
   ListEpisodesInput,
   MarkAllPlayedInput,
   MarkPlayedInput,
+  OpmlImportResult,
   RefreshSubscriptionInput,
   RemoveSubscriptionInput,
+  SetPausedInput,
+  SetSettingInput,
   UpdateProgressInput,
   VerifyLocalInput
 } from '@shared/ipc-contract'
@@ -47,6 +50,14 @@ const api = {
       input: RefreshSubscriptionInput
     ): Promise<IpcResult<{ addedCount: number; podcast: Podcast }>> =>
       ipcRenderer.invoke(IPC_CHANNELS.subscription.refresh, input),
+    refreshAll: (): Promise<IpcResult<Array<{ podcastId: string; addedCount: number }>>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.subscription.refreshAll),
+    setPaused: (input: SetPausedInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.subscription.setPaused, input),
+    importOpml: (): Promise<IpcResult<OpmlImportResult | null>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.subscription.importOpml),
+    exportOpml: (): Promise<IpcResult<{ filePath: string } | null>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.subscription.exportOpml),
     onChanged: (callback: (podcasts: Podcast[]) => void): (() => void) => {
       const listener = (_event: Electron.IpcRendererEvent, podcasts: Podcast[]): void =>
         callback(podcasts)
@@ -104,17 +115,9 @@ const api = {
     }
   },
   settings: {
-    get: (): Promise<IpcResult<AppSettings>> =>
-      Promise.resolve({
-        ok: true,
-        data: {
-          downloadPath: null,
-          resumeOnLaunch: true,
-          lastEpisodeId: null,
-          lastPodcastId: null,
-          lastPositionSec: 0
-        }
-      })
+    get: (): Promise<IpcResult<AppSettings>> => ipcRenderer.invoke(IPC_CHANNELS.settings.get),
+    set: (input: SetSettingInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.settings.set, input)
   },
   dataPortability: {
     export: (): Promise<IpcResult<{ filePath: string } | null>> =>

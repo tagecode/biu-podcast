@@ -1,14 +1,28 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import type { ImportPreview } from '@shared/backup'
 import { useSubscriptionStore } from '@/features/subscription/store'
 
 import * as settingsApi from '../api'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 
 interface SettingsPageProps {
   onBack: () => void
 }
+
+const REFRESH_OPTIONS = [
+  { value: 'null', label: '手动' },
+  { value: '30', label: '每 30 分钟' },
+  { value: '60', label: '每 1 小时' },
+  { value: '360', label: '每 6 小时' }
+]
 
 function formatPreview(preview: ImportPreview): string {
   return [
@@ -23,10 +37,19 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [autoRefresh, setAutoRefresh] = useState<string>('null')
   const [pendingImport, setPendingImport] = useState<{
     filePath: string
     preview: ImportPreview
   } | null>(null)
+
+  useEffect(() => {
+    void settingsApi.getSettings().then((settings) => {
+      setAutoRefresh(
+        settings.autoRefreshMinutes == null ? 'null' : String(settings.autoRefreshMinutes)
+      )
+    })
+  }, [])
 
   const handleExport = async (): Promise<void> => {
     setBusy(true)
@@ -78,6 +101,59 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
     } finally {
       setBusy(false)
     }
+  }
+
+  const handleOpmlImport = async (): Promise<void> => {
+    setBusy(true)
+    setError(null)
+    setMessage(null)
+    try {
+      const result = await window.api.subscription.importOpml()
+      if (!result.ok) {
+        setMessage('已取消导入')
+        return
+      }
+      const { data } = result
+      if (!data) {
+        setMessage('已取消导入')
+        return
+      }
+      const { added, skipped, failed } = data
+      await loadSubscriptions()
+      setMessage(
+        `OPML 导入完成：新增 ${added} 个，跳过 ${skipped} 个已订阅${failed.length ? `，失败 ${failed.length} 个` : ''}`
+      )
+    } catch (importError) {
+      setError(importError instanceof Error ? importError.message : 'OPML 导入失败')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleOpmlExport = async (): Promise<void> => {
+    setBusy(true)
+    setError(null)
+    setMessage(null)
+    try {
+      const result = await window.api.subscription.exportOpml()
+      if (!result.ok || !result.data) {
+        setMessage('已取消导出')
+        return
+      }
+      setMessage(`已导出 OPML 到：${result.data.filePath}`)
+    } catch (exportError) {
+      setError(exportError instanceof Error ? exportError.message : 'OPML 导出失败')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleAutoRefreshChange = (value: string): void => {
+    setAutoRefresh(value)
+    const minutes = value === 'null' ? null : Number(value)
+    void settingsApi.setSetting('autoRefreshMinutes', minutes).catch((e) => {
+      setError(e instanceof Error ? e.message : '保存自动刷新设置失败')
+    })
   }
 
   return (
@@ -142,6 +218,56 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
               </div>
             </div>
           ) : null}
+
+          <div>
+            <h2 className="text-sm font-semibold text-ink">订阅迁移（OPML）</h2>
+            <p className="mt-1 text-sm text-muted">导入/导出订阅列表为标准 OPML 文件。</p>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">导入 OPML</div>
+              <div className="mt-1 text-xs text-muted">批量导入订阅，重复条目自动跳过</div>
+            </div>
+            <Button variant="secondary" disabled={busy} onClick={() => void handleOpmlImport()}>
+              导入 OPML…
+            </Button>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">导出 OPML</div>
+              <div className="mt-1 text-xs text-muted">
+                导出当前全部订阅，可被其他播客客户端识别
+              </div>
+            </div>
+            <Button variant="secondary" disabled={busy} onClick={() => void handleOpmlExport()}>
+              导出 OPML…
+            </Button>
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold text-ink">刷新设置</h2>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">自动刷新间隔</div>
+              <div className="mt-1 text-xs text-muted">按设定间隔后台刷新订阅，发现新集通知</div>
+            </div>
+            <Select value={autoRefresh} onValueChange={handleAutoRefreshChange}>
+              <SelectTrigger className="w-32" aria-label="自动刷新间隔">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {REFRESH_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {message ? (
             <div className="rounded-lg border border-line bg-amber-100/50 p-3 text-sm text-ink whitespace-pre-wrap">

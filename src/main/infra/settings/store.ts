@@ -7,7 +7,8 @@ const defaults: AppSettings = {
   resumeOnLaunch: true,
   lastEpisodeId: null,
   lastPodcastId: null,
-  lastPositionSec: 0
+  lastPositionSec: 0,
+  autoRefreshMinutes: null
 }
 
 // electron-store v9+ is ESM-only. electron-vite externalizes it into CJS
@@ -37,7 +38,8 @@ export class SettingsStore {
       resumeOnLaunch: this.store.get('resumeOnLaunch'),
       lastEpisodeId: this.store.get('lastEpisodeId'),
       lastPodcastId: this.store.get('lastPodcastId'),
-      lastPositionSec: this.store.get('lastPositionSec')
+      lastPositionSec: this.store.get('lastPositionSec'),
+      autoRefreshMinutes: this.store.get('autoRefreshMinutes')
     }
   }
 

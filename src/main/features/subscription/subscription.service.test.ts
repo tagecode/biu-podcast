@@ -256,4 +256,63 @@ describe('SubscriptionService', () => {
     expect(db.select().from(schema.episodes).all()).toHaveLength(1)
     sqlite.close()
   })
+
+  it('setPaused: toggles isPaused', async () => {
+    const { db, sqlite, settings } = setup()
+    mockFetch.mockResolvedValue(makeFeed())
+    const service = new SubscriptionService({ db, settings })
+    const podcast = await service.add('https://example.com/feed.xml')
+
+    service.setPaused(podcast.id, true)
+    let row = db.select().from(schema.podcasts).where(eq(schema.podcasts.id, podcast.id)).get()
+    expect(row?.isPaused).toBe(true)
+
+    service.setPaused(podcast.id, false)
+    row = db.select().from(schema.podcasts).where(eq(schema.podcasts.id, podcast.id)).get()
+    expect(row?.isPaused).toBe(false)
+    sqlite.close()
+  })
+
+  it('setPaused: throws NOT_FOUND for missing podcast', () => {
+    const { db, settings } = setup()
+    const service = new SubscriptionService({ db, settings })
+    expect(() => service.setPaused('nope', true)).toThrow('播客不存在')
+  })
+
+  it('refreshAll: refreshes active podcasts and skips paused', async () => {
+    const { db, sqlite, settings } = setup()
+    mockFetch.mockResolvedValue(makeFeed())
+    const service = new SubscriptionService({ db, settings })
+
+    const p1 = await service.add('https://example.com/one.xml')
+    const p2 = await service.add('https://example.com/two.xml')
+    // Pause p2 — it must not be refreshed.
+    service.setPaused(p2.id, true)
+
+    // Second call: p1 gets one new episode, p2 skipped.
+    mockFetch.mockReset()
+    mockFetch.mockResolvedValueOnce(
+      makeFeed({
+        episodes: [
+          makeFeed().episodes[0]!,
+          {
+            title: 'EP-NEW',
+            descriptionHtml: null,
+            publishedAt: 1700002000000,
+            audioUrl: 'https://example.com/new.mp3',
+            durationSec: 300,
+            fileSizeBytes: 512,
+            guid: 'guid-new'
+          }
+        ]
+      })
+    )
+
+    const results = await service.refreshAll()
+    const p1Result = results.find((r) => r.podcastId === p1.id)
+    expect(p1Result?.addedCount).toBe(1)
+    // p2 was paused → refreshAll should not have produced a result for it.
+    expect(results.find((r) => r.podcastId === p2.id)).toBeUndefined()
+    sqlite.close()
+  })
 })

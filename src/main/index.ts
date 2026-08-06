@@ -5,6 +5,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 
 import icon from '../../resources/icon.png?asset'
 import { downloadService } from './features/download/download.service'
+import { autoRefreshScheduler } from './features/subscription/auto-refresh'
 import { registerAllHandlers } from './ipc/handlers'
 import { setMainWindow } from './ipc/register'
 import { closeDb, getDb } from './infra/db/client'
@@ -108,6 +109,7 @@ if (!ensureSingleInstance(() => mainWindowRef)) {
     } catch (error) {
       console.error('DownloadService.start() failed:', error)
     }
+    autoRefreshScheduler.start()
 
     app.on('browser-window-created', (_, window) => {
       optimizer.watchWindowShortcuts(window)

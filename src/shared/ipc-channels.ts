@@ -4,6 +4,10 @@ export const IPC_CHANNELS = {
     list: 'subscription:list',
     remove: 'subscription:remove',
     refresh: 'subscription:refresh',
+    refreshAll: 'subscription:refresh-all',
+    setPaused: 'subscription:set-paused',
+    importOpml: 'subscription:import-opml',
+    exportOpml: 'subscription:export-opml',
     changed: 'subscription:changed'
   },
   episode: {

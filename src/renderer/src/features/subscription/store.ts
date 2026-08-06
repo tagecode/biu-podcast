@@ -14,6 +14,7 @@ interface SubscriptionState {
   load: () => Promise<void>
   add: (feedUrl: string) => Promise<void>
   refresh: (podcastId: string) => Promise<void>
+  setPaused: (podcastId: string, paused: boolean) => Promise<void>
   remove: (podcastId: string, deleteData?: boolean) => Promise<void>
   setQuery: (query: string) => void
   setSortKey: (sortKey: SortKey) => void
@@ -66,6 +67,10 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       set({ error: mapped })
       throw new Error(mapped)
     }
+  },
+  setPaused: async (podcastId, paused) => {
+    await subscriptionApi.setSubscriptionPaused(podcastId, paused)
+    await get().load()
   },
   remove: async (podcastId, deleteData = false) => {
     await subscriptionApi.removeSubscription(podcastId, deleteData)

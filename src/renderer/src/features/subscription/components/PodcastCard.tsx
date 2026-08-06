@@ -30,6 +30,11 @@ export function PodcastCard({ podcast, onClick }: PodcastCardProps): React.JSX.E
         ) : (
           <CoverPlaceholder title={podcast.title} />
         )}
+        {podcast.isPaused ? (
+          <Badge className="absolute top-2 left-2 rounded-full bg-muted px-2 py-0.5 text-xs text-white">
+            已暂停
+          </Badge>
+        ) : null}
         {(podcast.unreadCount ?? 0) > 0 ? (
           <Badge className="absolute top-2 right-2 min-w-[22px] justify-center rounded-full bg-amber-600 px-1.5 text-ink">
             {podcast.unreadCount}
