@@ -26,9 +26,8 @@ interface DownloadState {
 // Throttle progress-driven re-renders so the panel (and its buttons) stays
 // stable between interactions — otherwise every chunk rebuilds the task row
 // and pause/cancel clicks get lost as the button is detached mid-click.
-let lastProgressAt: Record<string, number> = {}
+const lastProgressAt: Record<string, number> = {}
 const PROGRESS_THROTTLE_MS = 300
-
 export const useDownloadStore = create<DownloadState>((set, get) => ({
   tasks: [],
   panelOpen: false,

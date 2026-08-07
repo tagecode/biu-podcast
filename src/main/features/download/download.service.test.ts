@@ -10,7 +10,6 @@ vi.mock('electron', () => ({
   app: { getPath: () => '/tmp/fake-userdata' },
   Notification: {
     isSupported: () => false,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     prototype: { show: () => undefined }
   }
 }))
