@@ -3,7 +3,35 @@ import { globalShortcut, type BrowserWindow } from 'electron'
 import { IPC_CHANNELS } from '@shared/ipc-channels'
 import type { PlaybackCommand } from '@shared/ipc-contract'
 
-/** Global media-key shortcuts that work even when the app is unfocused. */
+interface CommandBinding {
+  command: PlaybackCommand
+  /** Candidate accelerators, tried in order; first successful wins. */
+  candidates: string[]
+}
+
+/**
+ * Global media-key shortcuts that work even when the app is unfocused.
+ *
+ * Media keys (hardware play/pause/next/prev) are the primary path. Software
+ * combos are fallbacks with several candidates each, because a single combo
+ * (e.g. Ctrl+Alt+P) may already be owned by another app — we try candidates
+ * in order so one conflict doesn't leave a command dead.
+ */
+const COMMANDS: CommandBinding[] = [
+  {
+    command: 'toggle',
+    candidates: ['MediaPlayPause', 'CommandOrControl+Alt+P', 'CommandOrControl+Alt+Space']
+  },
+  {
+    command: 'next',
+    candidates: ['MediaNextTrack', 'CommandOrControl+Alt+N', 'CommandOrControl+Shift+Right']
+  },
+  {
+    command: 'previous',
+    candidates: ['MediaPreviousTrack', 'CommandOrControl+Alt+B', 'CommandOrControl+Shift+Left']
+  }
+]
+
 export function registerPlaybackShortcuts(getWindow: () => BrowserWindow | null): void {
   const send = (command: PlaybackCommand): void => {
     const window = getWindow()
@@ -11,23 +39,16 @@ export function registerPlaybackShortcuts(getWindow: () => BrowserWindow | null)
     window.webContents.send(IPC_CHANNELS.playback.command, command)
   }
 
-  // Media keys (hardware play/pause/next/prev) are the standard global
-  // controls; also offer Ctrl+Alt combos as a software fallback.
-  const bindings: Array<{ accelerator: string; command: PlaybackCommand }> = [
-    { accelerator: 'MediaPlayPause', command: 'toggle' },
-    { accelerator: 'MediaNextTrack', command: 'next' },
-    { accelerator: 'MediaPreviousTrack', command: 'previous' },
-    { accelerator: 'CommandOrControl+Alt+P', command: 'toggle' },
-    { accelerator: 'CommandOrControl+Alt+N', command: 'next' },
-    { accelerator: 'CommandOrControl+Alt+B', command: 'previous' }
-  ]
-
-  for (const binding of bindings) {
-    const ok = globalShortcut.register(binding.accelerator, () => send(binding.command))
-    if (!ok) {
-      // Another app may already own the media key; the software combos
-      // (Ctrl/Cmd+Alt) are the reliable path. Non-fatal.
-      console.warn(`Failed to register global shortcut: ${binding.accelerator}`)
+  for (const { command, candidates } of COMMANDS) {
+    const registered = candidates.some((accelerator) => {
+      const ok = globalShortcut.register(accelerator, () => send(command))
+      if (ok) {
+        console.log(`[shortcuts] registered ${command} via ${accelerator}`)
+      }
+      return ok
+    })
+    if (!registered) {
+      console.warn(`[shortcuts] all candidates failed for "${command}": ${candidates.join(', ')}`)
     }
   }
 }
