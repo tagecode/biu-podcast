@@ -1,5 +1,7 @@
 import {
+  Gauge,
   Maximize2,
+  Moon,
   Pause,
   Play,
   Repeat,
@@ -199,7 +201,7 @@ export function FullScreenPlayer(): React.JSX.Element | null {
 
   return (
     <div className="absolute inset-0 z-40 flex flex-col bg-paper">
-      <div className="flex items-center justify-between px-6 py-4">
+      <div className="flex items-center px-6 py-4">
         <button
           type="button"
           className="text-sm text-muted hover:text-ink"
@@ -207,46 +209,6 @@ export function FullScreenPlayer(): React.JSX.Element | null {
         >
           收起播放器
         </button>
-        <Select value={String(playbackRate)} onValueChange={(v) => setPlaybackRate(Number(v))}>
-          <SelectTrigger className="w-24" aria-label="播放速度">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3].map((rate) => (
-              <SelectItem key={rate} value={String(rate)}>
-                {rate}x
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {sleepTimerRemaining !== null ? (
-          <div className="flex items-center gap-2 text-sm text-amber-700">
-            睡眠 {Math.ceil(sleepTimerRemaining / 60)}:
-            {String(sleepTimerRemaining % 60).padStart(2, '0')}
-            <button
-              type="button"
-              aria-label="取消睡眠定时器"
-              className="text-muted hover:text-danger"
-              onClick={() => setSleepTimer(null)}
-            >
-              ×
-            </button>
-          </div>
-        ) : (
-          <Select value="off" onValueChange={(v) => setSleepTimer(v === 'off' ? null : Number(v))}>
-            <SelectTrigger className="w-24" aria-label="睡眠定时器">
-              <SelectValue placeholder="睡眠" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="off">关闭</SelectItem>
-              {[10, 30, 60, 300, 900, 1800, 3600].map((sec) => (
-                <SelectItem key={sec} value={String(sec)}>
-                  {sec < 60 ? `${sec}s` : sec < 3600 ? `${sec / 60} 分钟` : `${sec / 3600} 小时`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
       </div>
       <div className="flex flex-1 flex-col items-center justify-center px-6 pb-12">
         <div className="mb-8 size-[280px] overflow-hidden rounded-lg bg-line shadow-md">
@@ -304,6 +266,67 @@ export function FullScreenPlayer(): React.JSX.Element | null {
           >
             <SkipForward className="size-6" />
           </Button>
+        </div>
+
+        {/* Toolbar: playback rate + sleep timer, with labels */}
+        <div className="mt-8 flex items-center gap-8">
+          <div className="flex items-center gap-2">
+            <Gauge className="size-4 text-muted" strokeWidth={1.75} />
+            <span className="text-sm text-muted">倍速</span>
+            <Select value={String(playbackRate)} onValueChange={(v) => setPlaybackRate(Number(v))}>
+              <SelectTrigger className="h-8 w-20" aria-label="播放速度">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3].map((rate) => (
+                  <SelectItem key={rate} value={String(rate)}>
+                    {rate}x
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <Moon className="size-4 text-muted" strokeWidth={1.75} />
+            <span className="text-sm text-muted">睡眠</span>
+            {sleepTimerRemaining !== null ? (
+              <div className="flex items-center gap-1.5">
+                <span className="font-mono text-sm text-amber-700">
+                  {Math.ceil(sleepTimerRemaining / 60)}:
+                  {String(sleepTimerRemaining % 60).padStart(2, '0')}
+                </span>
+                <button
+                  type="button"
+                  aria-label="取消睡眠定时器"
+                  className="text-sm text-muted hover:text-danger"
+                  onClick={() => setSleepTimer(null)}
+                >
+                  ×
+                </button>
+              </div>
+            ) : (
+              <Select
+                value="off"
+                onValueChange={(v) => setSleepTimer(v === 'off' ? null : Number(v))}
+              >
+                <SelectTrigger className="h-8 w-24" aria-label="睡眠定时器">
+                  <SelectValue placeholder="选择" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="off">关闭</SelectItem>
+                  {[10, 30, 60, 300, 900, 1800, 3600].map((sec) => (
+                    <SelectItem key={sec} value={String(sec)}>
+                      {sec < 60
+                        ? `${sec}s`
+                        : sec < 3600
+                          ? `${sec / 60} 分钟`
+                          : `${sec / 3600} 小时`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
       </div>
     </div>
