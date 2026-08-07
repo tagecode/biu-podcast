@@ -8,34 +8,40 @@ export type RegisteredShortcuts = Partial<Record<PlaybackCommand, string>>
 
 interface CommandBinding {
   command: PlaybackCommand
-  /** Candidate accelerators, tried in order; first successful wins. */
-  candidates: string[]
+  /** Hardware media key (headphones / keyboard play button), best UX. */
+  mediaKey: string
+  /** Software keyboard combos, tried in order; exposed for tooltip display. */
+  softwareCandidates: string[]
 }
 
 /**
  * Global media-key shortcuts that work even when the app is unfocused.
  *
- * Media keys (hardware play/pause/next/prev) are the primary path. Software
- * combos are fallbacks with several candidates each, because a single combo
- * (e.g. Ctrl+Alt+P) may already be owned by another app — we try candidates
- * in order so one conflict doesn't leave a command dead.
+ * Each command registers BOTH a hardware media key (best for real use) and a
+ * software keyboard combo (fallback + what tooltips display). Software combos
+ * have several candidates because a single combo (e.g. Ctrl+Alt+P) may already
+ * be owned by another app — we try candidates in order so one conflict doesn't
+ * leave a command dead.
  */
 const COMMANDS: CommandBinding[] = [
   {
     command: 'toggle',
-    candidates: ['MediaPlayPause', 'CommandOrControl+Alt+P', 'CommandOrControl+Alt+Space']
+    mediaKey: 'MediaPlayPause',
+    softwareCandidates: ['CommandOrControl+Alt+P', 'CommandOrControl+Alt+Space']
   },
   {
     command: 'next',
-    candidates: ['MediaNextTrack', 'CommandOrControl+Alt+N', 'CommandOrControl+Shift+Right']
+    mediaKey: 'MediaNextTrack',
+    softwareCandidates: ['CommandOrControl+Alt+N', 'CommandOrControl+Shift+Right']
   },
   {
     command: 'previous',
-    candidates: ['MediaPreviousTrack', 'CommandOrControl+Alt+B', 'CommandOrControl+Shift+Left']
+    mediaKey: 'MediaPreviousTrack',
+    softwareCandidates: ['CommandOrControl+Alt+B', 'CommandOrControl+Shift+Left']
   }
 ]
 
-/** Currently registered accelerators per command (for UI display). */
+/** Currently registered software combo per command (for tooltip display). */
 let registeredShortcuts: RegisteredShortcuts = {}
 
 export function getRegisteredShortcuts(): RegisteredShortcuts {
@@ -50,8 +56,12 @@ export function registerPlaybackShortcuts(getWindow: () => BrowserWindow | null)
   }
 
   registeredShortcuts = {}
-  for (const { command, candidates } of COMMANDS) {
-    const registered = candidates.some((accelerator) => {
+  for (const { command, mediaKey, softwareCandidates } of COMMANDS) {
+    // Hardware media key: register if free (non-fatal if owned elsewhere).
+    globalShortcut.register(mediaKey, () => send(command))
+
+    // Software combo: first successful candidate becomes the display shortcut.
+    const registered = softwareCandidates.some((accelerator) => {
       const ok = globalShortcut.register(accelerator, () => send(command))
       if (ok) {
         registeredShortcuts[command] = accelerator
@@ -60,7 +70,9 @@ export function registerPlaybackShortcuts(getWindow: () => BrowserWindow | null)
       return ok
     })
     if (!registered) {
-      console.warn(`[shortcuts] all candidates failed for "${command}": ${candidates.join(', ')}`)
+      console.warn(
+        `[shortcuts] all software candidates failed for "${command}": ${softwareCandidates.join(', ')}`
+      )
     }
   }
 }
