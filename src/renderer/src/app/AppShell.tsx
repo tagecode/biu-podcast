@@ -156,9 +156,11 @@ export function AppShell(): React.JSX.Element {
         <DownloadPanel />
       </div>
 
-      {/* Hide the mini player while the full-screen player is open — it would
-          otherwise overlap the full player's toolbar at the bottom. */}
-      {playbackView === 'mini' ? <MiniPlayer /> : null}
+      {/* Hide the mini player while the full-screen player is open (it would
+          otherwise overlap the full player's toolbar) and on the settings
+          page (it's a config page; a persistent player there just eats
+          space). */}
+      {playbackView === 'mini' && route.name !== 'settings' ? <MiniPlayer /> : null}
     </div>
   )
 }

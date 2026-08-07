@@ -140,7 +140,7 @@ const api = {
     set: (input: SetSettingInput): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC_CHANNELS.settings.set, input),
     chooseDirectory: (): Promise<IpcResult<string | null>> =>
-      ipcRenderer.invoke(IPC_CHANNELS.settings.chooseDirectory)
+      ipcRenderer.invoke(IPC_CHANNELS.settings.chooseDirectory, {})
   },
   dataPortability: {
     export: (): Promise<IpcResult<{ filePath: string } | null>> =>
