@@ -1,4 +1,13 @@
-import { Maximize2, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward } from 'lucide-react'
+import {
+  Maximize2,
+  Pause,
+  Play,
+  Repeat,
+  Repeat1,
+  Shuffle,
+  SkipBack,
+  SkipForward
+} from 'lucide-react'
 import { useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -119,7 +128,9 @@ export function MiniPlayer(): React.JSX.Element | null {
           aria-label={`播放模式：${queueMode === 'list' ? '列表循环' : queueMode === 'repeat-one' ? '单曲循环' : '随机播放'}`}
           className="text-muted-700 hover:text-ink"
           onClick={() =>
-            setQueueMode(queueMode === 'list' ? 'repeat-one' : queueMode === 'repeat-one' ? 'shuffle' : 'list')
+            setQueueMode(
+              queueMode === 'list' ? 'repeat-one' : queueMode === 'repeat-one' ? 'shuffle' : 'list'
+            )
           }
         >
           {queueMode === 'list' ? (
@@ -210,7 +221,8 @@ export function FullScreenPlayer(): React.JSX.Element | null {
         </Select>
         {sleepTimerRemaining !== null ? (
           <div className="flex items-center gap-2 text-sm text-amber-700">
-            睡眠 {Math.ceil(sleepTimerRemaining / 60)}:{String(sleepTimerRemaining % 60).padStart(2, '0')}
+            睡眠 {Math.ceil(sleepTimerRemaining / 60)}:
+            {String(sleepTimerRemaining % 60).padStart(2, '0')}
             <button
               type="button"
               aria-label="取消睡眠定时器"
