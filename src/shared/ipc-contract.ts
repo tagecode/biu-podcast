@@ -146,3 +146,6 @@ export type ReorderPlaylistInput = z.infer<typeof ReorderPlaylistInputSchema>
 export type CreateNoteInput = z.infer<typeof CreateNoteInputSchema>
 export type EpisodeIdInput = z.infer<typeof EpisodeIdInputSchema>
 export type NoteIdInput = z.infer<typeof NoteIdInputSchema>
+
+/** Playback commands sent main→renderer (global shortcuts / media keys). */
+export type PlaybackCommand = 'toggle' | 'next' | 'previous'

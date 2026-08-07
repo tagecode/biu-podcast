@@ -6,6 +6,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { downloadService } from './features/download/download.service'
 import { autoRefreshScheduler } from './features/subscription/auto-refresh'
+import { registerPlaybackShortcuts, unregisterPlaybackShortcuts } from './infra/shortcuts'
 import { registerAllHandlers } from './ipc/handlers'
 import { setMainWindow } from './ipc/register'
 import { closeDb, getDb } from './infra/db/client'
@@ -117,9 +118,15 @@ if (!ensureSingleInstance(() => mainWindowRef)) {
 
     createWindow()
 
+    registerPlaybackShortcuts(() => mainWindowRef)
+
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
+  })
+
+  app.on('will-quit', () => {
+    unregisterPlaybackShortcuts()
   })
 
   app.on('window-all-closed', () => {

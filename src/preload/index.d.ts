@@ -13,6 +13,7 @@ import type {
   MarkPlayedInput,
   NoteIdInput,
   OpmlImportResult,
+  PlaybackCommand,
   PlaylistIdInput,
   PlaylistItemInput,
   RefreshSubscriptionInput,
@@ -76,6 +77,7 @@ declare global {
       playback: {
         updateProgress: (input: UpdateProgressInput) => Promise<IpcResult<void>>
         getLastSession: () => Promise<IpcResult<PlaybackSession | null>>
+        onCommand: (callback: (command: PlaybackCommand) => void) => () => void
       }
       download: {
         enqueue: (input: EnqueueDownloadInput) => Promise<IpcResult<DownloadTask>>

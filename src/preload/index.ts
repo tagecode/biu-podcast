@@ -16,6 +16,7 @@ import type {
   MarkPlayedInput,
   NoteIdInput,
   OpmlImportResult,
+  PlaybackCommand,
   PlaylistIdInput,
   PlaylistItemInput,
   RefreshSubscriptionInput,
@@ -100,7 +101,13 @@ const api = {
     updateProgress: (input: UpdateProgressInput): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC_CHANNELS.playback.updateProgress, input),
     getLastSession: (): Promise<IpcResult<PlaybackSession | null>> =>
-      ipcRenderer.invoke(IPC_CHANNELS.playback.getLastSession)
+      ipcRenderer.invoke(IPC_CHANNELS.playback.getLastSession),
+    onCommand: (callback: (command: PlaybackCommand) => void): (() => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, command: PlaybackCommand): void =>
+        callback(command)
+      ipcRenderer.on(IPC_CHANNELS.playback.command, listener)
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.playback.command, listener)
+    }
   },
   download: {
     enqueue: (input: EnqueueDownloadInput): Promise<IpcResult<DownloadTask>> =>

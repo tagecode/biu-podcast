@@ -20,7 +20,9 @@ export const IPC_CHANNELS = {
   },
   playback: {
     updateProgress: 'playback:update-progress',
-    getLastSession: 'playback:get-last-session'
+    getLastSession: 'playback:get-last-session',
+    /** Main → renderer: global shortcut / media key pressed. */
+    command: 'playback:command'
   },
   download: {
     enqueue: 'download:enqueue',

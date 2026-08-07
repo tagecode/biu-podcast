@@ -62,6 +62,17 @@ export function AppShell(): React.JSX.Element {
     void loadPlaybackPrefs()
   }, [])
 
+  // Global shortcuts / media keys: main process sends a playback command.
+  useEffect(() => {
+    const unsubscribe = window.api.playback.onCommand((command) => {
+      const state = usePlaybackStore.getState()
+      if (command === 'toggle') state.togglePlay()
+      else if (command === 'next') void state.playNext()
+      else if (command === 'previous') void state.playPrevious()
+    })
+    return unsubscribe
+  }, [])
+
   return (
     <div className="flex h-screen flex-col bg-paper text-ink">
       <header
