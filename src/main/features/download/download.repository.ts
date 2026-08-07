@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm'
+import { count, desc, eq } from 'drizzle-orm'
 import { ulid } from 'ulid'
 
 import type { AppDatabase } from '../../infra/db/client'
@@ -72,8 +72,17 @@ export class DownloadRepository {
       }))
   }
 
-  /** Completed downloads, newest first (history view). */
-  listCompleted(): DownloadTask[] {
+  /** Completed downloads, newest first (history view), paginated. */
+  listCompletedPage(offset = 0, limit = 50): { items: DownloadTask[]; total: number } {
+    const safeLimit = Math.min(Math.max(limit, 1), 100)
+    const safeOffset = Math.max(offset, 0)
+
+    const totalRow = this.db
+      .select({ value: count() })
+      .from(downloadTasks)
+      .where(eq(downloadTasks.status, 'completed'))
+      .get()
+
     const rows = this.db
       .select({
         task: downloadTasks,
@@ -83,16 +92,20 @@ export class DownloadRepository {
       .from(downloadTasks)
       .innerJoin(episodes, eq(episodes.id, downloadTasks.episodeId))
       .innerJoin(podcasts, eq(podcasts.id, episodes.podcastId))
+      .where(eq(downloadTasks.status, 'completed'))
       .orderBy(desc(downloadTasks.updatedAt))
+      .limit(safeLimit)
+      .offset(safeOffset)
       .all()
 
-    return rows
-      .filter((row) => row.task.status === 'completed')
-      .map((row) => ({
+    return {
+      items: rows.map((row) => ({
         ...this.toTask(row.task),
         episodeTitle: row.episodeTitle,
         podcastTitle: row.podcastTitle
-      }))
+      })),
+      total: Number(totalRow?.value ?? 0)
+    }
   }
 
   update(

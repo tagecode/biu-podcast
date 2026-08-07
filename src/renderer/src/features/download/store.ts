@@ -6,11 +6,13 @@ import * as downloadApi from './api'
 interface DownloadState {
   tasks: DownloadTask[]
   history: DownloadTask[]
+  historyTotal: number
+  historyLoading: boolean
   panelOpen: boolean
   loading: boolean
   error: string | null
   load: () => Promise<void>
-  loadHistory: () => Promise<void>
+  loadHistory: (reset?: boolean) => Promise<void>
   enqueue: (episodeId: string) => Promise<void>
   pause: (taskId: string) => Promise<void>
   resume: (taskId: string) => Promise<void>
@@ -25,6 +27,8 @@ interface DownloadState {
   }) => void
 }
 
+const HISTORY_PAGE_SIZE = 50
+
 // Throttle progress-driven re-renders so the panel (and its buttons) stays
 // stable between interactions — otherwise every chunk rebuilds the task row
 // and pause/cancel clicks get lost as the button is detached mid-click.
@@ -33,6 +37,8 @@ const PROGRESS_THROTTLE_MS = 300
 export const useDownloadStore = create<DownloadState>((set, get) => ({
   tasks: [],
   history: [],
+  historyTotal: 0,
+  historyLoading: false,
   panelOpen: false,
   loading: false,
   error: null,
@@ -48,12 +54,21 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
       })
     }
   },
-  loadHistory: async () => {
+  loadHistory: async (reset = false) => {
+    const { history, historyLoading, historyTotal } = get()
+    if (historyLoading) return
+    if (!reset && history.length >= historyTotal) return // all loaded
+    const offset = reset ? 0 : history.length
+    set({ historyLoading: true })
     try {
-      const history = await downloadApi.listDownloadHistory()
-      set({ history })
+      const page = await downloadApi.listDownloadHistory(offset, HISTORY_PAGE_SIZE)
+      set((state) => ({
+        history: reset ? page.items : [...state.history, ...page.items],
+        historyTotal: page.total,
+        historyLoading: false
+      }))
     } catch {
-      // Non-fatal — history is best-effort.
+      set({ historyLoading: false })
     }
   },
   enqueue: async (episodeId) => {

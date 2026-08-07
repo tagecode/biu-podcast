@@ -62,6 +62,13 @@ export const VerifyLocalInputSchema = z.object({
   episodeId: z.string().min(1)
 })
 
+export const DownloadHistoryInputSchema = z.object({
+  offset: z.number().int().min(0).optional().default(0),
+  limit: z.number().int().min(1).max(100).optional().default(50)
+})
+
+export type DownloadHistoryInput = z.infer<typeof DownloadHistoryInputSchema>
+
 export type AddSubscriptionInput = z.infer<typeof AddSubscriptionInputSchema>
 export type RemoveSubscriptionInput = z.infer<typeof RemoveSubscriptionInputSchema>
 export type RefreshSubscriptionInput = z.infer<typeof RefreshSubscriptionInputSchema>

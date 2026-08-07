@@ -6,8 +6,11 @@ export async function listDownloads(): Promise<DownloadTask[]> {
   return result.data
 }
 
-export async function listDownloadHistory(): Promise<DownloadTask[]> {
-  const result = await window.api.download.history()
+export async function listDownloadHistory(
+  offset = 0,
+  limit = 50
+): Promise<{ items: DownloadTask[]; total: number }> {
+  const result = await window.api.download.history({ offset, limit })
   if (!result.ok) throw new Error(result.error.message)
   return result.data
 }

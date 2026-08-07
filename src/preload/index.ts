@@ -6,6 +6,7 @@ import type {
   CreateNoteInput,
   CreatePlaylistInput,
   DownloadTaskIdInput,
+  DownloadHistoryInput,
   EnqueueDownloadInput,
   EpisodeIdInput,
   GetAdjacentInput,
@@ -116,8 +117,10 @@ const api = {
     enqueue: (input: EnqueueDownloadInput): Promise<IpcResult<DownloadTask>> =>
       ipcRenderer.invoke(IPC_CHANNELS.download.enqueue, input),
     list: (): Promise<IpcResult<DownloadTask[]>> => ipcRenderer.invoke(IPC_CHANNELS.download.list),
-    history: (): Promise<IpcResult<DownloadTask[]>> =>
-      ipcRenderer.invoke(IPC_CHANNELS.download.history),
+    history: (
+      input: DownloadHistoryInput
+    ): Promise<IpcResult<{ items: DownloadTask[]; total: number }>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.download.history, input),
     getDir: (): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC_CHANNELS.download.getDir),
     pause: (input: DownloadTaskIdInput): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC_CHANNELS.download.pause, input),

@@ -244,9 +244,9 @@ export class DownloadService {
     return this.downloads.listActive()
   }
 
-  /** Completed downloads, newest first (history). */
-  listHistory(): DownloadTask[] {
-    return this.downloads.listCompleted()
+  /** Completed downloads, newest first (history), paginated. */
+  listHistory(offset = 0, limit = 50): { items: DownloadTask[]; total: number } {
+    return this.downloads.listCompletedPage(offset, limit)
   }
 
   getDownloadDirectory(): string {

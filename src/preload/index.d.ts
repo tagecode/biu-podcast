@@ -3,6 +3,7 @@ import type {
   CreateNoteInput,
   CreatePlaylistInput,
   DownloadTaskIdInput,
+  DownloadHistoryInput,
   EnqueueDownloadInput,
   EpisodeIdInput,
   GetAdjacentInput,
@@ -84,7 +85,9 @@ declare global {
       download: {
         enqueue: (input: EnqueueDownloadInput) => Promise<IpcResult<DownloadTask>>
         list: () => Promise<IpcResult<DownloadTask[]>>
-        history: () => Promise<IpcResult<DownloadTask[]>>
+        history: (
+          input: DownloadHistoryInput
+        ) => Promise<IpcResult<{ items: DownloadTask[]; total: number }>>
         getDir: () => Promise<IpcResult<string>>
         pause: (input: DownloadTaskIdInput) => Promise<IpcResult<void>>
         resume: (input: DownloadTaskIdInput) => Promise<IpcResult<void>>

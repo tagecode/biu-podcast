@@ -1,5 +1,5 @@
 import { CheckCircle2, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { formatFileSize } from '@/lib/format'
@@ -34,16 +34,28 @@ export function DownloadPanel(): React.JSX.Element | null {
   const panelOpen = useDownloadStore((state) => state.panelOpen)
   const tasks = useDownloadStore((state) => state.tasks)
   const history = useDownloadStore((state) => state.history)
+  const historyTotal = useDownloadStore((state) => state.historyTotal)
+  const historyLoading = useDownloadStore((state) => state.historyLoading)
   const setPanelOpen = useDownloadStore((state) => state.setPanelOpen)
   const loadHistory = useDownloadStore((state) => state.loadHistory)
   const pause = useDownloadStore((state) => state.pause)
   const resume = useDownloadStore((state) => state.resume)
   const cancel = useDownloadStore((state) => state.cancel)
   const [tab, setTab] = useState<'active' | 'history'>('active')
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (panelOpen) void loadHistory()
-  }, [panelOpen, loadHistory])
+    if (panelOpen && tab === 'history') void loadHistory(true)
+  }, [panelOpen, tab, loadHistory])
+
+  const onScroll = (): void => {
+    if (tab !== 'history') return
+    const el = scrollRef.current
+    if (!el || historyLoading) return
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 120) {
+      void loadHistory()
+    }
+  }
 
   if (!panelOpen) return null
 
@@ -86,7 +98,7 @@ export function DownloadPanel(): React.JSX.Element | null {
           </Button>
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div ref={scrollRef} onScroll={onScroll} className="min-h-0 flex-1 overflow-y-auto">
         {list.length === 0 ? (
           <div className="px-4 py-8 text-center text-sm text-muted">
             {tab === 'active' ? '暂无下载任务' : '暂无下载历史'}
@@ -148,6 +160,15 @@ export function DownloadPanel(): React.JSX.Element | null {
             </div>
           ))
         )}
+        {tab === 'history' && history.length > 0 ? (
+          <div className="px-4 py-3 text-center text-xs text-muted">
+            {historyLoading
+              ? '加载中…'
+              : history.length >= historyTotal
+                ? `已加载全部 ${historyTotal} 条`
+                : `已加载 ${history.length} / ${historyTotal} 条，继续滚动加载`}
+          </div>
+        ) : null}
       </div>
     </aside>
   )

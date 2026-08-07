@@ -5,6 +5,7 @@ import {
   CreateNoteInputSchema,
   CreatePlaylistInputSchema,
   DownloadTaskIdInputSchema,
+  DownloadHistoryInputSchema,
   EnqueueDownloadInputSchema,
   EpisodeIdInputSchema,
   GetAdjacentInputSchema,
@@ -166,7 +167,9 @@ export function registerDownloadHandlers(): void {
 
   registerNoInputHandler(IPC_CHANNELS.download.list, () => downloadService.list())
 
-  registerNoInputHandler(IPC_CHANNELS.download.history, () => downloadService.listHistory())
+  registerHandler(IPC_CHANNELS.download.history, DownloadHistoryInputSchema, (_event, input) =>
+    downloadService.listHistory(input.offset, input.limit)
+  )
 
   registerNoInputHandler(IPC_CHANNELS.download.getDir, () => downloadService.getDownloadDirectory())
 
