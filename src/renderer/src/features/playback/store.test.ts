@@ -144,7 +144,10 @@ describe('playback store queue + rate', () => {
       },
       settings: {
         get: vi.fn(() =>
-          Promise.resolve({ ok: true as const, data: { playbackRate: 1, openFullPlayerDefault: false } })
+          Promise.resolve({
+            ok: true as const,
+            data: { playbackRate: 1, openFullPlayerDefault: false }
+          })
         ),
         set: vi.fn(() => Promise.resolve({ ok: true as const, data: undefined }))
       }
