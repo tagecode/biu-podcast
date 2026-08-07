@@ -287,9 +287,9 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
                 checked={openFullDefault}
                 onChange={(e) => {
                   setOpenFullDefault(e.target.checked)
-                  void settingsApi.setSetting('openFullPlayerDefault', e.target.checked).catch((err) =>
-                    setError(err instanceof Error ? err.message : '保存设置失败')
-                  )
+                  void settingsApi
+                    .setSetting('openFullPlayerDefault', e.target.checked)
+                    .catch((err) => setError(err instanceof Error ? err.message : '保存设置失败'))
                 }}
               />
               <span className="ml-2 text-sm text-muted">{openFullDefault ? '开启' : '关闭'}</span>

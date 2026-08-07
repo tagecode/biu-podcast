@@ -237,7 +237,12 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     // Queue-aware: navigate the queue when the current episode is in it.
     const qIndex = queueItems.findIndex((e) => e.id === currentEpisode.id)
     if (qIndex >= 0) {
-      const prev = previousIndex({ items: queueItems, currentIndex: qIndex, mode: queueMode, shuffleOrder: [] })
+      const prev = previousIndex({
+        items: queueItems,
+        currentIndex: qIndex,
+        mode: queueMode,
+        shuffleOrder: []
+      })
       if (prev !== null) {
         await get().playEpisode(queueItems[prev]!, currentPodcast, { fromSec: 0 })
       }
@@ -253,7 +258,12 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     // Queue-aware: navigate the queue when the current episode is in it.
     const qIndex = queueItems.findIndex((e) => e.id === currentEpisode.id)
     if (qIndex >= 0) {
-      const next = nextIndex({ items: queueItems, currentIndex: qIndex, mode: queueMode, shuffleOrder: [] })
+      const next = nextIndex({
+        items: queueItems,
+        currentIndex: qIndex,
+        mode: queueMode,
+        shuffleOrder: []
+      })
       if (next !== null) {
         await get().playEpisode(queueItems[next]!, currentPodcast, { fromSec: 0 })
       }
