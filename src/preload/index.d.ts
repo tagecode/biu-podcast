@@ -17,6 +17,7 @@ import type {
   PlaylistIdInput,
   PlaylistItemInput,
   RefreshSubscriptionInput,
+  RegisteredShortcuts,
   RemoveSubscriptionInput,
   RenamePlaylistInput,
   ReorderPlaylistInput,
@@ -77,6 +78,7 @@ declare global {
       playback: {
         updateProgress: (input: UpdateProgressInput) => Promise<IpcResult<void>>
         getLastSession: () => Promise<IpcResult<PlaybackSession | null>>
+        getRegisteredShortcuts: () => Promise<IpcResult<RegisteredShortcuts>>
         onCommand: (callback: (command: PlaybackCommand) => void) => () => void
       }
       download: {

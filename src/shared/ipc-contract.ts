@@ -149,3 +149,6 @@ export type NoteIdInput = z.infer<typeof NoteIdInputSchema>
 
 /** Playback commands sent main→renderer (global shortcuts / media keys). */
 export type PlaybackCommand = 'toggle' | 'next' | 'previous'
+
+/** Maps a playback command to the accelerator actually registered (for UI display). */
+export type RegisteredShortcuts = Partial<Record<PlaybackCommand, string>>

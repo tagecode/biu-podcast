@@ -3,6 +3,9 @@ import { globalShortcut, type BrowserWindow } from 'electron'
 import { IPC_CHANNELS } from '@shared/ipc-channels'
 import type { PlaybackCommand } from '@shared/ipc-contract'
 
+/** Maps a playback command to the accelerator that was successfully registered. */
+export type RegisteredShortcuts = Partial<Record<PlaybackCommand, string>>
+
 interface CommandBinding {
   command: PlaybackCommand
   /** Candidate accelerators, tried in order; first successful wins. */
@@ -32,6 +35,13 @@ const COMMANDS: CommandBinding[] = [
   }
 ]
 
+/** Currently registered accelerators per command (for UI display). */
+let registeredShortcuts: RegisteredShortcuts = {}
+
+export function getRegisteredShortcuts(): RegisteredShortcuts {
+  return { ...registeredShortcuts }
+}
+
 export function registerPlaybackShortcuts(getWindow: () => BrowserWindow | null): void {
   const send = (command: PlaybackCommand): void => {
     const window = getWindow()
@@ -39,10 +49,12 @@ export function registerPlaybackShortcuts(getWindow: () => BrowserWindow | null)
     window.webContents.send(IPC_CHANNELS.playback.command, command)
   }
 
+  registeredShortcuts = {}
   for (const { command, candidates } of COMMANDS) {
     const registered = candidates.some((accelerator) => {
       const ok = globalShortcut.register(accelerator, () => send(command))
       if (ok) {
+        registeredShortcuts[command] = accelerator
         console.log(`[shortcuts] registered ${command} via ${accelerator}`)
       }
       return ok
@@ -55,4 +67,5 @@ export function registerPlaybackShortcuts(getWindow: () => BrowserWindow | null)
 
 export function unregisterPlaybackShortcuts(): void {
   globalShortcut.unregisterAll()
+  registeredShortcuts = {}
 }

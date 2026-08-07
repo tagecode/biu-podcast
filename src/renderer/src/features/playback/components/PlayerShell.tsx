@@ -11,7 +11,7 @@ import {
   SkipBack,
   SkipForward
 } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -23,8 +23,11 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { formatDuration } from '@/lib/format'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 import { bindAudioEvents, usePlaybackStore } from '../store'
+import { fetchRegisteredShortcuts, formatAccelerator } from '../lib/shortcut-hints'
+import type { RegisteredShortcuts } from '@shared/ipc-contract'
 
 export function MiniPlayer(): React.JSX.Element | null {
   const currentEpisode = usePlaybackStore((state) => state.currentEpisode)
@@ -42,7 +45,11 @@ export function MiniPlayer(): React.JSX.Element | null {
   const clearPlaybackError = usePlaybackStore((state) => state.clearPlaybackError)
   const queueMode = usePlaybackStore((state) => state.queueMode)
   const setQueueMode = usePlaybackStore((state) => state.setQueueMode)
+  const [shortcuts, setShortcuts] = useState<RegisteredShortcuts>({})
 
+  useEffect(() => {
+    void fetchRegisteredShortcuts().then(setShortcuts)
+  }, [])
   useEffect(() => bindAudioEvents(), [])
 
   if (playbackError && !currentEpisode) {
@@ -92,58 +99,105 @@ export function MiniPlayer(): React.JSX.Element | null {
           <div className="truncate text-xs text-muted">{currentPodcast.title}</div>
         </div>
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="上一集"
-            disabled={!hasPrevious}
-            onClick={() => void playPrevious()}
-          >
-            <SkipBack className="size-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full bg-amber-600 hover:bg-amber-500"
-            onClick={togglePlay}
-          >
-            {isPlaying ? (
-              <Pause className="size-4 text-ink" />
-            ) : (
-              <Play className="size-4 text-ink" />
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="下一集"
-            disabled={!hasNext}
-            onClick={() => void playNext()}
-          >
-            <SkipForward className="size-4" />
-          </Button>
+          <TooltipProvider delayDuration={400}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="上一集"
+                  disabled={!hasPrevious}
+                  onClick={() => void playPrevious()}
+                >
+                  <SkipBack className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                上一集
+                {formatAccelerator(shortcuts.previous)
+                  ? ` (${formatAccelerator(shortcuts.previous)})`
+                  : ''}
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full bg-amber-600 hover:bg-amber-500"
+                  onClick={togglePlay}
+                >
+                  {isPlaying ? (
+                    <Pause className="size-4 text-ink" />
+                  ) : (
+                    <Play className="size-4 text-ink" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                播放/暂停
+                {formatAccelerator(shortcuts.toggle)
+                  ? ` (${formatAccelerator(shortcuts.toggle)})`
+                  : ''}
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="下一集"
+                  disabled={!hasNext}
+                  onClick={() => void playNext()}
+                >
+                  <SkipForward className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                下一集
+                {formatAccelerator(shortcuts.next) ? ` (${formatAccelerator(shortcuts.next)})` : ''}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         <div className="font-mono text-xs text-muted">
           {formatDuration(currentTimeSec)} / {formatDuration(durationSec)}
         </div>
-        <button
-          type="button"
-          aria-label={`播放模式：${queueMode === 'list' ? '列表循环' : queueMode === 'repeat-one' ? '单曲循环' : '随机播放'}`}
-          className="text-muted-700 hover:text-ink"
-          onClick={() =>
-            setQueueMode(
-              queueMode === 'list' ? 'repeat-one' : queueMode === 'repeat-one' ? 'shuffle' : 'list'
-            )
-          }
-        >
-          {queueMode === 'list' ? (
-            <Repeat className="size-4" strokeWidth={1.75} />
-          ) : queueMode === 'repeat-one' ? (
-            <Repeat1 className="size-4 text-amber-600" strokeWidth={1.75} />
-          ) : (
-            <Shuffle className="size-4 text-amber-600" strokeWidth={1.75} />
-          )}
-        </button>
+        <TooltipProvider delayDuration={400}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                aria-label={`播放模式：${queueMode === 'list' ? '列表循环' : queueMode === 'repeat-one' ? '单曲循环' : '随机播放'}`}
+                className="text-muted-700 hover:text-ink"
+                onClick={() =>
+                  setQueueMode(
+                    queueMode === 'list'
+                      ? 'repeat-one'
+                      : queueMode === 'repeat-one'
+                        ? 'shuffle'
+                        : 'list'
+                  )
+                }
+              >
+                {queueMode === 'list' ? (
+                  <Repeat className="size-4" strokeWidth={1.75} />
+                ) : queueMode === 'repeat-one' ? (
+                  <Repeat1 className="size-4 text-amber-600" strokeWidth={1.75} />
+                ) : (
+                  <Shuffle className="size-4 text-amber-600" strokeWidth={1.75} />
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {queueMode === 'list'
+                ? '列表循环'
+                : queueMode === 'repeat-one'
+                  ? '单曲循环'
+                  : '随机播放'}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <Button variant="ghost" size="icon" onClick={openFullPlayer} aria-label="展开播放器">
           <Maximize2 className="size-4" />
         </Button>

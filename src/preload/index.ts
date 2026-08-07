@@ -20,6 +20,7 @@ import type {
   PlaylistIdInput,
   PlaylistItemInput,
   RefreshSubscriptionInput,
+  RegisteredShortcuts,
   RemoveSubscriptionInput,
   RenamePlaylistInput,
   ReorderPlaylistInput,
@@ -102,6 +103,8 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.playback.updateProgress, input),
     getLastSession: (): Promise<IpcResult<PlaybackSession | null>> =>
       ipcRenderer.invoke(IPC_CHANNELS.playback.getLastSession),
+    getRegisteredShortcuts: (): Promise<IpcResult<RegisteredShortcuts>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.playback.getRegisteredShortcuts),
     onCommand: (callback: (command: PlaybackCommand) => void): (() => void) => {
       const listener = (_event: Electron.IpcRendererEvent, command: PlaybackCommand): void =>
         callback(command)

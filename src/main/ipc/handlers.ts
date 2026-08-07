@@ -36,6 +36,7 @@ import { playlistService } from '../features/playlist/playlist.service'
 import { settingsStore } from '../infra/settings/store'
 import { autoRefreshScheduler } from '../features/subscription/auto-refresh'
 import { subscriptionService } from '../features/subscription/subscription.service'
+import { getRegisteredShortcuts } from '../infra/shortcuts'
 import { broadcast, registerHandler, registerNoInputHandler, registerVoidHandler } from './register'
 
 export function registerSubscriptionHandlers(): void {
@@ -145,6 +146,10 @@ export function registerPlaybackHandlers(): void {
 
   registerNoInputHandler(IPC_CHANNELS.playback.getLastSession, () =>
     playbackService.getLastSession()
+  )
+
+  registerNoInputHandler(IPC_CHANNELS.playback.getRegisteredShortcuts, () =>
+    getRegisteredShortcuts()
   )
 }
 
