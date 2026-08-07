@@ -39,6 +39,7 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
   const [busy, setBusy] = useState(false)
   const [autoRefresh, setAutoRefresh] = useState<string>('null')
   const [openFullDefault, setOpenFullDefault] = useState(false)
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const [pendingImport, setPendingImport] = useState<{
     filePath: string
     preview: ImportPreview
@@ -50,6 +51,7 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
         settings.autoRefreshMinutes == null ? 'null' : String(settings.autoRefreshMinutes)
       )
       setOpenFullDefault(settings.openFullPlayerDefault)
+      setNotificationsEnabled(settings.notificationsEnabled)
     })
   }, [])
 
@@ -293,6 +295,29 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
                 }}
               />
               <span className="ml-2 text-sm text-muted">{openFullDefault ? '开启' : '关闭'}</span>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">系统通知</div>
+              <div className="mt-1 text-xs text-muted">新集数、下载完成时弹出系统通知</div>
+            </div>
+            <label className="flex cursor-pointer items-center">
+              <input
+                type="checkbox"
+                className="accent-amber-600"
+                checked={notificationsEnabled}
+                onChange={(e) => {
+                  setNotificationsEnabled(e.target.checked)
+                  void settingsApi
+                    .setSetting('notificationsEnabled', e.target.checked)
+                    .catch((err) => setError(err instanceof Error ? err.message : '保存设置失败'))
+                }}
+              />
+              <span className="ml-2 text-sm text-muted">
+                {notificationsEnabled ? '开启' : '关闭'}
+              </span>
             </label>
           </div>
 

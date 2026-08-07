@@ -115,6 +115,8 @@ export interface AppSettings {
   playbackRate: number
   /** Open the full player by default when playback starts. */
   openFullPlayerDefault: boolean
+  /** System notifications for new episodes / download completion. */
+  notificationsEnabled: boolean
 }
 
 export interface PlaybackSession {

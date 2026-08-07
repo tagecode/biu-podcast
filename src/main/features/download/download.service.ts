@@ -8,6 +8,7 @@ import { app } from 'electron'
 
 import { EpisodeRepository } from '../episode/episode.repository'
 import { getDb, type AppDatabase } from '../../infra/db/client'
+import { showNotification } from '../../infra/notification'
 import { settingsStore, SettingsStore } from '../../infra/settings/store'
 import { AppError } from '@shared/errors'
 import { IPC_CHANNELS } from '@shared/ipc-channels'
@@ -146,6 +147,14 @@ export class DownloadService {
         })
         if (event.localFilePath) {
           this.episodes.markDownloaded(event.episodeId, event.localFilePath)
+        }
+        // Notify on completion (respects the notifications setting).
+        const done = this.episodes.findById(event.episodeId)
+        if (done) {
+          showNotification(
+            { title: '下载完成', body: done.title },
+            this.settings.getAll().notificationsEnabled
+          )
         }
       }
 

@@ -55,10 +55,10 @@ export class AutoRefreshScheduler {
     const results = await this.service.refreshAll()
     const totalNew = results.reduce((sum, r) => sum + r.addedCount, 0)
     if (totalNew > 0) {
-      showNotification({
-        title: '博播',
-        body: `发现 ${totalNew} 集新内容`
-      })
+      showNotification(
+        { title: '博播', body: `发现 ${totalNew} 集新内容` },
+        this.settings.getAll().notificationsEnabled
+      )
     }
   }
 }

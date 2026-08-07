@@ -8,7 +8,7 @@ export async function getSettings(): Promise<AppSettings> {
 }
 
 export async function setSetting(
-  key: 'autoRefreshMinutes' | 'playbackRate' | 'openFullPlayerDefault',
+  key: 'autoRefreshMinutes' | 'playbackRate' | 'openFullPlayerDefault' | 'notificationsEnabled',
   value: number | boolean | null
 ): Promise<void> {
   const result = await window.api.settings.set({ key, value })

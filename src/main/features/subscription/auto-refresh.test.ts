@@ -21,7 +21,8 @@ function makeSettings(autoRefreshMinutes: number | null): SettingsStore {
         lastEpisodeId: null,
         lastPodcastId: null,
         lastPositionSec: 0,
-        autoRefreshMinutes
+        autoRefreshMinutes,
+        notificationsEnabled: true
       }) as never
   } as unknown as SettingsStore
 }
@@ -101,7 +102,8 @@ describe('AutoRefreshScheduler', () => {
     await scheduled[0]!.fn()
     expect(refreshAll).toHaveBeenCalledTimes(1)
     expect(showNotificationMock).toHaveBeenCalledWith(
-      expect.objectContaining({ body: '发现 2 集新内容' })
+      expect.objectContaining({ body: '发现 2 集新内容' }),
+      true
     )
     scheduler.stop()
   })

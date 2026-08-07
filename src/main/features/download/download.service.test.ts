@@ -7,7 +7,12 @@ import { join } from 'path'
 process.env.BIU_PODCAST_DB_PATH = ':memory:'
 
 vi.mock('electron', () => ({
-  app: { getPath: () => '/tmp/fake-userdata' }
+  app: { getPath: () => '/tmp/fake-userdata' },
+  Notification: {
+    isSupported: () => false,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    prototype: { show: () => undefined }
+  }
 }))
 
 import { createTestDb, createTestSettings } from '../../test-utils/db'
