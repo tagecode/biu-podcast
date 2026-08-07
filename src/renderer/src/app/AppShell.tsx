@@ -8,7 +8,7 @@ import { DownloadPanel } from '@/features/download/components/DownloadPanel'
 import { useDownloadStore } from '@/features/download/store'
 import { PodcastDetailPage } from '@/features/episode/pages/PodcastDetailPage'
 import { FullScreenPlayer, MiniPlayer } from '@/features/playback/components/PlayerShell'
-import { usePlaybackStore } from '@/features/playback/store'
+import { loadPlaybackPrefs, usePlaybackStore } from '@/features/playback/store'
 import { NotesPage } from '@/features/playlist/pages/NotesPage'
 import { PlaylistsPage } from '@/features/playlist/pages/PlaylistsPage'
 import { SettingsPage } from '@/features/settings/pages/SettingsPage'
@@ -56,6 +56,10 @@ export function AppShell(): React.JSX.Element {
       restoreSession(result.data.episode, result.data.podcast, result.data.positionSec)
     })()
   }, [restoreSession])
+
+  useEffect(() => {
+    void loadPlaybackPrefs()
+  }, [])
 
   return (
     <div className="flex h-screen flex-col bg-paper text-ink">

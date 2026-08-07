@@ -1,7 +1,14 @@
-import { Maximize2, Pause, Play, SkipBack, SkipForward } from 'lucide-react'
+import { Maximize2, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward } from 'lucide-react'
 import { useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { formatDuration } from '@/lib/format'
 
@@ -21,6 +28,8 @@ export function MiniPlayer(): React.JSX.Element | null {
   const playNext = usePlaybackStore((state) => state.playNext)
   const openFullPlayer = usePlaybackStore((state) => state.openFullPlayer)
   const clearPlaybackError = usePlaybackStore((state) => state.clearPlaybackError)
+  const queueMode = usePlaybackStore((state) => state.queueMode)
+  const setQueueMode = usePlaybackStore((state) => state.setQueueMode)
 
   useEffect(() => bindAudioEvents(), [])
 
@@ -105,6 +114,22 @@ export function MiniPlayer(): React.JSX.Element | null {
         <div className="font-mono text-xs text-muted">
           {formatDuration(currentTimeSec)} / {formatDuration(durationSec)}
         </div>
+        <button
+          type="button"
+          aria-label={`播放模式：${queueMode === 'list' ? '列表循环' : queueMode === 'repeat-one' ? '单曲循环' : '随机播放'}`}
+          className="text-muted-700 hover:text-ink"
+          onClick={() =>
+            setQueueMode(queueMode === 'list' ? 'repeat-one' : queueMode === 'repeat-one' ? 'shuffle' : 'list')
+          }
+        >
+          {queueMode === 'list' ? (
+            <Repeat className="size-4" strokeWidth={1.75} />
+          ) : queueMode === 'repeat-one' ? (
+            <Repeat1 className="size-4 text-amber-600" strokeWidth={1.75} />
+          ) : (
+            <Shuffle className="size-4 text-amber-600" strokeWidth={1.75} />
+          )}
+        </button>
         <Button variant="ghost" size="icon" onClick={openFullPlayer} aria-label="展开播放器">
           <Maximize2 className="size-4" />
         </Button>
@@ -127,12 +152,43 @@ export function FullScreenPlayer(): React.JSX.Element | null {
   const playNext = usePlaybackStore((state) => state.playNext)
   const seek = usePlaybackStore((state) => state.seek)
   const closeFullPlayer = usePlaybackStore((state) => state.closeFullPlayer)
+  const playbackRate = usePlaybackStore((state) => state.playbackRate)
+  const setPlaybackRate = usePlaybackStore((state) => state.setPlaybackRate)
+  const sleepTimerRemaining = usePlaybackStore((state) => state.sleepTimerRemaining)
+  const setSleepTimer = usePlaybackStore((state) => state.setSleepTimer)
+
+  // Keyboard shortcuts: Space = play/pause, ←/→ = ±10s, ↑/↓ = volume.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent): void => {
+      const state = usePlaybackStore.getState()
+      if (event.code === 'Space') {
+        event.preventDefault()
+        state.togglePlay()
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        state.seek(Math.min(state.durationSec, state.currentTimeSec + 10))
+      } else if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        state.seek(Math.max(0, state.currentTimeSec - 10))
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault()
+        const audio = document.querySelector('audio')
+        if (audio) audio.volume = Math.min(1, audio.volume + 0.1)
+      } else if (event.key === 'ArrowDown') {
+        event.preventDefault()
+        const audio = document.querySelector('audio')
+        if (audio) audio.volume = Math.max(0, audio.volume - 0.1)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   if (!currentEpisode || !currentPodcast || view !== 'full') return null
 
   return (
     <div className="absolute inset-0 z-40 flex flex-col bg-paper">
-      <div className="flex items-center px-6 py-4">
+      <div className="flex items-center justify-between px-6 py-4">
         <button
           type="button"
           className="text-sm text-muted hover:text-ink"
@@ -140,6 +196,45 @@ export function FullScreenPlayer(): React.JSX.Element | null {
         >
           收起播放器
         </button>
+        <Select value={String(playbackRate)} onValueChange={(v) => setPlaybackRate(Number(v))}>
+          <SelectTrigger className="w-24" aria-label="播放速度">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3].map((rate) => (
+              <SelectItem key={rate} value={String(rate)}>
+                {rate}x
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {sleepTimerRemaining !== null ? (
+          <div className="flex items-center gap-2 text-sm text-amber-700">
+            睡眠 {Math.ceil(sleepTimerRemaining / 60)}:{String(sleepTimerRemaining % 60).padStart(2, '0')}
+            <button
+              type="button"
+              aria-label="取消睡眠定时器"
+              className="text-muted hover:text-danger"
+              onClick={() => setSleepTimer(null)}
+            >
+              ×
+            </button>
+          </div>
+        ) : (
+          <Select value="off" onValueChange={(v) => setSleepTimer(v === 'off' ? null : Number(v))}>
+            <SelectTrigger className="w-24" aria-label="睡眠定时器">
+              <SelectValue placeholder="睡眠" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="off">关闭</SelectItem>
+              {[10, 30, 60, 300, 900, 1800, 3600].map((sec) => (
+                <SelectItem key={sec} value={String(sec)}>
+                  {sec < 60 ? `${sec}s` : sec < 3600 ? `${sec / 60} 分钟` : `${sec / 3600} 小时`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
       <div className="flex flex-1 flex-col items-center justify-center px-6 pb-12">
         <div className="mb-8 size-[280px] overflow-hidden rounded-lg bg-line shadow-md">

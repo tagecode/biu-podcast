@@ -133,3 +133,57 @@ describe('playback store stopIfPlayingPodcast', () => {
     expect(state.isPlaying).toBe(true)
   })
 })
+
+describe('playback store queue + rate', () => {
+  beforeEach(() => {
+    window.api = {
+      episode: { markPlayed: vi.fn() },
+      playback: {
+        updateProgress: vi.fn(() => Promise.resolve({ ok: true as const, data: undefined })),
+        getLastSession: vi.fn(() => Promise.resolve({ ok: true as const, data: null }))
+      },
+      settings: {
+        get: vi.fn(() =>
+          Promise.resolve({ ok: true as const, data: { playbackRate: 1, openFullPlayerDefault: false } })
+        ),
+        set: vi.fn(() => Promise.resolve({ ok: true as const, data: undefined }))
+      }
+    } as unknown as Window['api']
+    usePlaybackStore.setState({
+      queueItems: [],
+      queueMode: 'list',
+      playbackRate: 1,
+      sleepTimerRemaining: null,
+      currentEpisode: null,
+      currentPodcast: null,
+      isPlaying: false
+    })
+  })
+
+  it('setPlaybackRate updates the store and persists', () => {
+    usePlaybackStore.getState().setPlaybackRate(1.5)
+    expect(usePlaybackStore.getState().playbackRate).toBe(1.5)
+    expect(window.api.settings.set).toHaveBeenCalledWith({ key: 'playbackRate', value: 1.5 })
+  })
+
+  it('addToQueue dedupes by episode id', () => {
+    const e1 = { id: 'e1' } as never
+    const e2 = { id: 'e2' } as never
+    const store = usePlaybackStore.getState()
+    store.addToQueue(e1)
+    store.addToQueue(e1)
+    store.addToQueue(e2)
+    expect(usePlaybackStore.getState().queueItems.map((i) => (i as { id: string }).id)).toEqual([
+      'e1',
+      'e2'
+    ])
+  })
+
+  it('setQueueMode cycles modes', () => {
+    const store = usePlaybackStore.getState()
+    store.setQueueMode('repeat-one')
+    expect(usePlaybackStore.getState().queueMode).toBe('repeat-one')
+    store.setQueueMode('shuffle')
+    expect(usePlaybackStore.getState().queueMode).toBe('shuffle')
+  })
+})

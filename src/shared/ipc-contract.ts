@@ -96,7 +96,7 @@ export const WindowActionInputSchema = z.object({})
 export type WindowActionInput = z.infer<typeof WindowActionInputSchema>
 
 export const SetSettingInputSchema = z.object({
-  key: z.enum(['autoRefreshMinutes']),
+  key: z.enum(['autoRefreshMinutes', 'playbackRate', 'openFullPlayerDefault']),
   value: z.union([z.number().nullable(), z.string(), z.boolean()])
 })
 export type SetSettingInput = z.infer<typeof SetSettingInputSchema>

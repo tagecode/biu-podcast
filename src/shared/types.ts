@@ -111,6 +111,10 @@ export interface AppSettings {
   lastPositionSec: number
   /** Auto-refresh interval in minutes; null/0 = manual. */
   autoRefreshMinutes: number | null
+  /** Default playback rate (1.0 = normal). */
+  playbackRate: number
+  /** Open the full player by default when playback starts. */
+  openFullPlayerDefault: boolean
 }
 
 export interface PlaybackSession {

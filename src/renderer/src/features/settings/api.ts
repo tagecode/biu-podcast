@@ -7,7 +7,10 @@ export async function getSettings(): Promise<AppSettings> {
   return result.data
 }
 
-export async function setSetting(key: 'autoRefreshMinutes', value: number | null): Promise<void> {
+export async function setSetting(
+  key: 'autoRefreshMinutes' | 'playbackRate' | 'openFullPlayerDefault',
+  value: number | boolean | null
+): Promise<void> {
   const result = await window.api.settings.set({ key, value })
   if (!result.ok) throw new Error(result.error.message)
 }

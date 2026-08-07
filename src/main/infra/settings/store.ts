@@ -8,7 +8,9 @@ const defaults: AppSettings = {
   lastEpisodeId: null,
   lastPodcastId: null,
   lastPositionSec: 0,
-  autoRefreshMinutes: null
+  autoRefreshMinutes: null,
+  playbackRate: 1,
+  openFullPlayerDefault: false
 }
 
 // electron-store v9+ is ESM-only. electron-vite externalizes it into CJS
@@ -39,7 +41,9 @@ export class SettingsStore {
       lastEpisodeId: this.store.get('lastEpisodeId'),
       lastPodcastId: this.store.get('lastPodcastId'),
       lastPositionSec: this.store.get('lastPositionSec'),
-      autoRefreshMinutes: this.store.get('autoRefreshMinutes')
+      autoRefreshMinutes: this.store.get('autoRefreshMinutes'),
+      playbackRate: this.store.get('playbackRate'),
+      openFullPlayerDefault: this.store.get('openFullPlayerDefault')
     }
   }
 

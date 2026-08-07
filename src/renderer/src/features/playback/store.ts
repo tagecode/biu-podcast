@@ -3,6 +3,7 @@ import { create } from 'zustand'
 
 import { canPlayEpisode } from './lib/offline-guard'
 import { resolveMediaUrl } from './lib/media-url'
+import { nextIndex, previousIndex, type QueueMode } from './lib/queue'
 
 interface PlaybackState {
   currentEpisode: Episode | null
@@ -14,6 +15,16 @@ interface PlaybackState {
   hasPrevious: boolean
   hasNext: boolean
   playbackError: string | null
+  playbackRate: number
+  setPlaybackRate: (rate: number) => void
+  /** Remaining sleep-timer seconds; null when not armed. */
+  sleepTimerRemaining: number | null
+  setSleepTimer: (seconds: number | null) => void
+  /** Current playback queue (independent of persistent playlists). */
+  queueItems: Episode[]
+  queueMode: QueueMode
+  setQueueMode: (mode: QueueMode) => void
+  addToQueue: (episode: Episode) => void
   playEpisode: (
     episode: Episode,
     podcast: Podcast,
@@ -38,6 +49,8 @@ interface PlaybackState {
 
 let audioElement: HTMLAudioElement | null = null
 let lastPersistAt = 0
+let sleepTimerHandle: ReturnType<typeof setInterval> | null = null
+let openFullPlayerDefault = false
 
 function getAudio(): HTMLAudioElement {
   if (!audioElement) {
@@ -52,6 +65,22 @@ async function persistNow(episodeId: string, positionSec: number): Promise<void>
   await window.api.playback.updateProgress({ episodeId, positionSec })
 }
 
+/** Load persisted playback preferences (rate + full-player default). */
+export async function loadPlaybackPrefs(): Promise<void> {
+  try {
+    const result = await window.api.settings.get()
+    if (!result.ok) return
+    openFullPlayerDefault = result.data.openFullPlayerDefault
+    const rate = result.data.playbackRate
+    if (rate && rate > 0) {
+      usePlaybackStore.setState({ playbackRate: rate })
+      getAudio().playbackRate = rate
+    }
+  } catch {
+    // Non-fatal — defaults apply.
+  }
+}
+
 export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   currentEpisode: null,
   currentPodcast: null,
@@ -62,6 +91,47 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   hasPrevious: false,
   hasNext: false,
   playbackError: null,
+  playbackRate: 1,
+  setPlaybackRate: (rate) => {
+    getAudio().playbackRate = rate
+    set({ playbackRate: rate })
+    void window.api.settings.set({ key: 'playbackRate', value: rate })
+  },
+  sleepTimerRemaining: null,
+  setSleepTimer: (seconds) => {
+    if (sleepTimerHandle) {
+      clearInterval(sleepTimerHandle)
+      sleepTimerHandle = null
+    }
+    if (seconds === null) {
+      set({ sleepTimerRemaining: null })
+      return
+    }
+    set({ sleepTimerRemaining: seconds })
+    sleepTimerHandle = setInterval(() => {
+      const state = usePlaybackStore.getState()
+      const remaining = state.sleepTimerRemaining
+      if (remaining === null) {
+        if (sleepTimerHandle) clearInterval(sleepTimerHandle)
+        sleepTimerHandle = null
+        return
+      }
+      if (remaining <= 1) {
+        // Timer done: pause playback.
+        state.pause()
+        state.setSleepTimer(null)
+      } else {
+        usePlaybackStore.setState({ sleepTimerRemaining: remaining - 1 })
+      }
+    }, 1000)
+  },
+  queueItems: [],
+  queueMode: 'list',
+  setQueueMode: (mode) => set({ queueMode: mode }),
+  addToQueue: (episode) => {
+    if (get().queueItems.some((e) => e.id === episode.id)) return
+    set((state) => ({ queueItems: [...state.queueItems, episode] }))
+  },
   playEpisode: async (episode, podcast, options) => {
     const online = typeof navigator === 'undefined' ? true : navigator.onLine
     let playable = episode
@@ -98,6 +168,7 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     const fromSec = options?.fromSec ?? playable.playbackPositionSec
     if (get().currentEpisode?.id !== playable.id) {
       audio.src = resolveMediaUrl(playable)
+      audio.playbackRate = get().playbackRate
       audio.currentTime = fromSec
       set({
         currentEpisode: playable,
@@ -106,7 +177,8 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
         durationSec: playable.durationSec ?? 0,
         hasPrevious: false,
         hasNext: false,
-        playbackError: null
+        playbackError: null,
+        view: openFullPlayerDefault ? 'full' : get().view
       })
       void get().refreshAdjacent()
     } else {
@@ -160,15 +232,33 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   openFullPlayer: () => set({ view: 'full' }),
   closeFullPlayer: () => set({ view: 'mini' }),
   playPrevious: async () => {
-    const { currentEpisode, currentPodcast } = get()
+    const { currentEpisode, currentPodcast, queueItems, queueMode } = get()
     if (!currentEpisode || !currentPodcast) return
+    // Queue-aware: navigate the queue when the current episode is in it.
+    const qIndex = queueItems.findIndex((e) => e.id === currentEpisode.id)
+    if (qIndex >= 0) {
+      const prev = previousIndex({ items: queueItems, currentIndex: qIndex, mode: queueMode, shuffleOrder: [] })
+      if (prev !== null) {
+        await get().playEpisode(queueItems[prev]!, currentPodcast, { fromSec: 0 })
+      }
+      return
+    }
     const result = await window.api.episode.getAdjacent({ episodeId: currentEpisode.id })
     if (!result.ok || !result.data.previous) return
     await get().playEpisode(result.data.previous, currentPodcast, { fromSec: 0 })
   },
   playNext: async () => {
-    const { currentEpisode, currentPodcast } = get()
+    const { currentEpisode, currentPodcast, queueItems, queueMode } = get()
     if (!currentEpisode || !currentPodcast) return
+    // Queue-aware: navigate the queue when the current episode is in it.
+    const qIndex = queueItems.findIndex((e) => e.id === currentEpisode.id)
+    if (qIndex >= 0) {
+      const next = nextIndex({ items: queueItems, currentIndex: qIndex, mode: queueMode, shuffleOrder: [] })
+      if (next !== null) {
+        await get().playEpisode(queueItems[next]!, currentPodcast, { fromSec: 0 })
+      }
+      return
+    }
     const result = await window.api.episode.getAdjacent({ episodeId: currentEpisode.id })
     if (!result.ok || !result.data.next) return
     await get().playEpisode(result.data.next, currentPodcast, { fromSec: 0 })

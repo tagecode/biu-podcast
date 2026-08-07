@@ -38,6 +38,7 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [autoRefresh, setAutoRefresh] = useState<string>('null')
+  const [openFullDefault, setOpenFullDefault] = useState(false)
   const [pendingImport, setPendingImport] = useState<{
     filePath: string
     preview: ImportPreview
@@ -48,6 +49,7 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
       setAutoRefresh(
         settings.autoRefreshMinutes == null ? 'null' : String(settings.autoRefreshMinutes)
       )
+      setOpenFullDefault(settings.openFullPlayerDefault)
     })
   }, [])
 
@@ -267,6 +269,31 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold text-ink">播放设置</h2>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">默认打开全屏播放器</div>
+              <div className="mt-1 text-xs text-muted">点击播放时直接进入全屏播放器视图</div>
+            </div>
+            <label className="flex cursor-pointer items-center">
+              <input
+                type="checkbox"
+                className="accent-amber-600"
+                checked={openFullDefault}
+                onChange={(e) => {
+                  setOpenFullDefault(e.target.checked)
+                  void settingsApi.setSetting('openFullPlayerDefault', e.target.checked).catch((err) =>
+                    setError(err instanceof Error ? err.message : '保存设置失败')
+                  )
+                }}
+              />
+              <span className="ml-2 text-sm text-muted">{openFullDefault ? '开启' : '关闭'}</span>
+            </label>
           </div>
 
           {message ? (

@@ -1,4 +1,4 @@
-import { Download, ListPlus, Pause, Play, X } from 'lucide-react'
+import { Download, ListPlus, ListVideo, Pause, Play, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import type { Episode, Note, Playlist } from '@shared/types'
 
 import { formatDate, formatDuration, formatFileSize } from '@/lib/format'
+import { usePlaybackStore } from '@/features/playback/store'
 import * as playlistApi from '@/features/playlist/api'
 
 interface EpisodeDetailPanelProps {
@@ -48,6 +49,10 @@ export function EpisodeDetailPanel({
     await playlistApi.addToPlaylist(playlistId, episode.id)
   }
 
+  const addToQueue = (): void => {
+    usePlaybackStore.getState().addToQueue(episode)
+  }
+
   const addNote = async (): Promise<void> => {
     if (!noteText.trim()) return
     const ts = currentPositionSec ?? 0
@@ -82,6 +87,9 @@ export function EpisodeDetailPanel({
             下载
           </Button>
         ) : null}
+        <Button variant="ghost" size="icon" aria-label="加入播放队列" onClick={() => addToQueue()}>
+          <ListVideo className="size-4" />
+        </Button>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
