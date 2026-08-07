@@ -224,6 +224,11 @@ export function FullScreenPlayer(): React.JSX.Element | null {
   const setPlaybackRate = usePlaybackStore((state) => state.setPlaybackRate)
   const sleepTimerRemaining = usePlaybackStore((state) => state.sleepTimerRemaining)
   const setSleepTimer = usePlaybackStore((state) => state.setSleepTimer)
+  const [shortcuts, setShortcuts] = useState<RegisteredShortcuts>({})
+
+  useEffect(() => {
+    void fetchRegisteredShortcuts().then(setShortcuts)
+  }, [])
 
   // Keyboard shortcuts: Space = play/pause, ←/→ = ±10s, ↑/↓ = volume.
   useEffect(() => {
@@ -257,14 +262,21 @@ export function FullScreenPlayer(): React.JSX.Element | null {
   return (
     <div className="absolute inset-0 z-40 flex flex-col bg-paper">
       <div className="flex items-center px-6 py-4">
-        <button
-          type="button"
-          className="flex items-center gap-1.5 text-sm text-muted hover:text-ink"
-          onClick={closeFullPlayer}
-        >
-          <ChevronDown className="size-4" strokeWidth={1.75} />
-          收起播放器
-        </button>
+        <TooltipProvider delayDuration={400}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="flex items-center gap-1.5 text-sm text-muted hover:text-ink"
+                onClick={closeFullPlayer}
+              >
+                <ChevronDown className="size-4" strokeWidth={1.75} />
+                收起播放器
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>收起到迷你播放器</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
       <div className="flex flex-1 flex-col items-center justify-center px-6 pb-12">
         <div className="mb-8 size-[280px] overflow-hidden rounded-lg bg-line shadow-md">
@@ -299,29 +311,60 @@ export function FullScreenPlayer(): React.JSX.Element | null {
           </div>
         </div>
         <div className="mt-6 flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-12"
-            aria-label="上一集"
-            disabled={!hasPrevious}
-            onClick={() => void playPrevious()}
-          >
-            <SkipBack className="size-6" />
-          </Button>
-          <Button size="lg" className={cn('size-16 rounded-full p-0')} onClick={togglePlay}>
-            {isPlaying ? <Pause className="size-6" /> : <Play className="size-6" />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-12"
-            aria-label="下一集"
-            disabled={!hasNext}
-            onClick={() => void playNext()}
-          >
-            <SkipForward className="size-6" />
-          </Button>
+          <TooltipProvider delayDuration={400}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-12"
+                  aria-label="上一集"
+                  disabled={!hasPrevious}
+                  onClick={() => void playPrevious()}
+                >
+                  <SkipBack className="size-6" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                上一集
+                {formatAccelerator(shortcuts.previous)
+                  ? ` (${formatAccelerator(shortcuts.previous)})`
+                  : ''}
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="lg" className={cn('size-16 rounded-full p-0')} onClick={togglePlay}>
+                  {isPlaying ? <Pause className="size-6" /> : <Play className="size-6" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                播放/暂停
+                {formatAccelerator(shortcuts.toggle)
+                  ? ` (${formatAccelerator(shortcuts.toggle)})`
+                  : ''}{' '}
+                · 空格
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-12"
+                  aria-label="下一集"
+                  disabled={!hasNext}
+                  onClick={() => void playNext()}
+                >
+                  <SkipForward className="size-6" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                下一集
+                {formatAccelerator(shortcuts.next) ? ` (${formatAccelerator(shortcuts.next)})` : ''}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         {/* Toolbar: playback rate + sleep timer, with labels */}
