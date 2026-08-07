@@ -34,6 +34,7 @@ type Route =
 
 export function AppShell(): React.JSX.Element {
   const [route, setRoute] = useState<Route>({ name: 'subscriptions' })
+  const playbackView = usePlaybackStore((state) => state.view)
   const panelOpen = useDownloadStore((state) => state.panelOpen)
   const tasks = useDownloadStore((state) => state.tasks)
   const setPanelOpen = useDownloadStore((state) => state.setPanelOpen)
@@ -144,7 +145,9 @@ export function AppShell(): React.JSX.Element {
         <DownloadPanel />
       </div>
 
-      <MiniPlayer />
+      {/* Hide the mini player while the full-screen player is open — it would
+          otherwise overlap the full player's toolbar at the bottom. */}
+      {playbackView === 'mini' ? <MiniPlayer /> : null}
     </div>
   )
 }
