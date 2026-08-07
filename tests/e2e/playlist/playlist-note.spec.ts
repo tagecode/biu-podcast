@@ -3,10 +3,9 @@ import { launchApp } from '../helpers/launch-app'
 import { startTestServer } from '../helpers/test-server'
 
 test('playlist and note round-trip through the UI', async () => {
-  const server = await startTestServer(
-    { title: '列表笔记播客', author: 'T' },
-    [{ title: '集一', audioBytes: 256 * 1024, publishedDaysAgo: 1, durationSec: 300 }]
-  )
+  const server = await startTestServer({ title: '列表笔记播客', author: 'T' }, [
+    { title: '集一', audioBytes: 256 * 1024, publishedDaysAgo: 1, durationSec: 300 }
+  ])
   const app = await launchApp()
   const window = await app.firstWindow()
   await window.waitForLoadState('domcontentloaded')
