@@ -1,4 +1,5 @@
 import {
+  ChevronDown,
   Gauge,
   Maximize2,
   Moon,
@@ -204,9 +205,10 @@ export function FullScreenPlayer(): React.JSX.Element | null {
       <div className="flex items-center px-6 py-4">
         <button
           type="button"
-          className="text-sm text-muted hover:text-ink"
+          className="flex items-center gap-1.5 text-sm text-muted hover:text-ink"
           onClick={closeFullPlayer}
         >
+          <ChevronDown className="size-4" strokeWidth={1.75} />
           收起播放器
         </button>
       </div>
