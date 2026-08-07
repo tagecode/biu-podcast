@@ -50,6 +50,33 @@ export interface DownloadTask {
   podcastTitle?: string
 }
 
+export interface Playlist {
+  id: string
+  name: string
+  createdAt: number
+  /** Episode count (computed on list). */
+  itemCount?: number
+}
+
+export interface PlaylistItem {
+  id: string
+  playlistId: string
+  episodeId: string
+  sortOrder: number
+  addedAt: number
+  episodeTitle?: string
+  podcastTitle?: string
+}
+
+export interface Note {
+  id: string
+  episodeId: string
+  timestampSec: number
+  content: string
+  createdAt: number
+  episodeTitle?: string
+}
+
 export interface ParsedFeedEpisode {
   title: string
   descriptionHtml: string | null

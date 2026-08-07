@@ -46,3 +46,31 @@ export const downloadTasks = sqliteTable('download_tasks', {
   retryCount: integer('retry_count').notNull().default(0),
   updatedAt: integer('updated_at').notNull()
 })
+
+export const playlists = sqliteTable('playlists', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  createdAt: integer('created_at').notNull()
+})
+
+export const playlistItems = sqliteTable('playlist_items', {
+  id: text('id').primaryKey(),
+  playlistId: text('playlist_id')
+    .notNull()
+    .references(() => playlists.id, { onDelete: 'cascade' }),
+  episodeId: text('episode_id')
+    .notNull()
+    .references(() => episodes.id, { onDelete: 'cascade' }),
+  sortOrder: integer('sort_order').notNull().default(0),
+  addedAt: integer('added_at').notNull()
+})
+
+export const notes = sqliteTable('notes', {
+  id: text('id').primaryKey(),
+  episodeId: text('episode_id')
+    .notNull()
+    .references(() => episodes.id, { onDelete: 'cascade' }),
+  timestampSec: integer('timestamp_sec').notNull(),
+  content: text('content').notNull(),
+  createdAt: integer('created_at').notNull()
+})

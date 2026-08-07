@@ -3,17 +3,25 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { IPC_CHANNELS } from '@shared/ipc-channels'
 import type {
   AddSubscriptionInput,
+  CreateNoteInput,
+  CreatePlaylistInput,
   DownloadTaskIdInput,
   EnqueueDownloadInput,
+  EpisodeIdInput,
   GetAdjacentInput,
   GetEpisodeInput,
   ImportBackupInput,
   ListEpisodesInput,
   MarkAllPlayedInput,
   MarkPlayedInput,
+  NoteIdInput,
   OpmlImportResult,
+  PlaylistIdInput,
+  PlaylistItemInput,
   RefreshSubscriptionInput,
   RemoveSubscriptionInput,
+  RenamePlaylistInput,
+  ReorderPlaylistInput,
   SetPausedInput,
   SetSettingInput,
   UpdateProgressInput,
@@ -26,7 +34,10 @@ import type {
   DownloadTaskStatus,
   Episode,
   IpcResult,
+  Note,
   PlaybackSession,
+  Playlist,
+  PlaylistItem,
   Podcast
 } from '@shared/types'
 import type { EpisodeListPage } from '@shared/episode-list'
@@ -133,6 +144,34 @@ const api = {
     close: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC_CHANNELS.window.close, {}),
     isMaximized: (): Promise<IpcResult<boolean>> =>
       ipcRenderer.invoke(IPC_CHANNELS.window.isMaximized, {})
+  },
+  playlist: {
+    create: (input: CreatePlaylistInput): Promise<IpcResult<Playlist>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.playlist.create, input),
+    list: (): Promise<IpcResult<Playlist[]>> => ipcRenderer.invoke(IPC_CHANNELS.playlist.list),
+    rename: (input: RenamePlaylistInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.playlist.rename, input),
+    delete: (input: PlaylistIdInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.playlist.delete, input),
+    addItem: (input: PlaylistItemInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.playlist.addItem, input),
+    removeItem: (input: PlaylistItemInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.playlist.removeItem, input),
+    listItems: (input: PlaylistIdInput): Promise<IpcResult<PlaylistItem[]>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.playlist.listItems, input),
+    reorder: (input: ReorderPlaylistInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.playlist.reorder, input)
+  },
+  note: {
+    create: (input: CreateNoteInput): Promise<IpcResult<Note>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.note.create, input),
+    listByEpisode: (input: EpisodeIdInput): Promise<IpcResult<Note[]>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.note.listByEpisode, input),
+    listAll: (): Promise<IpcResult<Note[]>> => ipcRenderer.invoke(IPC_CHANNELS.note.listAll),
+    delete: (input: NoteIdInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.note.delete, input),
+    export: (): Promise<IpcResult<{ filePath: string } | null>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.note.export)
   }
 }
 

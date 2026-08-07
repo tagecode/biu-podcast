@@ -100,3 +100,49 @@ export const SetSettingInputSchema = z.object({
   value: z.union([z.number().nullable(), z.string(), z.boolean()])
 })
 export type SetSettingInput = z.infer<typeof SetSettingInputSchema>
+
+export const CreatePlaylistInputSchema = z.object({
+  name: z.string().min(1).max(100)
+})
+
+export const RenamePlaylistInputSchema = z.object({
+  playlistId: z.string().min(1),
+  name: z.string().min(1).max(100)
+})
+
+export const PlaylistIdInputSchema = z.object({
+  playlistId: z.string().min(1)
+})
+
+export const PlaylistItemInputSchema = z.object({
+  playlistId: z.string().min(1),
+  episodeId: z.string().min(1)
+})
+
+export const ReorderPlaylistInputSchema = z.object({
+  playlistId: z.string().min(1),
+  episodeIds: z.array(z.string()).max(1000)
+})
+
+export const CreateNoteInputSchema = z.object({
+  episodeId: z.string().min(1),
+  timestampSec: z.number().min(0),
+  content: z.string().min(1).max(5000)
+})
+
+export const EpisodeIdInputSchema = z.object({
+  episodeId: z.string().min(1)
+})
+
+export const NoteIdInputSchema = z.object({
+  noteId: z.string().min(1)
+})
+
+export type CreatePlaylistInput = z.infer<typeof CreatePlaylistInputSchema>
+export type RenamePlaylistInput = z.infer<typeof RenamePlaylistInputSchema>
+export type PlaylistIdInput = z.infer<typeof PlaylistIdInputSchema>
+export type PlaylistItemInput = z.infer<typeof PlaylistItemInputSchema>
+export type ReorderPlaylistInput = z.infer<typeof ReorderPlaylistInputSchema>
+export type CreateNoteInput = z.infer<typeof CreateNoteInputSchema>
+export type EpisodeIdInput = z.infer<typeof EpisodeIdInputSchema>
+export type NoteIdInput = z.infer<typeof NoteIdInputSchema>

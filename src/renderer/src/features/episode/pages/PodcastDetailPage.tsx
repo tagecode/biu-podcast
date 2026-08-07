@@ -42,6 +42,7 @@ export function PodcastDetailPage({
   const [detailLoading, setDetailLoading] = useState(false)
   const playEpisode = usePlaybackStore((state) => state.playEpisode)
   const currentEpisodeId = usePlaybackStore((state) => state.currentEpisode?.id)
+  const currentTimeSec = usePlaybackStore((state) => state.currentTimeSec)
   const isPlaying = usePlaybackStore((state) => state.isPlaying)
   const togglePlay = usePlaybackStore((state) => state.togglePlay)
   const stopIfPlayingPodcast = usePlaybackStore((state) => state.stopIfPlayingPodcast)
@@ -258,6 +259,7 @@ export function PodcastDetailPage({
           episode={selectedEpisode}
           onClose={() => setSelectedEpisode(null)}
           isCurrentPlaying={currentEpisodeId === selectedEpisode.id && isPlaying}
+          currentPositionSec={currentEpisodeId === selectedEpisode.id ? currentTimeSec : 0}
           onPlay={() => {
             if (currentEpisodeId === selectedEpisode.id) {
               togglePlay()

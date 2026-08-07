@@ -1,8 +1,11 @@
 import { BrowserWindow } from 'electron'
 import {
   AddSubscriptionInputSchema,
+  CreateNoteInputSchema,
+  CreatePlaylistInputSchema,
   DownloadTaskIdInputSchema,
   EnqueueDownloadInputSchema,
+  EpisodeIdInputSchema,
   GetAdjacentInputSchema,
   GetEpisodeInputSchema,
   ImportBackupInputSchema,
@@ -10,9 +13,14 @@ import {
   ListEpisodesInputSchema,
   MarkAllPlayedInputSchema,
   MarkPlayedInputSchema,
+  NoteIdInputSchema,
   OpmlActionInputSchema,
+  PlaylistIdInputSchema,
+  PlaylistItemInputSchema,
   RefreshSubscriptionInputSchema,
   RemoveSubscriptionInputSchema,
+  RenamePlaylistInputSchema,
+  ReorderPlaylistInputSchema,
   SetPausedInputSchema,
   SetSettingInputSchema,
   UpdateProgressInputSchema,
@@ -24,6 +32,7 @@ import { dataPortabilityService } from '../features/data-portability/data-portab
 import { downloadService } from '../features/download/download.service'
 import { episodeService } from '../features/episode/episode.service'
 import { playbackService } from '../features/playback/playback.service'
+import { playlistService } from '../features/playlist/playlist.service'
 import { settingsStore } from '../infra/settings/store'
 import { autoRefreshScheduler } from '../features/subscription/auto-refresh'
 import { subscriptionService } from '../features/subscription/subscription.service'
@@ -242,6 +251,47 @@ export function registerSettingsHandlers(): void {
   })
 }
 
+export function registerPlaylistHandlers(): void {
+  registerHandler(IPC_CHANNELS.playlist.create, CreatePlaylistInputSchema, (_e, input) =>
+    playlistService.createPlaylist(input.name)
+  )
+  registerNoInputHandler(IPC_CHANNELS.playlist.list, () => playlistService.listPlaylists())
+  registerVoidHandler(IPC_CHANNELS.playlist.rename, RenamePlaylistInputSchema, (_e, input) =>
+    playlistService.renamePlaylist(input.playlistId, input.name)
+  )
+  registerVoidHandler(IPC_CHANNELS.playlist.delete, PlaylistIdInputSchema, (_e, input) =>
+    playlistService.deletePlaylist(input.playlistId)
+  )
+  registerVoidHandler(IPC_CHANNELS.playlist.addItem, PlaylistItemInputSchema, (_e, input) =>
+    playlistService.addToPlaylist(input.playlistId, input.episodeId)
+  )
+  registerVoidHandler(IPC_CHANNELS.playlist.removeItem, PlaylistItemInputSchema, (_e, input) =>
+    playlistService.removeFromPlaylist(input.playlistId, input.episodeId)
+  )
+  registerHandler(IPC_CHANNELS.playlist.listItems, PlaylistIdInputSchema, (_e, input) =>
+    playlistService.listPlaylistItems(input.playlistId)
+  )
+  registerVoidHandler(IPC_CHANNELS.playlist.reorder, ReorderPlaylistInputSchema, (_e, input) =>
+    playlistService.reorderPlaylist(input.playlistId, input.episodeIds)
+  )
+}
+
+export function registerNoteHandlers(): void {
+  registerHandler(IPC_CHANNELS.note.create, CreateNoteInputSchema, (_e, input) =>
+    playlistService.createNote(input.episodeId, input.timestampSec, input.content)
+  )
+  registerHandler(IPC_CHANNELS.note.listByEpisode, EpisodeIdInputSchema, (_e, input) =>
+    playlistService.listNotesByEpisode(input.episodeId)
+  )
+  registerNoInputHandler(IPC_CHANNELS.note.listAll, () => playlistService.listAllNotes())
+  registerVoidHandler(IPC_CHANNELS.note.delete, NoteIdInputSchema, (_e, input) =>
+    playlistService.deleteNote(input.noteId)
+  )
+  registerHandler(IPC_CHANNELS.note.export, OpmlActionInputSchema, () =>
+    playlistService.exportNotesToFile()
+  )
+}
+
 export function registerAllHandlers(): void {
   registerSubscriptionHandlers()
   registerEpisodeHandlers()
@@ -249,5 +299,7 @@ export function registerAllHandlers(): void {
   registerDownloadHandlers()
   registerDataPortabilityHandlers()
   registerSettingsHandlers()
+  registerPlaylistHandlers()
+  registerNoteHandlers()
   registerWindowHandlers()
 }

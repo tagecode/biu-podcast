@@ -6,12 +6,13 @@ module.exports = {
       comment:
         '渲染进程 features/<a> 不得 import features/<b>（a ≠ b）的内部模块。' +
         '同 feature 内部引用天然放行（$1 引用 from 捕获组）。' +
-        'PodcastDetailPage（跨 store 消费）与 SettingsPage（刷新订阅）是已知的有意跨 feature 引用，在 from.pathNot 中豁免。',
+        'PodcastDetailPage / SettingsPage / EpisodeDetailPanel 是有意的跨 feature 引用，在 from.pathNot 中豁免。',
       from: {
         path: '^src/renderer/src/features/([^/]+)',
         pathNot:
           '^src/renderer/src/features/episode/pages/PodcastDetailPage\\.tsx$|' +
-          '^src/renderer/src/features/settings/pages/SettingsPage\\.tsx$'
+          '^src/renderer/src/features/settings/pages/SettingsPage\\.tsx$|' +
+          '^src/renderer/src/features/episode/components/EpisodeDetailPanel\\.tsx$'
       },
       to: {
         path: '^src/renderer/src/features/',

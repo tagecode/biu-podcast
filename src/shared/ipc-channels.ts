@@ -46,5 +46,22 @@ export const IPC_CHANNELS = {
     close: 'window:close',
     isMaximized: 'window:is-maximized',
     maximizedChanged: 'window:maximized-changed'
+  },
+  playlist: {
+    create: 'playlist:create',
+    list: 'playlist:list',
+    rename: 'playlist:rename',
+    delete: 'playlist:delete',
+    addItem: 'playlist:add-item',
+    removeItem: 'playlist:remove-item',
+    listItems: 'playlist:list-items',
+    reorder: 'playlist:reorder'
+  },
+  note: {
+    create: 'note:create',
+    listByEpisode: 'note:list-by-episode',
+    listAll: 'note:list-all',
+    delete: 'note:delete',
+    export: 'note:export'
   }
 } as const

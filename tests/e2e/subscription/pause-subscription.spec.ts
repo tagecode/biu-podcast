@@ -3,10 +3,9 @@ import { launchApp } from '../helpers/launch-app'
 import { startTestServer } from '../helpers/test-server'
 
 test('pausing a subscription shows the paused badge and stops auto-refresh', async () => {
-  const server = await startTestServer(
-    { title: '暂停测试播客', author: 'T' },
-    [{ title: '集一', audioBytes: 256 * 1024, publishedDaysAgo: 1, durationSec: 300 }]
-  )
+  const server = await startTestServer({ title: '暂停测试播客', author: 'T' }, [
+    { title: '集一', audioBytes: 256 * 1024, publishedDaysAgo: 1, durationSec: 300 }
+  ])
   const app = await launchApp()
   const window = await app.firstWindow()
   await window.waitForLoadState('domcontentloaded')

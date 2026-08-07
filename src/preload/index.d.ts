@@ -1,16 +1,24 @@
 import type {
   AddSubscriptionInput,
+  CreateNoteInput,
+  CreatePlaylistInput,
   DownloadTaskIdInput,
   EnqueueDownloadInput,
+  EpisodeIdInput,
   GetAdjacentInput,
   GetEpisodeInput,
   ImportBackupInput,
   ListEpisodesInput,
   MarkAllPlayedInput,
   MarkPlayedInput,
+  NoteIdInput,
   OpmlImportResult,
+  PlaylistIdInput,
+  PlaylistItemInput,
   RefreshSubscriptionInput,
   RemoveSubscriptionInput,
+  RenamePlaylistInput,
+  ReorderPlaylistInput,
   SetPausedInput,
   SetSettingInput,
   UpdateProgressInput,
@@ -24,7 +32,10 @@ import type {
   DownloadTaskStatus,
   Episode,
   IpcResult,
+  Note,
   PlaybackSession,
+  Playlist,
+  PlaylistItem,
   Podcast
 } from '@shared/types'
 
@@ -91,6 +102,23 @@ declare global {
         maximize: () => Promise<IpcResult<void>>
         close: () => Promise<IpcResult<void>>
         isMaximized: () => Promise<IpcResult<boolean>>
+      }
+      playlist: {
+        create: (input: CreatePlaylistInput) => Promise<IpcResult<Playlist>>
+        list: () => Promise<IpcResult<Playlist[]>>
+        rename: (input: RenamePlaylistInput) => Promise<IpcResult<void>>
+        delete: (input: PlaylistIdInput) => Promise<IpcResult<void>>
+        addItem: (input: PlaylistItemInput) => Promise<IpcResult<void>>
+        removeItem: (input: PlaylistItemInput) => Promise<IpcResult<void>>
+        listItems: (input: PlaylistIdInput) => Promise<IpcResult<PlaylistItem[]>>
+        reorder: (input: ReorderPlaylistInput) => Promise<IpcResult<void>>
+      }
+      note: {
+        create: (input: CreateNoteInput) => Promise<IpcResult<Note>>
+        listByEpisode: (input: EpisodeIdInput) => Promise<IpcResult<Note[]>>
+        listAll: () => Promise<IpcResult<Note[]>>
+        delete: (input: NoteIdInput) => Promise<IpcResult<void>>
+        export: () => Promise<IpcResult<{ filePath: string } | null>>
       }
     }
   }

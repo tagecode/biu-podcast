@@ -1,4 +1,4 @@
-import { Download, Play, Settings } from 'lucide-react'
+import { Download, ListMusic, Play, Settings, StickyNote } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
 
@@ -9,6 +9,8 @@ import { useDownloadStore } from '@/features/download/store'
 import { PodcastDetailPage } from '@/features/episode/pages/PodcastDetailPage'
 import { FullScreenPlayer, MiniPlayer } from '@/features/playback/components/PlayerShell'
 import { usePlaybackStore } from '@/features/playback/store'
+import { NotesPage } from '@/features/playlist/pages/NotesPage'
+import { PlaylistsPage } from '@/features/playlist/pages/PlaylistsPage'
 import { SettingsPage } from '@/features/settings/pages/SettingsPage'
 import { SubscriptionListView } from '@/features/subscription/components/SubscriptionListView'
 
@@ -24,7 +26,11 @@ const dragRegion: CSSProperties = { WebkitAppRegion: 'drag' }
 const noDragRegion: CSSProperties = { WebkitAppRegion: 'no-drag' }
 
 type Route =
-  { name: 'subscriptions' } | { name: 'detail'; podcastId: string } | { name: 'settings' }
+  | { name: 'subscriptions' }
+  | { name: 'detail'; podcastId: string }
+  | { name: 'playlists' }
+  | { name: 'notes' }
+  | { name: 'settings' }
 
 export function AppShell(): React.JSX.Element {
   const [route, setRoute] = useState<Route>({ name: 'subscriptions' })
@@ -73,6 +79,22 @@ export function AppShell(): React.JSX.Element {
           <Button
             variant="ghost"
             size="icon"
+            aria-label="播放列表"
+            onClick={() => setRoute({ name: 'playlists' })}
+          >
+            <ListMusic className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="笔记"
+            onClick={() => setRoute({ name: 'notes' })}
+          >
+            <StickyNote className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             aria-label="设置"
             onClick={() => setRoute({ name: 'settings' })}
           >
@@ -106,6 +128,10 @@ export function AppShell(): React.JSX.Element {
               podcastId={route.podcastId}
               onBack={() => setRoute({ name: 'subscriptions' })}
             />
+          ) : route.name === 'playlists' ? (
+            <PlaylistsPage onBack={() => setRoute({ name: 'subscriptions' })} />
+          ) : route.name === 'notes' ? (
+            <NotesPage onBack={() => setRoute({ name: 'subscriptions' })} />
           ) : (
             <SettingsPage onBack={() => setRoute({ name: 'subscriptions' })} />
           )}
