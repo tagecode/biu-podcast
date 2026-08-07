@@ -40,6 +40,7 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
   const [autoRefresh, setAutoRefresh] = useState<string>('null')
   const [openFullDefault, setOpenFullDefault] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
+  const [downloadPath, setDownloadPath] = useState<string | null>(null)
   const [pendingImport, setPendingImport] = useState<{
     filePath: string
     preview: ImportPreview
@@ -52,8 +53,24 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
       )
       setOpenFullDefault(settings.openFullPlayerDefault)
       setNotificationsEnabled(settings.notificationsEnabled)
+      setDownloadPath(settings.downloadPath)
     })
   }, [])
+
+  const handleChooseDownloadDir = async (): Promise<void> => {
+    setBusy(true)
+    setError(null)
+    try {
+      const result = await window.api.settings.chooseDirectory()
+      if (!result.ok || !result.data) return
+      setDownloadPath(result.data)
+      await settingsApi.setSetting('downloadPath', result.data)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '选择目录失败')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   const handleExport = async (): Promise<void> => {
     setBusy(true)
@@ -319,6 +336,26 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
                 {notificationsEnabled ? '开启' : '关闭'}
               </span>
             </label>
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold text-ink">存储设置</h2>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium text-ink">下载目录</div>
+              <div className="mt-1 truncate text-xs text-muted">
+                {downloadPath ?? '默认目录（应用数据目录下 downloads）'}
+              </div>
+            </div>
+            <Button
+              variant="secondary"
+              disabled={busy}
+              onClick={() => void handleChooseDownloadDir()}
+            >
+              选择…
+            </Button>
           </div>
 
           {message ? (

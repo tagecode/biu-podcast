@@ -166,9 +166,14 @@ export class DownloadService {
         totalBytes: event.totalBytes
       })
 
-      const episode = this.episodes.findById(event.episodeId)
-      if (episode) {
-        broadcast(IPC_CHANNELS.episode.changed, { podcastId: episode.podcastId })
+      // Refresh the episode list only on status transitions, not on every
+      // progress tick — otherwise the detail page reloads in a loop while a
+      // download streams (causing the download button to flicker).
+      if (event.type !== 'progress') {
+        const episode = this.episodes.findById(event.episodeId)
+        if (episode) {
+          broadcast(IPC_CHANNELS.episode.changed, { podcastId: episode.podcastId })
+        }
       }
     })
   }

@@ -1,6 +1,7 @@
-import { BrowserWindow } from 'electron'
+import { BrowserWindow, dialog } from 'electron'
 import {
   AddSubscriptionInputSchema,
+  ChooseDirectoryInputSchema,
   CreateNoteInputSchema,
   CreatePlaylistInputSchema,
   DownloadTaskIdInputSchema,
@@ -253,6 +254,15 @@ export function registerSettingsHandlers(): void {
     if (input.key === 'autoRefreshMinutes') {
       autoRefreshScheduler.restart()
     }
+  })
+
+  registerHandler(IPC_CHANNELS.settings.chooseDirectory, ChooseDirectoryInputSchema, async () => {
+    const result = await dialog.showOpenDialog({
+      title: '选择下载目录',
+      properties: ['openDirectory', 'createDirectory']
+    })
+    if (result.canceled || !result.filePaths[0]) return null
+    return result.filePaths[0]
   })
 }
 

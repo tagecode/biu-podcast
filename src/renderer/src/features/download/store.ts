@@ -61,9 +61,12 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
   applyProgress: (payload) => {
     set((state) => {
       const index = state.tasks.findIndex((task) => task.id === payload.taskId)
+      // Task not in the local list yet (enqueue's load() still in flight).
+      // Don't re-fetch on every progress tick — that races the UI.
       if (index < 0) {
-        if (payload.status === 'completed') return state
-        void get().load()
+        if (payload.status === 'completed') {
+          void get().load()
+        }
         return state
       }
       if (payload.status === 'completed') {

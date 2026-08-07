@@ -36,7 +36,8 @@ export const IPC_CHANNELS = {
   },
   settings: {
     get: 'settings:get',
-    set: 'settings:set'
+    set: 'settings:set',
+    chooseDirectory: 'settings:choose-directory'
   },
   dataPortability: {
     export: 'data-portability:export',

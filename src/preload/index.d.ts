@@ -95,6 +95,7 @@ declare global {
       settings: {
         get: () => Promise<IpcResult<AppSettings>>
         set: (input: SetSettingInput) => Promise<IpcResult<void>>
+        chooseDirectory: () => Promise<IpcResult<string | null>>
       }
       dataPortability: {
         export: () => Promise<IpcResult<{ filePath: string } | null>>

@@ -100,11 +100,16 @@ export const SetSettingInputSchema = z.object({
     'autoRefreshMinutes',
     'playbackRate',
     'openFullPlayerDefault',
-    'notificationsEnabled'
+    'notificationsEnabled',
+    'downloadPath'
   ]),
   value: z.union([z.number().nullable(), z.string(), z.boolean()])
 })
 export type SetSettingInput = z.infer<typeof SetSettingInputSchema>
+
+/** No payload — dialog-based directory picker. */
+export const ChooseDirectoryInputSchema = z.object({})
+export type ChooseDirectoryInput = z.infer<typeof ChooseDirectoryInputSchema>
 
 export const CreatePlaylistInputSchema = z.object({
   name: z.string().min(1).max(100)

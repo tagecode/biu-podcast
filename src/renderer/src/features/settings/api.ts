@@ -8,8 +8,13 @@ export async function getSettings(): Promise<AppSettings> {
 }
 
 export async function setSetting(
-  key: 'autoRefreshMinutes' | 'playbackRate' | 'openFullPlayerDefault' | 'notificationsEnabled',
-  value: number | boolean | null
+  key:
+    | 'autoRefreshMinutes'
+    | 'playbackRate'
+    | 'openFullPlayerDefault'
+    | 'notificationsEnabled'
+    | 'downloadPath',
+  value: number | boolean | string | null
 ): Promise<void> {
   const result = await window.api.settings.set({ key, value })
   if (!result.ok) throw new Error(result.error.message)
