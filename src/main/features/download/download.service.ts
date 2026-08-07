@@ -25,7 +25,7 @@ export interface DownloadServiceDeps {
   runner?: DownloadRunner
 }
 
-function getDownloadDir(settings: SettingsStore): string {
+export function getDownloadDir(settings: SettingsStore): string {
   const configured = settings.getAll().downloadPath
   if (configured) return configured
   return join(app.getPath('userData'), 'downloads')
@@ -242,6 +242,15 @@ export class DownloadService {
 
   list(): DownloadTask[] {
     return this.downloads.listActive()
+  }
+
+  /** Completed downloads, newest first (history). */
+  listHistory(): DownloadTask[] {
+    return this.downloads.listCompleted()
+  }
+
+  getDownloadDirectory(): string {
+    return getDownloadDir(this.settings)
   }
 
   pause(taskId: string): void {

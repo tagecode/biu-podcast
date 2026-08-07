@@ -6,6 +6,12 @@ export async function listDownloads(): Promise<DownloadTask[]> {
   return result.data
 }
 
+export async function listDownloadHistory(): Promise<DownloadTask[]> {
+  const result = await window.api.download.history()
+  if (!result.ok) throw new Error(result.error.message)
+  return result.data
+}
+
 export async function enqueueDownload(episodeId: string): Promise<DownloadTask> {
   const result = await window.api.download.enqueue({ episodeId })
   if (!result.ok) throw new Error(result.error.message)

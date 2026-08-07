@@ -40,7 +40,7 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
   const [autoRefresh, setAutoRefresh] = useState<string>('null')
   const [openFullDefault, setOpenFullDefault] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
-  const [downloadPath, setDownloadPath] = useState<string | null>(null)
+  const [downloadDir, setDownloadDir] = useState<string>('')
   const [pendingImport, setPendingImport] = useState<{
     filePath: string
     preview: ImportPreview
@@ -53,9 +53,20 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
       )
       setOpenFullDefault(settings.openFullPlayerDefault)
       setNotificationsEnabled(settings.notificationsEnabled)
-      setDownloadPath(settings.downloadPath)
+    })
+    // Resolve the actual download directory (default or custom).
+    void window.api.download.getDir().then((r) => {
+      if (r.ok) setDownloadDir(r.data)
     })
   }, [])
+
+  const handleOpenDownloadDir = async (): Promise<void> => {
+    try {
+      await window.api.settings.openDirectory()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '打开目录失败')
+    }
+  }
 
   const handleChooseDownloadDir = async (): Promise<void> => {
     setBusy(true)
@@ -63,7 +74,7 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
     try {
       const result = await window.api.settings.chooseDirectory()
       if (!result.ok || !result.data) return
-      setDownloadPath(result.data)
+      setDownloadDir(result.data)
       await settingsApi.setSetting('downloadPath', result.data)
     } catch (e) {
       setError(e instanceof Error ? e.message : '选择目录失败')
@@ -345,17 +356,26 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
           <div className="flex items-center justify-between gap-4 border-b border-line py-4">
             <div className="min-w-0 flex-1">
               <div className="text-sm font-medium text-ink">下载目录</div>
-              <div className="mt-1 truncate text-xs text-muted">
-                {downloadPath ?? '默认目录（应用数据目录下 downloads）'}
+              <div className="mt-1 truncate text-xs text-muted" title={downloadDir}>
+                {downloadDir || '正在获取目录…'}
               </div>
             </div>
-            <Button
-              variant="secondary"
-              disabled={busy}
-              onClick={() => void handleChooseDownloadDir()}
-            >
-              选择…
-            </Button>
+            <div className="flex shrink-0 items-center gap-2">
+              <Button
+                variant="secondary"
+                disabled={busy || !downloadDir}
+                onClick={() => void handleOpenDownloadDir()}
+              >
+                打开目录
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={busy}
+                onClick={() => void handleChooseDownloadDir()}
+              >
+                选择…
+              </Button>
+            </div>
           </div>
 
           {message ? (

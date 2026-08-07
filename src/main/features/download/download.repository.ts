@@ -72,6 +72,29 @@ export class DownloadRepository {
       }))
   }
 
+  /** Completed downloads, newest first (history view). */
+  listCompleted(): DownloadTask[] {
+    const rows = this.db
+      .select({
+        task: downloadTasks,
+        episodeTitle: episodes.title,
+        podcastTitle: podcasts.title
+      })
+      .from(downloadTasks)
+      .innerJoin(episodes, eq(episodes.id, downloadTasks.episodeId))
+      .innerJoin(podcasts, eq(podcasts.id, episodes.podcastId))
+      .orderBy(desc(downloadTasks.updatedAt))
+      .all()
+
+    return rows
+      .filter((row) => row.task.status === 'completed')
+      .map((row) => ({
+        ...this.toTask(row.task),
+        episodeTitle: row.episodeTitle,
+        podcastTitle: row.podcastTitle
+      }))
+  }
+
   update(
     id: string,
     patch: Partial<{

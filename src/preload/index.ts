@@ -116,6 +116,9 @@ const api = {
     enqueue: (input: EnqueueDownloadInput): Promise<IpcResult<DownloadTask>> =>
       ipcRenderer.invoke(IPC_CHANNELS.download.enqueue, input),
     list: (): Promise<IpcResult<DownloadTask[]>> => ipcRenderer.invoke(IPC_CHANNELS.download.list),
+    history: (): Promise<IpcResult<DownloadTask[]>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.download.history),
+    getDir: (): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC_CHANNELS.download.getDir),
     pause: (input: DownloadTaskIdInput): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC_CHANNELS.download.pause, input),
     resume: (input: DownloadTaskIdInput): Promise<IpcResult<void>> =>
@@ -140,7 +143,9 @@ const api = {
     set: (input: SetSettingInput): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC_CHANNELS.settings.set, input),
     chooseDirectory: (): Promise<IpcResult<string | null>> =>
-      ipcRenderer.invoke(IPC_CHANNELS.settings.chooseDirectory, {})
+      ipcRenderer.invoke(IPC_CHANNELS.settings.chooseDirectory, {}),
+    openDirectory: (): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.settings.openDirectory, {})
   },
   dataPortability: {
     export: (): Promise<IpcResult<{ filePath: string } | null>> =>

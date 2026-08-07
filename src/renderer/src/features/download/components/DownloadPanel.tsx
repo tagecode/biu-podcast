@@ -1,10 +1,12 @@
-import { X } from 'lucide-react'
+import { CheckCircle2, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { formatFileSize } from '@/lib/format'
 import type { DownloadTask } from '@shared/types'
 
 import { useDownloadStore } from '../store'
+import { cn } from '@/lib/utils'
 
 function statusLabel(task: DownloadTask): string {
   switch (task.status) {
@@ -31,79 +33,120 @@ function progressPercent(task: DownloadTask): number {
 export function DownloadPanel(): React.JSX.Element | null {
   const panelOpen = useDownloadStore((state) => state.panelOpen)
   const tasks = useDownloadStore((state) => state.tasks)
+  const history = useDownloadStore((state) => state.history)
   const setPanelOpen = useDownloadStore((state) => state.setPanelOpen)
+  const loadHistory = useDownloadStore((state) => state.loadHistory)
   const pause = useDownloadStore((state) => state.pause)
   const resume = useDownloadStore((state) => state.resume)
   const cancel = useDownloadStore((state) => state.cancel)
+  const [tab, setTab] = useState<'active' | 'history'>('active')
+
+  useEffect(() => {
+    if (panelOpen) void loadHistory()
+  }, [panelOpen, loadHistory])
 
   if (!panelOpen) return null
+
+  const list = tab === 'active' ? tasks : history
 
   return (
     <aside className="flex w-80 shrink-0 flex-col border-l border-line bg-surface">
       <div className="flex h-14 items-center justify-between border-b border-line px-4">
-        <span className="text-sm font-medium text-ink">下载队列 · {tasks.length} 项</span>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="关闭下载队列"
-          onClick={() => setPanelOpen(false)}
-        >
-          <X className="size-4" />
-        </Button>
+        <span className="text-sm font-medium text-ink">
+          {tab === 'active' ? `下载队列 · ${tasks.length} 项` : '下载历史'}
+        </span>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            className={cn(
+              'rounded px-2 py-0.5 text-xs',
+              tab === 'active' ? 'bg-amber-100 text-ink' : 'text-muted hover:text-ink'
+            )}
+            onClick={() => setTab('active')}
+          >
+            活跃
+          </button>
+          <button
+            type="button"
+            className={cn(
+              'rounded px-2 py-0.5 text-xs',
+              tab === 'history' ? 'bg-amber-100 text-ink' : 'text-muted hover:text-ink'
+            )}
+            onClick={() => setTab('history')}
+          >
+            历史
+          </button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="关闭下载队列"
+            onClick={() => setPanelOpen(false)}
+          >
+            <X className="size-4" />
+          </Button>
+        </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {tasks.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-muted">暂无下载任务</div>
+        {list.length === 0 ? (
+          <div className="px-4 py-8 text-center text-sm text-muted">
+            {tab === 'active' ? '暂无下载任务' : '暂无下载历史'}
+          </div>
         ) : (
-          tasks.map((task) => {
-            const percent = progressPercent(task)
-            return (
-              <div key={task.id} className="border-b border-line px-4 py-3">
-                <div className="truncate text-sm font-medium text-ink">
-                  {task.episodeTitle ?? task.episodeId}
-                </div>
-                <div className="mt-0.5 text-xs text-muted">
-                  {task.podcastTitle ?? '未知播客'} · {formatFileSize(task.totalBytes)} ·{' '}
-                  {statusLabel(task)}
-                </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line">
-                  <div
-                    className="h-full bg-amber-600 transition-all"
-                    style={{ width: `${percent}%` }}
-                  />
-                </div>
-                <div className="mt-2 flex gap-3">
-                  {task.status === 'downloading' || task.status === 'queued' ? (
-                    <button
-                      type="button"
-                      className="text-xs text-muted hover:text-ink"
-                      onClick={() => void pause(task.id)}
-                    >
-                      暂停
-                    </button>
-                  ) : null}
-                  {task.status === 'paused' || task.status === 'failed' ? (
-                    <button
-                      type="button"
-                      className="text-xs text-muted hover:text-ink"
-                      onClick={() => void resume(task.id)}
-                    >
-                      {task.status === 'failed' ? '重试' : '继续'}
-                    </button>
-                  ) : null}
-                  {task.status !== 'completed' ? (
-                    <button
-                      type="button"
-                      className="text-xs text-muted hover:text-ink"
-                      onClick={() => void cancel(task.id)}
-                    >
-                      取消
-                    </button>
-                  ) : null}
-                </div>
+          list.map((task) => (
+            <div key={task.id} className="border-b border-line px-4 py-3">
+              <div className="truncate text-sm font-medium text-ink">
+                {task.episodeTitle ?? task.episodeId}
               </div>
-            )
-          })
+              <div className="mt-0.5 text-xs text-muted">
+                {task.podcastTitle ?? '未知播客'} · {formatFileSize(task.totalBytes)} ·{' '}
+                {statusLabel(task)}
+              </div>
+              {tab === 'active' ? (
+                <>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line">
+                    <div
+                      className="h-full bg-amber-600 transition-all"
+                      style={{ width: `${progressPercent(task)}%` }}
+                    />
+                  </div>
+                  <div className="mt-2 flex gap-3">
+                    {task.status === 'downloading' || task.status === 'queued' ? (
+                      <button
+                        type="button"
+                        className="text-xs text-muted hover:text-ink"
+                        onClick={() => void pause(task.id)}
+                      >
+                        暂停
+                      </button>
+                    ) : null}
+                    {task.status === 'paused' || task.status === 'failed' ? (
+                      <button
+                        type="button"
+                        className="text-xs text-muted hover:text-ink"
+                        onClick={() => void resume(task.id)}
+                      >
+                        {task.status === 'failed' ? '重试' : '继续'}
+                      </button>
+                    ) : null}
+                    {task.status !== 'completed' ? (
+                      <button
+                        type="button"
+                        className="text-xs text-muted hover:text-ink"
+                        onClick={() => void cancel(task.id)}
+                      >
+                        取消
+                      </button>
+                    ) : null}
+                  </div>
+                </>
+              ) : (
+                <div className="mt-1 flex items-center gap-1 text-xs text-success">
+                  <CheckCircle2 className="size-3.5" strokeWidth={1.75} />
+                  已下载到本机
+                </div>
+              )}
+            </div>
+          ))
         )}
       </div>
     </aside>

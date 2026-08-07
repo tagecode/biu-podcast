@@ -1,4 +1,4 @@
-import { BrowserWindow, dialog } from 'electron'
+import { BrowserWindow, dialog, shell } from 'electron'
 import {
   AddSubscriptionInputSchema,
   ChooseDirectoryInputSchema,
@@ -166,6 +166,10 @@ export function registerDownloadHandlers(): void {
 
   registerNoInputHandler(IPC_CHANNELS.download.list, () => downloadService.list())
 
+  registerNoInputHandler(IPC_CHANNELS.download.history, () => downloadService.listHistory())
+
+  registerNoInputHandler(IPC_CHANNELS.download.getDir, () => downloadService.getDownloadDirectory())
+
   registerVoidHandler(
     IPC_CHANNELS.download.pause,
     DownloadTaskIdInputSchema,
@@ -263,6 +267,11 @@ export function registerSettingsHandlers(): void {
     })
     if (result.canceled || !result.filePaths[0]) return null
     return result.filePaths[0]
+  })
+
+  registerHandler(IPC_CHANNELS.settings.openDirectory, ChooseDirectoryInputSchema, async () => {
+    const dir = downloadService.getDownloadDirectory()
+    await shell.openPath(dir)
   })
 }
 

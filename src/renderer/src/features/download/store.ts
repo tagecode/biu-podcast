@@ -5,10 +5,12 @@ import * as downloadApi from './api'
 
 interface DownloadState {
   tasks: DownloadTask[]
+  history: DownloadTask[]
   panelOpen: boolean
   loading: boolean
   error: string | null
   load: () => Promise<void>
+  loadHistory: () => Promise<void>
   enqueue: (episodeId: string) => Promise<void>
   pause: (taskId: string) => Promise<void>
   resume: (taskId: string) => Promise<void>
@@ -30,6 +32,7 @@ const lastProgressAt: Record<string, number> = {}
 const PROGRESS_THROTTLE_MS = 300
 export const useDownloadStore = create<DownloadState>((set, get) => ({
   tasks: [],
+  history: [],
   panelOpen: false,
   loading: false,
   error: null,
@@ -43,6 +46,14 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
         loading: false,
         error: error instanceof Error ? error.message : '加载下载队列失败'
       })
+    }
+  },
+  loadHistory: async () => {
+    try {
+      const history = await downloadApi.listDownloadHistory()
+      set({ history })
+    } catch {
+      // Non-fatal — history is best-effort.
     }
   },
   enqueue: async (episodeId) => {

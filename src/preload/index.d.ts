@@ -84,6 +84,8 @@ declare global {
       download: {
         enqueue: (input: EnqueueDownloadInput) => Promise<IpcResult<DownloadTask>>
         list: () => Promise<IpcResult<DownloadTask[]>>
+        history: () => Promise<IpcResult<DownloadTask[]>>
+        getDir: () => Promise<IpcResult<string>>
         pause: (input: DownloadTaskIdInput) => Promise<IpcResult<void>>
         resume: (input: DownloadTaskIdInput) => Promise<IpcResult<void>>
         cancel: (input: DownloadTaskIdInput) => Promise<IpcResult<void>>
@@ -96,6 +98,7 @@ declare global {
         get: () => Promise<IpcResult<AppSettings>>
         set: (input: SetSettingInput) => Promise<IpcResult<void>>
         chooseDirectory: () => Promise<IpcResult<string | null>>
+        openDirectory: () => Promise<IpcResult<void>>
       }
       dataPortability: {
         export: () => Promise<IpcResult<{ filePath: string } | null>>

@@ -28,6 +28,8 @@ export const IPC_CHANNELS = {
   download: {
     enqueue: 'download:enqueue',
     list: 'download:list',
+    history: 'download:history',
+    getDir: 'download:get-dir',
     pause: 'download:pause',
     resume: 'download:resume',
     cancel: 'download:cancel',
@@ -37,7 +39,8 @@ export const IPC_CHANNELS = {
   settings: {
     get: 'settings:get',
     set: 'settings:set',
-    chooseDirectory: 'settings:choose-directory'
+    chooseDirectory: 'settings:choose-directory',
+    openDirectory: 'settings:open-directory'
   },
   dataPortability: {
     export: 'data-portability:export',
