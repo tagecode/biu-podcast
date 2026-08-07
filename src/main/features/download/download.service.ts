@@ -103,6 +103,8 @@ export class DownloadService {
   private readonly episodes: EpisodeRepository
   private readonly queue: DownloadQueue
   private started = false
+  /** When each task began actually downloading (taskId → timestamp). */
+  private readonly downloadStartedAt = new Map<string, number>()
 
   constructor(deps: DownloadServiceDeps = {}) {
     this.db = deps.db ?? getDb()
@@ -123,17 +125,18 @@ export class DownloadService {
           totalBytes: event.totalBytes,
           status: event.status
         })
-      } else if (
-        event.status === 'downloading' ||
-        event.status === 'queued' ||
-        event.status === 'paused'
-      ) {
+      } else if (event.status === 'downloading') {
+        this.downloadStartedAt.set(event.taskId, Date.now())
+        this.downloads.update(event.taskId, { status: 'downloading', retryCount: event.retryCount })
+        this.episodes.setDownloadStatus(event.episodeId, 'downloading')
+      } else if (event.status === 'queued' || event.status === 'paused') {
         this.downloads.update(event.taskId, {
           status: event.status,
           retryCount: event.retryCount
         })
         this.episodes.setDownloadStatus(event.episodeId, event.status)
       } else if (event.status === 'failed') {
+        this.downloadStartedAt.delete(event.taskId)
         this.downloads.update(event.taskId, {
           status: 'failed',
           retryCount: event.retryCount
@@ -148,9 +151,15 @@ export class DownloadService {
         if (event.localFilePath) {
           this.episodes.markDownloaded(event.episodeId, event.localFilePath)
         }
-        // Notify on completion (respects the notifications setting).
+        // Notify on completion (respects the notifications setting). Skip the
+        // notice for downloads that finished almost instantly (<2s) — those
+        // are typically tiny/cached files and the "下载完成" popup right after
+        // clicking feels like a false positive.
         const done = this.episodes.findById(event.episodeId)
-        if (done) {
+        const startedAt = this.downloadStartedAt.get(event.taskId)
+        this.downloadStartedAt.delete(event.taskId)
+        const durationMs = startedAt ? Date.now() - startedAt : Infinity
+        if (done && durationMs >= 2000) {
           showNotification(
             { title: '下载完成', body: done.title },
             this.settings.getAll().notificationsEnabled

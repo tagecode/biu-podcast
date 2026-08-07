@@ -23,6 +23,12 @@ interface DownloadState {
   }) => void
 }
 
+// Throttle progress-driven re-renders so the panel (and its buttons) stays
+// stable between interactions — otherwise every chunk rebuilds the task row
+// and pause/cancel clicks get lost as the button is detached mid-click.
+let lastProgressAt: Record<string, number> = {}
+const PROGRESS_THROTTLE_MS = 300
+
 export const useDownloadStore = create<DownloadState>((set, get) => ({
   tasks: [],
   panelOpen: false,
@@ -62,22 +68,39 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
     set((state) => {
       const index = state.tasks.findIndex((task) => task.id === payload.taskId)
       // Task not in the local list yet (enqueue's load() still in flight).
-      // Don't re-fetch on every progress tick — that races the UI.
       if (index < 0) {
         if (payload.status === 'completed') {
           void get().load()
         }
         return state
       }
-      if (payload.status === 'completed') {
-        return {
-          tasks: state.tasks.filter((task) => task.id !== payload.taskId)
+      // Status transitions always apply.
+      const existing = state.tasks[index]
+      if (existing && existing.status !== payload.status) {
+        lastProgressAt[payload.taskId] = Date.now()
+        if (payload.status === 'completed') {
+          // Completed tasks leave the active list.
+          return { tasks: state.tasks.filter((task) => task.id !== payload.taskId) }
         }
+        const next = [...state.tasks]
+        next[index] = {
+          ...next[index],
+          status: payload.status,
+          progressBytes: payload.progressBytes,
+          totalBytes: payload.totalBytes
+        }
+        return { tasks: next }
       }
+      // Progress-only update: throttle to keep the row (and its buttons)
+      // from being rebuilt on every chunk.
+      const now = Date.now()
+      if (now - (lastProgressAt[payload.taskId] ?? 0) < PROGRESS_THROTTLE_MS) {
+        return state
+      }
+      lastProgressAt[payload.taskId] = now
       const next = [...state.tasks]
       next[index] = {
         ...next[index],
-        status: payload.status,
         progressBytes: payload.progressBytes,
         totalBytes: payload.totalBytes
       }
