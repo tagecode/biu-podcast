@@ -40,6 +40,7 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
   const [autoRefresh, setAutoRefresh] = useState<string>('null')
   const [openFullDefault, setOpenFullDefault] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
+  const [closeToTray, setCloseToTray] = useState(false)
   const [downloadDir, setDownloadDir] = useState<string>('')
   const [pendingImport, setPendingImport] = useState<{
     filePath: string
@@ -53,6 +54,7 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
       )
       setOpenFullDefault(settings.openFullPlayerDefault)
       setNotificationsEnabled(settings.notificationsEnabled)
+      setCloseToTray(settings.closeToTray)
     })
     // Resolve the actual download directory (default or custom).
     void window.api.download.getDir().then((r) => {
@@ -346,6 +348,27 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
               <span className="ml-2 text-sm text-muted">
                 {notificationsEnabled ? '开启' : '关闭'}
               </span>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">关闭时最小化到托盘</div>
+              <div className="mt-1 text-xs text-muted">点击窗口关闭按钮后驻留系统托盘而非退出</div>
+            </div>
+            <label className="flex cursor-pointer items-center">
+              <input
+                type="checkbox"
+                className="accent-amber-600"
+                checked={closeToTray}
+                onChange={(e) => {
+                  setCloseToTray(e.target.checked)
+                  void settingsApi
+                    .setSetting('closeToTray', e.target.checked)
+                    .catch((err) => setError(err instanceof Error ? err.message : '保存设置失败'))
+                }}
+              />
+              <span className="ml-2 text-sm text-muted">{closeToTray ? '开启' : '关闭'}</span>
             </label>
           </div>
 

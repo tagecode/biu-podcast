@@ -108,7 +108,8 @@ export const SetSettingInputSchema = z.object({
     'playbackRate',
     'openFullPlayerDefault',
     'notificationsEnabled',
-    'downloadPath'
+    'downloadPath',
+    'closeToTray'
   ]),
   value: z.union([z.number().nullable(), z.string(), z.boolean()])
 })

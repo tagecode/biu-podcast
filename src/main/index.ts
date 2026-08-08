@@ -8,6 +8,8 @@ import { downloadService } from './features/download/download.service'
 import { autoRefreshScheduler } from './features/subscription/auto-refresh'
 import { setupDeepLink, routeDeepLinkArgv } from './infra/deep-link'
 import { registerPlaybackShortcuts, unregisterPlaybackShortcuts } from './infra/shortcuts'
+import { AppTray } from './infra/tray'
+import { settingsStore } from './infra/settings/store'
 import { registerAllHandlers } from './ipc/handlers'
 import { setMainWindow } from './ipc/register'
 import { closeDb, getDb } from './infra/db/client'
@@ -32,6 +34,7 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 let mainWindowRef: BrowserWindow | null = null
+let tray: AppTray | null = null
 
 if (
   !ensureSingleInstance(
@@ -126,6 +129,8 @@ if (
 
     setupDeepLink(() => mainWindowRef)
     registerPlaybackShortcuts(() => mainWindowRef)
+    tray = new AppTray(() => mainWindowRef, icon)
+    tray.create()
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -134,9 +139,13 @@ if (
 
   app.on('will-quit', () => {
     unregisterPlaybackShortcuts()
+    tray?.destroy()
+    tray = null
   })
 
   app.on('window-all-closed', () => {
+    // With "close to tray", keep the app running in the tray.
+    if (settingsStore.getAll().closeToTray) return
     if (process.platform !== 'darwin') {
       app.quit()
     }

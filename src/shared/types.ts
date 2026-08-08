@@ -117,6 +117,8 @@ export interface AppSettings {
   openFullPlayerDefault: boolean
   /** System notifications for new episodes / download completion. */
   notificationsEnabled: boolean
+  /** Closing the window keeps the app running in the system tray. */
+  closeToTray: boolean
 }
 
 export interface PlaybackSession {

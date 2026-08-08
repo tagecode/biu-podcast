@@ -13,7 +13,8 @@ export async function setSetting(
     | 'playbackRate'
     | 'openFullPlayerDefault'
     | 'notificationsEnabled'
-    | 'downloadPath',
+    | 'downloadPath'
+    | 'closeToTray',
   value: number | boolean | string | null
 ): Promise<void> {
   const result = await window.api.settings.set({ key, value })
