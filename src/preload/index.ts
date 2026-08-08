@@ -20,6 +20,7 @@ import type {
   ListEpisodesInput,
   MarkAllPlayedInput,
   MarkPlayedInput,
+  MediaSessionUpdateInput,
   NoteIdInput,
   OpmlImportResult,
   PlaybackCommand,
@@ -132,6 +133,10 @@ const api = {
       ipcRenderer.on(IPC_CHANNELS.playback.deepLinkPlay, listener)
       return () => ipcRenderer.removeListener(IPC_CHANNELS.playback.deepLinkPlay, listener)
     }
+  },
+  mediaSession: {
+    update: (input: MediaSessionUpdateInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.mediaSession.update, input)
   },
   shortcuts: {
     getConfig: (): Promise<IpcResult<ShortcutConfig>> =>

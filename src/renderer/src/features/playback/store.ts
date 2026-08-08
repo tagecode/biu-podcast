@@ -66,6 +66,29 @@ async function persistNow(episodeId: string, positionSec: number): Promise<void>
   await window.api.playback.updateProgress({ episodeId, positionSec })
 }
 
+/**
+ * Push current playback state to the OS media session (SMTC / MPRIS / Now
+ * Playing). Best-effort: the media center is purely additive, so failures are
+ * swallowed. Called on metadata change, play/pause, and position ticks.
+ */
+export function pushMediaSession(): void {
+  const state = usePlaybackStore.getState()
+  const { currentEpisode: episode, currentPodcast: podcast, isPlaying } = state
+  if (!episode || !podcast) {
+    return
+  }
+  void window.api.mediaSession
+    .update({
+      title: episode.title,
+      artist: podcast.title,
+      artworkUrl: podcast.coverUrl ?? undefined,
+      durationSec: episode.durationSec ?? undefined,
+      positionSec: getAudio().currentTime,
+      playing: isPlaying
+    })
+    .catch(() => undefined)
+}
+
 /** Load persisted playback preferences (rate + full-player default). */
 export async function loadPlaybackPrefs(): Promise<void> {
   try {
@@ -187,6 +210,7 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     }
     void audio.play()
     set({ isPlaying: true })
+    pushMediaSession()
     return true
   },
   restoreSession: (episode, podcast, positionSec) => {
@@ -203,6 +227,7 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
       hasNext: false,
       playbackError: null
     })
+    pushMediaSession()
     void get().refreshAdjacent()
   },
   clearPlaybackError: () => set({ playbackError: null }),
@@ -217,16 +242,19 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
       set({ isPlaying: false })
       get().persistProgress()
     }
+    pushMediaSession()
   },
   pause: () => {
     getAudio().pause()
     set({ isPlaying: false })
     get().persistProgress()
+    pushMediaSession()
   },
   seek: (timeSec) => {
     const audio = getAudio()
     audio.currentTime = timeSec
     set({ currentTimeSec: timeSec })
+    pushMediaSession()
   },
   setCurrentTime: (timeSec) => set({ currentTimeSec: timeSec }),
   setDuration: (durationSec) => set({ durationSec }),
@@ -341,8 +369,14 @@ export function bindAudioEvents(target?: HTMLAudioElement): () => void {
       usePlaybackStore.setState({ isPlaying: false })
     }
   }
-  const onPlay = (): void => usePlaybackStore.setState({ isPlaying: true })
-  const onPause = (): void => usePlaybackStore.setState({ isPlaying: false })
+  const onPlay = (): void => {
+    usePlaybackStore.setState({ isPlaying: true })
+    pushMediaSession()
+  }
+  const onPause = (): void => {
+    usePlaybackStore.setState({ isPlaying: false })
+    pushMediaSession()
+  }
 
   audio.addEventListener('timeupdate', onTimeUpdate)
   audio.addEventListener('loadedmetadata', onLoadedMetadata)

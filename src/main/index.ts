@@ -11,6 +11,7 @@ import { registerPlaybackShortcuts, unregisterPlaybackShortcuts } from './infra/
 import { AppTray, setTrayInstance } from './infra/tray'
 import { settingsStore } from './infra/settings/store'
 import { updateService } from './infra/updater'
+import { initMediaSession, disposeMediaSession } from './infra/media-session/session'
 import { registerAllHandlers } from './ipc/handlers'
 import { setMainWindow } from './ipc/register'
 import { closeDb, getDb } from './infra/db/client'
@@ -143,6 +144,8 @@ if (
 
     setupDeepLink(() => mainWindowRef)
     registerPlaybackShortcuts(() => mainWindowRef)
+    // OS media session (SMTC / MPRIS / Now Playing) — additive; noop-safe.
+    initMediaSession()
     tray = new AppTray(() => mainWindowRef, icon)
     setTrayInstance(tray)
     tray.create()
@@ -168,6 +171,7 @@ if (
 
   app.on('will-quit', () => {
     unregisterPlaybackShortcuts()
+    disposeMediaSession()
     tray?.destroy()
     tray = null
   })

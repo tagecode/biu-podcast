@@ -15,6 +15,7 @@ import {
   ListEpisodesInputSchema,
   MarkAllPlayedInputSchema,
   MarkPlayedInputSchema,
+  MediaSessionUpdateSchema,
   NoteIdInputSchema,
   OpmlActionInputSchema,
   PlaylistIdInputSchema,
@@ -48,6 +49,7 @@ import { exportDiagnostics } from '../infra/logger'
 import { autoRefreshScheduler } from '../features/subscription/auto-refresh'
 import { subscriptionService } from '../features/subscription/subscription.service'
 import { applyShortcutBinding, getRegisteredShortcuts, getShortcutConfig } from '../infra/shortcuts'
+import { onMediaSessionCommand, updateMediaSession } from '../infra/media-session/session'
 import { broadcast, registerHandler, registerNoInputHandler, registerVoidHandler } from './register'
 
 export function registerSubscriptionHandlers(): void {
@@ -161,6 +163,22 @@ export function registerPlaybackHandlers(): void {
 
   registerNoInputHandler(IPC_CHANNELS.playback.getRegisteredShortcuts, () =>
     getRegisteredShortcuts()
+  )
+
+  // OS media-center commands are routed like global shortcuts: forward to the
+  // renderer's playback store via the same playback:command channel.
+  onMediaSessionCommand((cmd) => {
+    broadcast(IPC_CHANNELS.playback.command, cmd)
+  })
+}
+
+export function registerMediaSessionHandlers(): void {
+  registerVoidHandler(
+    IPC_CHANNELS.mediaSession.update,
+    MediaSessionUpdateSchema,
+    async (_event, input) => {
+      updateMediaSession(input)
+    }
   )
 }
 
@@ -384,6 +402,7 @@ export function registerAllHandlers(): void {
   registerSubscriptionHandlers()
   registerEpisodeHandlers()
   registerPlaybackHandlers()
+  registerMediaSessionHandlers()
   registerDownloadHandlers()
   registerDataPortabilityHandlers()
   registerSettingsHandlers()

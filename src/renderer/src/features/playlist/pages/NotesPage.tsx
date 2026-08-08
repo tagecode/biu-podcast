@@ -1,5 +1,5 @@
 import { Download, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
@@ -25,19 +25,19 @@ export function NotesPage({ onBack }: NotesPageProps): React.JSX.Element {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const load = async (): Promise<void> => {
+  const load = useCallback(async (): Promise<void> => {
     try {
       const loaded = await playlistApi.listAllNotes()
       setNotes(loaded)
     } catch (e) {
       setError(e instanceof Error ? e.message : t('note.loadFailed'))
     }
-  }
+  }, [t])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- initial load
     void load()
-  }, [])
+  }, [load])
 
   const handleExport = async (): Promise<void> => {
     setError(null)

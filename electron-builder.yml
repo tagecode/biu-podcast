@@ -19,6 +19,10 @@ files:
 asarUnpack:
   - resources/**
 win:
+  extraResources:
+    # SMTC companion process (Windows System Media Transport Controls bridge).
+    - from: companion-win/bin/publish
+      to: companion
   executableName: biu-podcast
   # --- Code signing (optional enhancement, T9.3 / Arch.md §15) ---
   # Signing is OPTIONAL: unsigned installers work but trigger a SmartScreen

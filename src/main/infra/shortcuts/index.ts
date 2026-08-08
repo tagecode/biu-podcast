@@ -3,15 +3,15 @@ import { globalShortcut, type BrowserWindow } from 'electron'
 import { AppError } from '@shared/errors'
 import { IPC_CHANNELS } from '@shared/ipc-channels'
 import type {
-  PlaybackCommand,
   RegisteredShortcuts,
+  ShortcutCommand,
   ShortcutConfig,
   ShortcutSetResult
 } from '@shared/ipc-contract'
 import { settingsStore } from '../settings/store'
 
 interface CommandBinding {
-  command: PlaybackCommand
+  command: ShortcutCommand
   /** Hardware media key (headphones / keyboard play button), best UX. */
   mediaKey: string
   /**
@@ -53,7 +53,7 @@ const COMMANDS: CommandBinding[] = [
 /** Default primary software combo per command (first candidate). */
 const DEFAULT_ACCELERATORS = Object.fromEntries(
   COMMANDS.map(({ command, softwareCandidates }) => [command, softwareCandidates[0]])
-) as Record<PlaybackCommand, string>
+) as Record<ShortcutCommand, string>
 
 /** Currently registered software combo per command (for tooltip display). */
 let registeredShortcuts: RegisteredShortcuts = {}
@@ -66,7 +66,7 @@ export function getRegisteredShortcuts(): RegisteredShortcuts {
 }
 
 /** Effective accelerator for a command: user override, else the default. */
-function effectiveAccelerator(command: PlaybackCommand): string {
+function effectiveAccelerator(command: ShortcutCommand): string {
   const user = settingsStore.get('shortcutBindings')[command]
   return user ?? DEFAULT_ACCELERATORS[command]
 }
@@ -78,13 +78,13 @@ export function getShortcutConfig(): ShortcutConfig {
   }
 }
 
-function send(command: PlaybackCommand): void {
+function send(command: ShortcutCommand): void {
   const window = getWindow()
   if (!window || window.isDestroyed()) return
   window.webContents.send(IPC_CHANNELS.playback.command, command)
 }
 
-function broadcastApplied(command: PlaybackCommand, result: ShortcutSetResult): void {
+function broadcastApplied(command: ShortcutCommand, result: ShortcutSetResult): void {
   const window = getWindow()
   if (!window || window.isDestroyed()) return
   window.webContents.send(IPC_CHANNELS.shortcuts.applied, { command, ...result })
@@ -128,10 +128,10 @@ function registerCommand({
 }
 
 /** Re-register every command from persisted settings (startup + after a change). */
-function applyAll(): Partial<Record<PlaybackCommand, ShortcutSetResult>> {
+function applyAll(): Partial<Record<ShortcutCommand, ShortcutSetResult>> {
   registeredShortcuts = {}
   globalShortcut.unregisterAll()
-  const results: Partial<Record<PlaybackCommand, ShortcutSetResult>> = {}
+  const results: Partial<Record<ShortcutCommand, ShortcutSetResult>> = {}
   for (const binding of COMMANDS) {
     results[binding.command] = registerCommand(binding)
   }
@@ -144,7 +144,7 @@ function applyAll(): Partial<Record<PlaybackCommand, ShortcutSetResult>> {
  * to the previous config and reports `taken` so the UI can notify.
  */
 export function applyShortcutBinding(
-  command: PlaybackCommand,
+  command: ShortcutCommand,
   accelerator: string | null
 ): ShortcutSetResult {
   if (accelerator) {

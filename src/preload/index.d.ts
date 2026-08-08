@@ -17,6 +17,7 @@ import type {
   ListEpisodesInput,
   MarkAllPlayedInput,
   MarkPlayedInput,
+  MediaSessionUpdateInput,
   NoteIdInput,
   OpmlImportResult,
   PlaybackCommand,
@@ -91,6 +92,9 @@ declare global {
         getRegisteredShortcuts: () => Promise<IpcResult<RegisteredShortcuts>>
         onCommand: (callback: (command: PlaybackCommand) => void) => () => void
         onDeepLinkPlay: (callback: (episodeId: string) => void) => () => void
+      }
+      mediaSession: {
+        update: (input: MediaSessionUpdateInput) => Promise<IpcResult<void>>
       }
       shortcuts: {
         getConfig: () => Promise<IpcResult<ShortcutConfig>>

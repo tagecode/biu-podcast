@@ -18,5 +18,9 @@ playwright-report
 .claude
 .playwright-mcp
 
+# .NET companion (built in CI / via pnpm build:companion)
+companion-win/bin
+companion-win/obj
+
 # venv
 .venv

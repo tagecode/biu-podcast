@@ -170,11 +170,40 @@ export type CreateNoteInput = z.infer<typeof CreateNoteInputSchema>
 export type EpisodeIdInput = z.infer<typeof EpisodeIdInputSchema>
 export type NoteIdInput = z.infer<typeof NoteIdInputSchema>
 
-/** Playback commands sent main→renderer (global shortcuts / media keys). */
-export type PlaybackCommand = 'toggle' | 'next' | 'previous'
+/** Playback commands sent main→renderer (global shortcuts / media keys / media session). */
+export type PlaybackCommand = 'toggle' | 'play' | 'pause' | 'next' | 'previous'
+
+/** Commands configurable as global shortcuts (media-session play/pause not included). */
+export type ShortcutCommand = 'toggle' | 'next' | 'previous'
+
+/** Current playback state pushed renderer→main for the media session. */
+export interface MediaSessionUpdate {
+  /** Episode title. */
+  title: string
+  /** Podcast title (shown as the artist). */
+  artist: string
+  /** Cover art URL, if any. */
+  artworkUrl?: string
+  /** Episode duration in seconds, if known. */
+  durationSec?: number
+  /** Current position in seconds. */
+  positionSec: number
+  /** Playback state. */
+  playing: boolean
+}
+
+export const MediaSessionUpdateSchema = z.object({
+  title: z.string().min(1),
+  artist: z.string().min(1),
+  artworkUrl: z.string().optional(),
+  durationSec: z.number().nonnegative().optional(),
+  positionSec: z.number().nonnegative(),
+  playing: z.boolean()
+})
+export type MediaSessionUpdateInput = z.infer<typeof MediaSessionUpdateSchema>
 
 /** Accelerator candidates per command, tried in order until one registers. */
-export type ShortcutBindings = Record<PlaybackCommand, string[]>
+export type ShortcutBindings = Record<ShortcutCommand, string[]>
 
 /** Result of (re)applying a shortcut binding. */
 export interface ShortcutSetResult {
@@ -185,7 +214,7 @@ export interface ShortcutSetResult {
 }
 
 /** Maps a playback command to the accelerator actually registered (for UI display). */
-export type RegisteredShortcuts = Partial<Record<PlaybackCommand, string>>
+export type RegisteredShortcuts = Partial<Record<ShortcutCommand, string>>
 
 /** Payload for saving a shortcut binding. */
 export const ShortcutSetInputSchema = z.object({
@@ -197,9 +226,9 @@ export type ShortcutSetInput = z.infer<typeof ShortcutSetInputSchema>
 
 export interface ShortcutConfig {
   /** User override per command; commands without a user binding use defaults. */
-  custom: Partial<Record<PlaybackCommand, string>>
+  custom: Partial<Record<ShortcutCommand, string>>
   /** Default accelerator per command (for display before any override). */
-  defaults: Record<PlaybackCommand, string>
+  defaults: Record<ShortcutCommand, string>
 }
 
 /** App metadata surfaced for the About page. */

@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
-import type { PlaybackCommand, ShortcutConfig } from '@shared/ipc-contract'
+import type { ShortcutCommand, ShortcutConfig } from '@shared/ipc-contract'
 import { formatAccelerator } from '@/lib/accelerator'
 import { eventToAccelerator } from '../lib/shortcut-record'
 
-const COMMANDS: Array<{ command: PlaybackCommand; labelKey: string }> = [
+const COMMANDS: Array<{ command: ShortcutCommand; labelKey: string }> = [
   { command: 'toggle', labelKey: 'settings.shortcutToggle' },
   { command: 'next', labelKey: 'settings.shortcutNext' },
   { command: 'previous', labelKey: 'settings.shortcutPrevious' }
@@ -24,7 +24,7 @@ interface Feedback {
 export function ShortcutSettings(): React.JSX.Element {
   const { t } = useTranslation()
   const [config, setConfig] = useState<ShortcutConfig | null>(null)
-  const [recording, setRecording] = useState<PlaybackCommand | null>(null)
+  const [recording, setRecording] = useState<ShortcutCommand | null>(null)
   const [feedback, setFeedback] = useState<Feedback | null>(null)
 
   const loadConfig = useCallback(async (): Promise<void> => {
@@ -47,7 +47,7 @@ export function ShortcutSettings(): React.JSX.Element {
   }, [loadConfig])
 
   const save = useCallback(
-    async (command: PlaybackCommand, accelerator: string): Promise<void> => {
+    async (command: ShortcutCommand, accelerator: string): Promise<void> => {
       try {
         const result = await window.api.shortcuts.set({ command, accelerator })
         if (!result.ok) {
@@ -92,7 +92,7 @@ export function ShortcutSettings(): React.JSX.Element {
     return () => window.removeEventListener('keydown', onKeyDown, true)
   }, [recording, save])
 
-  const resetToDefault = async (command: PlaybackCommand): Promise<void> => {
+  const resetToDefault = async (command: ShortcutCommand): Promise<void> => {
     try {
       const result = await window.api.shortcuts.set({ command, accelerator: null })
       if (!result.ok || result.data.taken) {
@@ -111,7 +111,7 @@ export function ShortcutSettings(): React.JSX.Element {
     }
   }
 
-  const effective = (command: PlaybackCommand): string | undefined =>
+  const effective = (command: ShortcutCommand): string | undefined =>
     config?.custom[command] ?? config?.defaults[command]
 
   return (

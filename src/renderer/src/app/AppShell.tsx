@@ -67,11 +67,14 @@ export function AppShell(): React.JSX.Element {
     void loadPlaybackPrefs()
   }, [])
 
-  // Global shortcuts / media keys: main process sends a playback command.
+  // Global shortcuts / media keys / OS media session: main process sends a
+  // playback command.
   useEffect(() => {
     const unsubscribe = window.api.playback.onCommand((command) => {
       const state = usePlaybackStore.getState()
       if (command === 'toggle') state.togglePlay()
+      else if (command === 'play' && !state.isPlaying) state.togglePlay()
+      else if (command === 'pause' && state.isPlaying) state.pause()
       else if (command === 'next') void state.playNext()
       else if (command === 'previous') void state.playPrevious()
     })

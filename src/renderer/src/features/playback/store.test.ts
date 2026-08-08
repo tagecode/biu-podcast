@@ -12,6 +12,9 @@ describe('playback store ended handler', () => {
       playback: {
         updateProgress: vi.fn(() => Promise.resolve({ ok: true as const, data: undefined })),
         getLastSession: vi.fn(() => Promise.resolve({ ok: true as const, data: null }))
+      },
+      mediaSession: {
+        update: vi.fn(() => Promise.resolve({ ok: true as const, data: undefined }))
       }
     } as unknown as Window['api']
     // Reset store between tests.
@@ -77,6 +80,9 @@ describe('playback store stopIfPlayingPodcast', () => {
       playback: {
         updateProgress: vi.fn(() => Promise.resolve({ ok: true as const, data: undefined })),
         getLastSession: vi.fn(() => Promise.resolve({ ok: true as const, data: null }))
+      },
+      mediaSession: {
+        update: vi.fn(() => Promise.resolve({ ok: true as const, data: undefined }))
       }
     } as unknown as Window['api']
     usePlaybackStore.setState({

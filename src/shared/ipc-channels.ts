@@ -29,6 +29,10 @@ export const IPC_CHANNELS = {
     /** Main → renderer: deep link wants to play an episode. */
     deepLinkPlay: 'playback:deep-link-play'
   },
+  mediaSession: {
+    /** Renderer → main: current playback state/metadata for the OS media session. */
+    update: 'media-session:update'
+  },
   shortcuts: {
     /** Renderer → main: current shortcut configuration (defaults + custom overrides). */
     getConfig: 'shortcuts:get-config',
