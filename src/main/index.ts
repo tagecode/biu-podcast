@@ -35,6 +35,7 @@ protocol.registerSchemesAsPrivileged([
 
 let mainWindowRef: BrowserWindow | null = null
 let tray: AppTray | null = null
+let isQuitting = false
 
 if (
   !ensureSingleInstance(
@@ -92,6 +93,18 @@ if (
     mainWindow.on('closed', () => {
       if (mainWindowRef === mainWindow) mainWindowRef = null
     })
+    // With "close to tray" enabled, closing the window hides it and keeps the
+    // process alive in the tray instead of destroying it. The tray's 显示博播
+    // restores the same window; on 'activate' (macOS, tray already gone) we
+    // recreate. The setting is read at close time so toggling it in the
+    // Settings page takes effect immediately; when it's off, the window is
+    // destroyed and window-all-closed below quits the app as usual.
+    mainWindow.on('close', (event) => {
+      if (isQuitting) return
+      if (!settingsStore.getAll().closeToTray) return
+      event.preventDefault()
+      mainWindow.hide()
+    })
     return mainWindow
   }
 
@@ -133,6 +146,12 @@ if (
     tray.create()
 
     app.on('activate', () => {
+      // A hidden (close-to-tray) window should come back on dock click too.
+      if (mainWindowRef) {
+        if (mainWindowRef.isMinimized()) mainWindowRef.restore()
+        mainWindowRef.show()
+        return
+      }
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
   })
@@ -152,6 +171,7 @@ if (
   })
 
   app.on('before-quit', () => {
+    isQuitting = true
     closeDb()
   })
 }

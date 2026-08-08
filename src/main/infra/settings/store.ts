@@ -12,7 +12,7 @@ const defaults: AppSettings = {
   playbackRate: 1,
   openFullPlayerDefault: false,
   notificationsEnabled: true,
-  closeToTray: false
+  closeToTray: true
 }
 
 // electron-store v9+ is ESM-only. electron-vite externalizes it into CJS
