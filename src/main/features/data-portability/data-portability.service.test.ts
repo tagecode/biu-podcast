@@ -7,7 +7,7 @@ import JSZip from 'jszip'
 process.env.BIU_PODCAST_DB_PATH = ':memory:'
 
 vi.mock('electron', () => ({
-  app: { getPath: () => '/tmp/fake-userdata', getVersion: () => '1.0.0' },
+  app: { getPath: () => '/tmp/fake-userdata', getVersion: () => '2.0.0' },
   dialog: {
     showSaveDialog: vi.fn(async () => ({ canceled: true })),
     showOpenDialog: vi.fn(async () => ({ canceled: true }))
@@ -35,7 +35,7 @@ function makeBundle(): BackupBundle {
   return {
     manifest: {
       app: BACKUP_APP_ID,
-      appVersion: '1.0.0',
+      appVersion: '2.0.0',
       schemaVersion: BACKUP_SCHEMA_VERSION,
       exportedAt: 1700000000000
     },

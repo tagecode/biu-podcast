@@ -10,7 +10,7 @@ vi.mock('electron', () => ({
   app: {
     getPath: vi.fn(() => userData.value),
     getName: vi.fn(() => 'biu-podcast'),
-    getVersion: vi.fn(() => '1.0.0')
+    getVersion: vi.fn(() => '2.0.0')
   },
   dialog: {
     showSaveDialog: vi.fn(async () => ({ canceled: true, filePath: undefined }))
@@ -56,7 +56,7 @@ describe('diagnostic logger', () => {
   it('collectDiagnostics returns env info + log content', async () => {
     await writeLog('info', 'playback', 'started')
     const info = await collectDiagnostics()
-    expect(info.appVersion).toBe('1.0.0')
+    expect(info.appVersion).toBe('2.0.0')
     expect(info.platform).toBeDefined()
     expect(info.log).toContain('started')
     expect(info.loggingEnabled).toBe(true)
