@@ -36,7 +36,7 @@
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
-    "postinstall": "node -e \"console.log('postinstall: relying on better-sqlite3 prebuilds (see onlyBuiltDependencies)')\""
+    "postinstall": "node -e \"console.log('postinstall: relying on better-sqlite3 prebuilds (see onlyBuiltDependencies)')\"",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
     "build:mac": "electron-vite build && electron-builder --mac",
