@@ -79,10 +79,8 @@ jobs:
 
       - name: Build SMTC companion (.NET, Windows only)
         if: runner.os == 'Windows'
-        run: |
-          dotnet publish companion-win/companion-win.csproj \
-            -c Release -r win-x64 --self-contained true \
-            -o companion-win/bin/publish
+        shell: bash
+        run: dotnet publish companion-win/companion-win.csproj -c Release -r win-x64 --self-contained true -o companion-win/bin/publish
 
       - name: Compile (electron-vite)
         run: pnpm exec electron-vite build
