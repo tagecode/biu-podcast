@@ -27,12 +27,12 @@
 
 从 [Releases](https://github.com/tagecode/biu-podcast/releases) 下载对应平台的安装包：
 
-| 平台 | 架构 | 格式 |
-|------|------|------|
-| Windows | x64 | `.exe`（NSIS 安装包） |
-| macOS | arm64 | `.dmg` / `.zip`（Apple Silicon） |
-| macOS | x64 | `.dmg` / `.zip`（Intel） |
-| Linux | x64 | `.AppImage` / `.deb` |
+| 平台    | 架构  | 格式                             |
+| ------- | ----- | -------------------------------- |
+| Windows | x64   | `.exe`（NSIS 安装包）            |
+| macOS   | arm64 | `.dmg` / `.zip`（Apple Silicon） |
+| macOS   | x64   | `.dmg` / `.zip`（Intel）         |
+| Linux   | x64   | `.AppImage` / `.deb`             |
 
 > 安装包目前未签名：macOS 首次打开需在「系统设置 → 隐私与安全性」中允许；Windows 若有 SmartScreen 提示，选择「更多信息 → 仍要运行」。
 

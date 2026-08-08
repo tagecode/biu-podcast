@@ -125,6 +125,13 @@ export interface AppSettings {
   fontScale: 90 | 100 | 110 | 120
   /** UI language: follow system / force Chinese / force English. */
   language: 'system' | 'zh' | 'en'
+  /**
+   * Auto-cleanup retention in days. Downloaded + played episodes older than
+   * this get their file removed (null = disabled).
+   */
+  cleanupRetentionDays: number | null
+  /** Write diagnostic logs to userData/logs (toggleable). */
+  loggingEnabled: boolean
 }
 
 export interface PlaybackSession {

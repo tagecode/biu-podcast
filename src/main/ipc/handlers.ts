@@ -25,6 +25,7 @@ import {
   ReorderPlaylistInputSchema,
   SetPausedInputSchema,
   SetSettingInputSchema,
+  StorageActionInputSchema,
   UpdateActionInputSchema,
   UpdateProgressInputSchema,
   VerifyLocalInputSchema,
@@ -40,6 +41,9 @@ import { settingsStore } from '../infra/settings/store'
 import { updateService } from '../infra/updater'
 import { getTrayInstance } from '../infra/tray'
 import { installApplicationMenu } from '../infra/menu'
+import { storageService } from '../features/storage/storage.service'
+import { cleanupService } from '../features/cleanup/cleanup.service'
+import { exportDiagnostics } from '../infra/logger'
 import { autoRefreshScheduler } from '../features/subscription/auto-refresh'
 import { subscriptionService } from '../features/subscription/subscription.service'
 import { getRegisteredShortcuts } from '../infra/shortcuts'
@@ -351,6 +355,23 @@ export function registerUpdateHandlers(): void {
   registerNoInputHandler(IPC_CHANNELS.update.getStatus, () => updateService.getStatus())
 }
 
+export function registerStorageHandlers(): void {
+  registerNoInputHandler(IPC_CHANNELS.storage.usage, () => storageService.computeUsage())
+  registerNoInputHandler(IPC_CHANNELS.storage.cleanupPreview, () => storageService.previewCleanup())
+  registerHandler(IPC_CHANNELS.storage.cleanupRun, StorageActionInputSchema, async () =>
+    storageService.runCleanup()
+  )
+  registerVoidHandler(IPC_CHANNELS.cleanup.clearCache, StorageActionInputSchema, async () => {
+    await cleanupService.clearCache()
+  })
+  registerVoidHandler(IPC_CHANNELS.cleanup.clearAllData, StorageActionInputSchema, async () => {
+    await cleanupService.clearAllData()
+  })
+  registerHandler(IPC_CHANNELS.diagnostics.export, StorageActionInputSchema, async () =>
+    exportDiagnostics()
+  )
+}
+
 export function registerAllHandlers(): void {
   registerSubscriptionHandlers()
   registerEpisodeHandlers()
@@ -363,4 +384,5 @@ export function registerAllHandlers(): void {
   registerWindowHandlers()
   registerAppHandlers()
   registerUpdateHandlers()
+  registerStorageHandlers()
 }

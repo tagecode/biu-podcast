@@ -89,6 +89,7 @@ export const en: TranslationSchema = {
     authorByline: 'Host: {{author}}',
     authorUnknown: 'Unknown author',
     totalEpisodes: '{{count}} episodes total',
+    episodes: '{{count}} episodes',
     fallbackInitial: 'B'
   },
   episode: {
@@ -293,7 +294,43 @@ export const en: TranslationSchema = {
     saveThemeFailed: 'Failed to save theme settings',
     saveFontScaleFailed: 'Failed to save font settings',
     saveFailed: 'Failed to save settings',
-    unknownError: 'Unknown error'
+    unknownError: 'Unknown error',
+    storageUsage: 'Storage used',
+    storageUsageHint: 'Disk space taken by downloaded files (by podcast)',
+    storageTotal: 'Total {{size}}',
+    storageByPodcast: 'By podcast',
+    storageCleanup: 'Auto-cleanup',
+    storageCleanupHint:
+      'Delete files for downloaded + played episodes older than the retention period',
+    cleanupOff: 'Off',
+    cleanup7d: 'Keep 7 days',
+    cleanup30d: 'Keep 30 days',
+    cleanup90d: 'Keep 90 days',
+    cleanupPreview: 'Preview',
+    cleanupRun: 'Clean now',
+    cleanupPreviewTitle: 'Will remove {{count}} file(s) ({{size}})',
+    cleanupPreviewEmpty: 'Nothing to clean right now',
+    cleanupDone: 'Cleaned {{count}} file(s), freed {{size}}',
+    cleanupFailed: 'Cleanup failed',
+    loadingUsage: 'Calculating…',
+    noDownloads: 'No downloaded files yet',
+    clearCache: 'Clear cache',
+    clearCacheHint: 'Remove images and temp files; subscriptions, progress and downloads are kept',
+    clearCacheDone: 'Cache cleared',
+    clearAllData: 'Clear all data',
+    clearAllDataHint:
+      'Delete the database, downloads and settings — the app returns to first-run state',
+    clearAllDataConfirmTitle: 'Clear ALL data?',
+    clearAllDataConfirmBody:
+      'This permanently deletes all subscriptions, playback progress, playlists, notes and downloaded files. The app will restart. This cannot be undone.',
+    clearAllDataDone: 'All data cleared',
+    clearFailed: 'Operation failed',
+    diagnosticsSection: 'Diagnostics',
+    diagnosticsLogging: 'Diagnostic logging',
+    diagnosticsLoggingHint: 'Record key events to a local log file for troubleshooting',
+    exportDiagnostics: 'Export diagnostics',
+    exportDiagnosticsHint: 'Export logs and environment info for feedback',
+    exportDiagnosticsBtn: 'Export logs'
   },
   about: {
     title: 'About',

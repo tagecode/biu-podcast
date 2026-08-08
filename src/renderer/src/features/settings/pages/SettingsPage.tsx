@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import type { ImportPreview } from '@shared/backup'
-import type { UpdateStatus } from '@shared/ipc-contract'
+import type { CleanupPreview, UpdateStatus } from '@shared/ipc-contract'
 import { useSubscriptionStore } from '@/features/subscription/store'
+import { formatFileSize } from '@/lib/format'
 
 import * as settingsApi from '../api'
 import { applyFontScale, applyTheme } from '@/lib/appearance'
@@ -16,6 +17,15 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog'
 
 interface SettingsPageProps {
   onBack: () => void
@@ -62,6 +72,18 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
   const [language, setLanguage] = useState<'system' | 'zh' | 'en'>('system')
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ phase: 'idle' })
   const [downloadDir, setDownloadDir] = useState<string>('')
+  const [storageUsage, setStorageUsage] = useState<{
+    podcasts: Array<{
+      podcastId: string
+      podcastTitle: string
+      bytes: number
+      downloadedCount: number
+    }>
+    totalBytes: number
+  } | null>(null)
+  const [cleanupRetention, setCleanupRetention] = useState<string>('null')
+  const [cleanupPreview, setCleanupPreview] = useState<CleanupPreview | null>(null)
+  const [loggingEnabled, setLoggingEnabled] = useState(true)
   const [pendingImport, setPendingImport] = useState<{
     filePath: string
     preview: ImportPreview
@@ -78,12 +100,28 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
       setTheme(settings.theme)
       setFontScale(settings.fontScale)
       setLanguage(settings.language)
+      setCleanupRetention(
+        settings.cleanupRetentionDays == null ? 'null' : String(settings.cleanupRetentionDays)
+      )
+      setLoggingEnabled(settings.loggingEnabled)
     })
     // Resolve the actual download directory (default or custom).
     void window.api.download.getDir().then((r) => {
       if (r.ok) setDownloadDir(r.data)
     })
+    // Load storage usage + retention preview.
+    void window.api.storage.usage().then((r) => {
+      if (r.ok) setStorageUsage(r.data)
+    })
+    void window.api.storage.cleanupPreview().then((r) => {
+      if (r.ok) setCleanupPreview(r.data)
+    })
   }, [])
+
+  const refreshCleanupPreview = async (): Promise<void> => {
+    const result = await window.api.storage.cleanupPreview()
+    if (result.ok) setCleanupPreview(result.data)
+  }
 
   // Update-status subscription: react to lifecycle events pushed by main.
   useEffect(() => {
@@ -247,6 +285,88 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
     })
   }
 
+  const handleCleanupRetentionChange = (value: string): void => {
+    setCleanupRetention(value)
+    const days = value === 'null' ? null : Number(value)
+    void settingsApi.setSetting('cleanupRetentionDays', days).catch((e) => {
+      setError(e instanceof Error ? e.message : t('settings.saveFailed'))
+    })
+    // Refresh the preview for the new retention window.
+    void refreshCleanupPreview()
+  }
+
+  const handleRunCleanup = async (): Promise<void> => {
+    setBusy(true)
+    setError(null)
+    setMessage(null)
+    try {
+      const result = await window.api.storage.cleanupRun()
+      if (result.ok) {
+        setMessage(
+          t('settings.cleanupDone', {
+            count: result.data.removedCount,
+            size: formatFileSize(result.data.freedBytes)
+          })
+        )
+      }
+      // Refresh usage + preview after deletion.
+      const usage = await window.api.storage.usage()
+      if (usage.ok) setStorageUsage(usage.data)
+      await refreshCleanupPreview()
+    } catch (cleanupError) {
+      setError(cleanupError instanceof Error ? cleanupError.message : t('settings.cleanupFailed'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleClearCache = async (): Promise<void> => {
+    setBusy(true)
+    setError(null)
+    setMessage(null)
+    try {
+      await window.api.cleanup.clearCache()
+      setMessage(t('settings.clearCacheDone'))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t('settings.clearFailed'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleClearAllData = async (): Promise<void> => {
+    setBusy(true)
+    setError(null)
+    setMessage(null)
+    try {
+      await window.api.cleanup.clearAllData()
+      // The app relaunches; this message is a fallback if it doesn't.
+      setMessage(t('settings.clearAllDataDone'))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t('settings.clearFailed'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleExportDiagnostics = async (): Promise<void> => {
+    setBusy(true)
+    setError(null)
+    setMessage(null)
+    try {
+      const result = await window.api.diagnostics.export()
+      if (!result.ok || !result.data) {
+        setMessage(t('settings.exportCancelled'))
+        return
+      }
+      setMessage(t('settings.exportDone', { path: result.data.filePath }))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t('settings.exportFailed'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-3 border-b border-line px-6 py-4">
@@ -281,6 +401,45 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
             <Button variant="secondary" disabled={busy} onClick={() => void handleChooseImport()}>
               {t('settings.import')}
             </Button>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">{t('settings.clearCache')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.clearCacheHint')}</div>
+            </div>
+            <Button variant="secondary" disabled={busy} onClick={() => void handleClearCache()}>
+              {t('settings.clearCache')}
+            </Button>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">{t('settings.clearAllData')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.clearAllDataHint')}</div>
+            </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="secondary" disabled={busy}>
+                  {t('settings.clearAllData')}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{t('settings.clearAllDataConfirmTitle')}</DialogTitle>
+                  <DialogDescription>{t('settings.clearAllDataConfirmBody')}</DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="secondary"
+                    onClick={() => void handleClearAllData()}
+                    disabled={busy}
+                  >
+                    {t('common.confirm')}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {pendingImport ? (
@@ -466,6 +625,73 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
             </div>
           </div>
 
+          <div className="border-b border-line py-4">
+            <div className="text-sm font-medium text-ink">{t('settings.storageUsage')}</div>
+            <div className="mt-1 text-xs text-muted">{t('settings.storageUsageHint')}</div>
+            {storageUsage === null ? (
+              <div className="mt-2 text-sm text-muted">{t('settings.loadingUsage')}</div>
+            ) : storageUsage.podcasts.length === 0 ? (
+              <div className="mt-2 text-sm text-muted">{t('settings.noDownloads')}</div>
+            ) : (
+              <>
+                <div className="mt-2 text-sm font-medium text-ink">
+                  {t('settings.storageTotal', { size: formatFileSize(storageUsage.totalBytes) })}
+                </div>
+                <ul className="mt-2 space-y-1">
+                  {storageUsage.podcasts.map((podcast) => (
+                    <li
+                      key={podcast.podcastId}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <span className="min-w-0 truncate text-ink">{podcast.podcastTitle}</span>
+                      <span className="ml-3 shrink-0 font-mono text-xs text-muted">
+                        {formatFileSize(podcast.bytes)} ·{' '}
+                        {t('episode.episodes', { count: podcast.downloadedCount })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">{t('settings.storageCleanup')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.storageCleanupHint')}</div>
+              {cleanupPreview && cleanupPreview.items.length > 0 ? (
+                <div className="mt-1 text-xs text-amber-700">
+                  {t('settings.cleanupPreviewTitle', {
+                    count: cleanupPreview.items.length,
+                    size: formatFileSize(cleanupPreview.totalBytes)
+                  })}
+                </div>
+              ) : cleanupPreview ? (
+                <div className="mt-1 text-xs text-muted">{t('settings.cleanupPreviewEmpty')}</div>
+              ) : null}
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Select value={cleanupRetention} onValueChange={handleCleanupRetentionChange}>
+                <SelectTrigger className="w-32" aria-label={t('settings.storageCleanup')}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="null">{t('settings.cleanupOff')}</SelectItem>
+                  <SelectItem value="7">{t('settings.cleanup7d')}</SelectItem>
+                  <SelectItem value="30">{t('settings.cleanup30d')}</SelectItem>
+                  <SelectItem value="90">{t('settings.cleanup90d')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="secondary"
+                disabled={busy || !cleanupPreview || cleanupPreview.items.length === 0}
+                onClick={() => void handleRunCleanup()}
+              >
+                {t('settings.cleanupRun')}
+              </Button>
+            </div>
+          </div>
+
           <div>
             <h2 className="text-sm font-semibold text-ink">{t('settings.appearanceSection')}</h2>
           </div>
@@ -589,6 +815,49 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
             </div>
             <Button variant="secondary" onClick={onOpenAbout}>
               {t('settings.view')}
+            </Button>
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold text-ink">{t('settings.diagnosticsSection')}</h2>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">{t('settings.diagnosticsLogging')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.diagnosticsLoggingHint')}</div>
+            </div>
+            <label className="flex cursor-pointer items-center">
+              <input
+                type="checkbox"
+                className="accent-amber-600"
+                checked={loggingEnabled}
+                onChange={(e) => {
+                  setLoggingEnabled(e.target.checked)
+                  void settingsApi
+                    .setSetting('loggingEnabled', e.target.checked)
+                    .catch((err) =>
+                      setError(err instanceof Error ? err.message : t('settings.saveFailed'))
+                    )
+                }}
+              />
+              <span className="ml-2 text-sm text-muted">
+                {loggingEnabled ? t('common.on') : t('common.off')}
+              </span>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">{t('settings.exportDiagnostics')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.exportDiagnosticsHint')}</div>
+            </div>
+            <Button
+              variant="secondary"
+              disabled={busy}
+              onClick={() => void handleExportDiagnostics()}
+            >
+              {t('settings.exportDiagnosticsBtn')}
             </Button>
           </div>
 

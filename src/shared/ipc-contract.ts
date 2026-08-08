@@ -112,7 +112,9 @@ export const SetSettingInputSchema = z.object({
     'closeToTray',
     'theme',
     'fontScale',
-    'language'
+    'language',
+    'cleanupRetentionDays',
+    'loggingEnabled'
   ]),
   value: z.union([z.number().nullable(), z.string(), z.boolean()])
 })
@@ -206,3 +208,37 @@ export interface UpdateStatus {
 /** No payload — update actions are stateful. */
 export const UpdateActionInputSchema = z.object({})
 export type UpdateActionInput = z.infer<typeof UpdateActionInputSchema>
+
+/** Per-podcast download size usage. */
+export interface PodcastStorageUsage {
+  podcastId: string
+  podcastTitle: string
+  bytes: number
+  downloadedCount: number
+}
+
+export interface StorageUsage {
+  podcasts: PodcastStorageUsage[]
+  totalBytes: number
+}
+
+export interface CleanupPreviewItem {
+  episodeId: string
+  podcastTitle: string
+  episodeTitle: string
+  bytes: number
+}
+
+export interface CleanupPreview {
+  items: CleanupPreviewItem[]
+  totalBytes: number
+}
+
+export interface CleanupResult {
+  freedBytes: number
+  removedCount: number
+}
+
+/** No payload — storage queries/actions are stateful. */
+export const StorageActionInputSchema = z.object({})
+export type StorageActionInput = z.infer<typeof StorageActionInputSchema>

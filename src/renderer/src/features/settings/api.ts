@@ -17,7 +17,9 @@ export async function setSetting(
     | 'closeToTray'
     | 'theme'
     | 'fontScale'
-    | 'language',
+    | 'language'
+    | 'cleanupRetentionDays'
+    | 'loggingEnabled',
   value: number | boolean | string | null
 ): Promise<void> {
   const result = await window.api.settings.set({ key, value })

@@ -15,7 +15,9 @@ const defaults: AppSettings = {
   closeToTray: true,
   theme: 'system',
   fontScale: 100,
-  language: 'system'
+  language: 'system',
+  cleanupRetentionDays: null,
+  loggingEnabled: true
 }
 
 // electron-store v9+ is ESM-only. electron-vite externalizes it into CJS
@@ -53,7 +55,9 @@ export class SettingsStore {
       closeToTray: this.store.get('closeToTray'),
       theme: this.store.get('theme'),
       fontScale: this.store.get('fontScale'),
-      language: this.store.get('language')
+      language: this.store.get('language'),
+      cleanupRetentionDays: this.store.get('cleanupRetentionDays'),
+      loggingEnabled: this.store.get('loggingEnabled')
     }
   }
 

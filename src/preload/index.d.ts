@@ -1,5 +1,8 @@
 import type {
   AppInfo,
+  CleanupPreview,
+  CleanupResult,
+  StorageUsage,
   UpdateStatus,
   AddSubscriptionInput,
   CreateNoteInput,
@@ -144,6 +147,18 @@ declare global {
         install: () => Promise<IpcResult<void>>
         getStatus: () => Promise<IpcResult<UpdateStatus>>
         onStatus: (callback: (status: UpdateStatus) => void) => () => void
+      }
+      storage: {
+        usage: () => Promise<IpcResult<StorageUsage>>
+        cleanupPreview: () => Promise<IpcResult<CleanupPreview>>
+        cleanupRun: () => Promise<IpcResult<CleanupResult>>
+      }
+      cleanup: {
+        clearCache: () => Promise<IpcResult<void>>
+        clearAllData: () => Promise<IpcResult<void>>
+      }
+      diagnostics: {
+        export: () => Promise<IpcResult<{ filePath: string } | null>>
       }
     }
   }

@@ -1,7 +1,7 @@
 ---
 name: 功能请求
 about: 为博播提一个新功能想法
-title: "[Feature] "
+title: '[Feature] '
 labels: enhancement
 assignees: ''
 ---

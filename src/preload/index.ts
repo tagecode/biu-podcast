@@ -3,6 +3,9 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { IPC_CHANNELS } from '@shared/ipc-channels'
 import type {
   AppInfo,
+  CleanupPreview,
+  CleanupResult,
+  StorageUsage,
   UpdateStatus,
   AddSubscriptionInput,
   CreateNoteInput,
@@ -222,6 +225,23 @@ const api = {
       ipcRenderer.on(IPC_CHANNELS.update.status, listener)
       return () => ipcRenderer.removeListener(IPC_CHANNELS.update.status, listener)
     }
+  },
+  storage: {
+    usage: (): Promise<IpcResult<StorageUsage>> => ipcRenderer.invoke(IPC_CHANNELS.storage.usage),
+    cleanupPreview: (): Promise<IpcResult<CleanupPreview>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.storage.cleanupPreview),
+    cleanupRun: (): Promise<IpcResult<CleanupResult>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.storage.cleanupRun, {})
+  },
+  cleanup: {
+    clearCache: (): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.cleanup.clearCache, {}),
+    clearAllData: (): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.cleanup.clearAllData, {})
+  },
+  diagnostics: {
+    export: (): Promise<IpcResult<{ filePath: string } | null>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.diagnostics.export, {})
   }
 }
 

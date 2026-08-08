@@ -90,5 +90,23 @@ export const IPC_CHANNELS = {
     listAll: 'note:list-all',
     delete: 'note:delete',
     export: 'note:export'
+  },
+  storage: {
+    /** Per-podcast download size usage. */
+    usage: 'storage:usage',
+    /** Retention cleanup preview (no side effects). */
+    cleanupPreview: 'storage:cleanup-preview',
+    /** Execute the retention cleanup. */
+    cleanupRun: 'storage:cleanup-run'
+  },
+  cleanup: {
+    /** Clear browser caches / temp files only. */
+    clearCache: 'cleanup:clear-cache',
+    /** Wipe database, downloads, settings, caches, then relaunch. */
+    clearAllData: 'cleanup:clear-all-data'
+  },
+  diagnostics: {
+    /** Export a diagnostic report (logs + environment) via save dialog. */
+    export: 'diagnostics:export'
   }
 } as const

@@ -1,4 +1,5 @@
 import type { DownloadTaskStatus } from '@shared/types'
+import { logError } from '../../infra/logger'
 
 export interface QueueTask {
   id: string
@@ -200,6 +201,10 @@ export class DownloadQueue {
         this.scheduleRetry(taskId, delay)
       } else {
         current.status = 'failed'
+        logError(
+          'download',
+          `task ${taskId} (episode ${current.episodeId}) failed: ${error instanceof Error ? error.message : String(error)}`
+        )
         this.emit(taskId)
       }
     } finally {

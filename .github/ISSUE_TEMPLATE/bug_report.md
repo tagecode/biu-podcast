@@ -1,7 +1,7 @@
 ---
 name: Bug 报告
 about: 报告一个 bug 帮助改进博播
-title: "[Bug] "
+title: '[Bug] '
 labels: bug
 assignees: ''
 ---

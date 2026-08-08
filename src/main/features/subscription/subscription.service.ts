@@ -6,6 +6,7 @@ import { app, dialog } from 'electron'
 import { EpisodeRepository } from '../episode/episode.repository'
 import { getDb, type AppDatabase } from '../../infra/db/client'
 import { settingsStore, SettingsStore } from '../../infra/settings/store'
+import { logError } from '../../infra/logger'
 import { AppError } from '@shared/errors'
 import type { FetchStatus, Podcast } from '@shared/types'
 
@@ -161,6 +162,10 @@ export class SubscriptionService {
         lastFetchedAt: Date.now(),
         lastFetchStatus: status
       })
+      logError(
+        'feed',
+        `refresh failed for "${podcast.title}": ${error instanceof Error ? error.message : String(error)}`
+      )
       throw error
     }
   }
