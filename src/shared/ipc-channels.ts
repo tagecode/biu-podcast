@@ -8,7 +8,9 @@ export const IPC_CHANNELS = {
     setPaused: 'subscription:set-paused',
     importOpml: 'subscription:import-opml',
     exportOpml: 'subscription:export-opml',
-    changed: 'subscription:changed'
+    changed: 'subscription:changed',
+    /** Main → renderer: deep link wants to subscribe to a feed. */
+    deepLinkSubscribe: 'subscription:deep-link-subscribe'
   },
   episode: {
     listByPodcast: 'episode:list-by-podcast',
@@ -23,7 +25,9 @@ export const IPC_CHANNELS = {
     getLastSession: 'playback:get-last-session',
     /** Main → renderer: global shortcut / media key pressed. */
     command: 'playback:command',
-    getRegisteredShortcuts: 'playback:get-registered-shortcuts'
+    getRegisteredShortcuts: 'playback:get-registered-shortcuts',
+    /** Main → renderer: deep link wants to play an episode. */
+    deepLinkPlay: 'playback:deep-link-play'
   },
   download: {
     enqueue: 'download:enqueue',

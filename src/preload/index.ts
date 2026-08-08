@@ -77,6 +77,12 @@ const api = {
         callback(podcasts)
       ipcRenderer.on(IPC_CHANNELS.subscription.changed, listener)
       return () => ipcRenderer.removeListener(IPC_CHANNELS.subscription.changed, listener)
+    },
+    onDeepLinkSubscribe: (callback: (feedUrl: string) => void): (() => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, feedUrl: string): void =>
+        callback(feedUrl)
+      ipcRenderer.on(IPC_CHANNELS.subscription.deepLinkSubscribe, listener)
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.subscription.deepLinkSubscribe, listener)
     }
   },
   episode: {
@@ -111,6 +117,12 @@ const api = {
         callback(command)
       ipcRenderer.on(IPC_CHANNELS.playback.command, listener)
       return () => ipcRenderer.removeListener(IPC_CHANNELS.playback.command, listener)
+    },
+    onDeepLinkPlay: (callback: (episodeId: string) => void): (() => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, episodeId: string): void =>
+        callback(episodeId)
+      ipcRenderer.on(IPC_CHANNELS.playback.deepLinkPlay, listener)
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.playback.deepLinkPlay, listener)
     }
   },
   download: {

@@ -13,6 +13,7 @@ import { NotesPage } from '@/features/playlist/pages/NotesPage'
 import { PlaylistsPage } from '@/features/playlist/pages/PlaylistsPage'
 import { SettingsPage } from '@/features/settings/pages/SettingsPage'
 import { SubscriptionListView } from '@/features/subscription/components/SubscriptionListView'
+import { useSubscriptionStore } from '@/features/subscription/store'
 
 declare module 'react' {
   interface CSSProperties {
@@ -71,6 +72,34 @@ export function AppShell(): React.JSX.Element {
       else if (command === 'previous') void state.playPrevious()
     })
     return unsubscribe
+  }, [])
+
+  // Deep links: biu-podcast://subscribe?url=... → subscribe and show list;
+  // biu-podcast://play/<episodeId> → open the podcast and play the episode.
+  useEffect(() => {
+    const unsubSubscribe = window.api.subscription.onDeepLinkSubscribe((feedUrl) => {
+      setRoute({ name: 'subscriptions' })
+      void useSubscriptionStore
+        .getState()
+        .add(feedUrl)
+        .catch(() => undefined)
+    })
+    const unsubPlay = window.api.playback.onDeepLinkPlay((episodeId) => {
+      void (async () => {
+        const result = await window.api.episode.getById({ episodeId })
+        if (!result.ok || !result.data) return
+        const episode = result.data
+        setRoute({ name: 'detail', podcastId: episode.podcastId })
+        // Find the podcast and start playback.
+        const subs = useSubscriptionStore.getState().podcasts
+        const podcast = subs.find((p) => p.id === episode.podcastId)
+        if (podcast) void usePlaybackStore.getState().playEpisode(episode, podcast)
+      })()
+    })
+    return () => {
+      unsubSubscribe()
+      unsubPlay()
+    }
   }, [])
 
   return (

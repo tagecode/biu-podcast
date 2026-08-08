@@ -65,6 +65,7 @@ declare global {
         importOpml: () => Promise<IpcResult<OpmlImportResult | null>>
         exportOpml: () => Promise<IpcResult<{ filePath: string } | null>>
         onChanged: (callback: (podcasts: Podcast[]) => void) => () => void
+        onDeepLinkSubscribe: (callback: (feedUrl: string) => void) => () => void
       }
       episode: {
         listByPodcast: (input: ListEpisodesInput) => Promise<IpcResult<EpisodeListPage>>
@@ -81,6 +82,7 @@ declare global {
         getLastSession: () => Promise<IpcResult<PlaybackSession | null>>
         getRegisteredShortcuts: () => Promise<IpcResult<RegisteredShortcuts>>
         onCommand: (callback: (command: PlaybackCommand) => void) => () => void
+        onDeepLinkPlay: (callback: (episodeId: string) => void) => () => void
       }
       download: {
         enqueue: (input: EnqueueDownloadInput) => Promise<IpcResult<DownloadTask>>

@@ -6,6 +6,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { downloadService } from './features/download/download.service'
 import { autoRefreshScheduler } from './features/subscription/auto-refresh'
+import { setupDeepLink, routeDeepLinkArgv } from './infra/deep-link'
 import { registerPlaybackShortcuts, unregisterPlaybackShortcuts } from './infra/shortcuts'
 import { registerAllHandlers } from './ipc/handlers'
 import { setMainWindow } from './ipc/register'
@@ -32,7 +33,12 @@ protocol.registerSchemesAsPrivileged([
 
 let mainWindowRef: BrowserWindow | null = null
 
-if (!ensureSingleInstance(() => mainWindowRef)) {
+if (
+  !ensureSingleInstance(
+    () => mainWindowRef,
+    (argv) => routeDeepLinkArgv(argv, () => mainWindowRef)
+  )
+) {
   // Another instance owns the lock; this process is quitting.
 } else {
   function createWindow(): BrowserWindow {
@@ -118,6 +124,7 @@ if (!ensureSingleInstance(() => mainWindowRef)) {
 
     createWindow()
 
+    setupDeepLink(() => mainWindowRef)
     registerPlaybackShortcuts(() => mainWindowRef)
 
     app.on('activate', () => {

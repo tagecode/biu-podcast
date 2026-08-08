@@ -1,5 +1,9 @@
 appId: com.biupodcast.app
 productName: 博播 BiuPodcast
+protocols:
+  - name: 博播 BiuPodcast
+    schemes:
+      - biu-podcast
 directories:
   buildResources: build
 extraResources:
