@@ -9,6 +9,7 @@ import { app } from 'electron'
 import { EpisodeRepository } from '../episode/episode.repository'
 import { getDb, type AppDatabase } from '../../infra/db/client'
 import { showNotification } from '../../infra/notification'
+import { t } from '../../infra/i18n'
 import { settingsStore, SettingsStore } from '../../infra/settings/store'
 import { AppError } from '@shared/errors'
 import { IPC_CHANNELS } from '@shared/ipc-channels'
@@ -161,7 +162,7 @@ export class DownloadService {
         const durationMs = startedAt ? Date.now() - startedAt : Infinity
         if (done && durationMs >= 2000) {
           showNotification(
-            { title: '下载完成', body: done.title },
+            { title: t('notification.downloadDone'), body: done.title },
             this.settings.getAll().notificationsEnabled
           )
         }

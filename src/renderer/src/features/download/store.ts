@@ -1,3 +1,4 @@
+import i18n from '@/lib/i18n'
 import type { DownloadTask, DownloadTaskStatus } from '@shared/types'
 import { create } from 'zustand'
 
@@ -50,7 +51,7 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
     } catch (error) {
       set({
         loading: false,
-        error: error instanceof Error ? error.message : '加载下载队列失败'
+        error: error instanceof Error ? error.message : i18n.t('download.loadFailed')
       })
     }
   },

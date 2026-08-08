@@ -109,7 +109,10 @@ export const SetSettingInputSchema = z.object({
     'openFullPlayerDefault',
     'notificationsEnabled',
     'downloadPath',
-    'closeToTray'
+    'closeToTray',
+    'theme',
+    'fontScale',
+    'language'
   ]),
   value: z.union([z.number().nullable(), z.string(), z.boolean()])
 })
@@ -170,3 +173,36 @@ export type PlaybackCommand = 'toggle' | 'next' | 'previous'
 
 /** Maps a playback command to the accelerator actually registered (for UI display). */
 export type RegisteredShortcuts = Partial<Record<PlaybackCommand, string>>
+
+/** App metadata surfaced for the About page. */
+export interface AppInfo {
+  name: string
+  version: string
+  /** Product name used for display (e.g. "博播"). */
+  productName: string
+  homepage: string
+  /** true when packaged (installed), false in dev. */
+  isPackaged: boolean
+}
+
+/** Update lifecycle phases surfaced to the settings UI. */
+export type UpdatePhase =
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'not-available'
+  | 'downloading'
+  | 'downloaded'
+  | 'error'
+  | 'disabled'
+
+export interface UpdateStatus {
+  phase: UpdatePhase
+  version?: string
+  percent?: number
+  message?: string
+}
+
+/** No payload — update actions are stateful. */
+export const UpdateActionInputSchema = z.object({})
+export type UpdateActionInput = z.infer<typeof UpdateActionInputSchema>

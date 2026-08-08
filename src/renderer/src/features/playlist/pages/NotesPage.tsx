@@ -1,5 +1,6 @@
 import { Download, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import type { Note } from '@shared/types'
@@ -19,6 +20,7 @@ function formatTimestamp(sec: number): string {
 }
 
 export function NotesPage({ onBack }: NotesPageProps): React.JSX.Element {
+  const { t } = useTranslation()
   const [notes, setNotes] = useState<Note[]>([])
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -28,7 +30,7 @@ export function NotesPage({ onBack }: NotesPageProps): React.JSX.Element {
       const loaded = await playlistApi.listAllNotes()
       setNotes(loaded)
     } catch (e) {
-      setError(e instanceof Error ? e.message : '加载笔记失败')
+      setError(e instanceof Error ? e.message : t('note.loadFailed'))
     }
   }
 
@@ -43,12 +45,12 @@ export function NotesPage({ onBack }: NotesPageProps): React.JSX.Element {
     try {
       const result = await window.api.note.export()
       if (!result.ok || !result.data) {
-        setMessage('已取消导出')
+        setMessage(t('note.exportCancelled'))
         return
       }
-      setMessage(`已导出笔记到：${result.data.filePath}`)
+      setMessage(t('note.exportDone', { path: result.data.filePath }))
     } catch (e) {
-      setError(e instanceof Error ? e.message : '导出失败')
+      setError(e instanceof Error ? e.message : t('note.exportFailed'))
     }
   }
 
@@ -61,13 +63,13 @@ export function NotesPage({ onBack }: NotesPageProps): React.JSX.Element {
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-3 border-b border-line px-6 py-4">
         <button type="button" className="text-sm text-muted hover:text-ink" onClick={onBack}>
-          返回
+          {t('common.back')}
         </button>
-        <h1 className="text-base font-semibold text-ink">笔记</h1>
+        <h1 className="text-base font-semibold text-ink">{t('note.title')}</h1>
         <div className="flex-1" />
         <Button variant="secondary" onClick={() => void handleExport()}>
           <Download className="size-4" />
-          导出 Markdown
+          {t('note.export')}
         </Button>
       </div>
 
@@ -83,9 +85,7 @@ export function NotesPage({ onBack }: NotesPageProps): React.JSX.Element {
           </div>
         ) : null}
         {notes.length === 0 ? (
-          <p className="py-12 text-center text-sm text-muted">
-            还没有笔记 —— 在集数详情中写一条时间戳笔记
-          </p>
+          <p className="py-12 text-center text-sm text-muted">{t('note.empty')}</p>
         ) : (
           <div className="space-y-2">
             {notes.map((note) => (
@@ -102,7 +102,7 @@ export function NotesPage({ onBack }: NotesPageProps): React.JSX.Element {
                 </div>
                 <button
                   type="button"
-                  aria-label="删除笔记"
+                  aria-label={t('note.delete')}
                   className="text-muted hover:text-danger"
                   onClick={() => void handleDelete(note.id)}
                 >

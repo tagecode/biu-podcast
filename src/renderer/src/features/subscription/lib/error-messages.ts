@@ -1,12 +1,13 @@
+import i18n from '@/lib/i18n'
 import type { FetchStatus } from '@shared/types'
 
 const CODE_MESSAGES: Record<string, string> = {
-  NOT_FOUND: '该订阅源已失效（404），请检查地址是否正确',
-  TIMEOUT: '请求超时，请检查网络连接后重试',
-  PARSE_ERROR: '无法解析该 RSS Feed，请确认地址是否正确',
-  INVALID_XML: 'Feed 返回的 XML 无效，请确认订阅源是否正常',
-  NETWORK_ERROR: '当前无网络或连接失败，请稍后重试',
-  ALREADY_SUBSCRIBED: '该播客已订阅，无需重复添加'
+  NOT_FOUND: 'subscription.feedErrorNotFound',
+  TIMEOUT: 'subscription.feedErrorTimeout',
+  PARSE_ERROR: 'subscription.feedErrorParse',
+  INVALID_XML: 'subscription.feedErrorInvalidXml',
+  NETWORK_ERROR: 'subscription.feedErrorNetwork',
+  ALREADY_SUBSCRIBED: 'subscription.feedErrorAlreadySubscribed'
 }
 
 const STATUS_MESSAGES: Record<Exclude<FetchStatus, 'ok'>, string> = {
@@ -18,9 +19,9 @@ const STATUS_MESSAGES: Record<Exclude<FetchStatus, 'ok'>, string> = {
 }
 
 export function messageForFeedError(codeOrStatus: string): string {
-  if (codeOrStatus in CODE_MESSAGES) return CODE_MESSAGES[codeOrStatus]
+  if (codeOrStatus in CODE_MESSAGES) return i18n.t(CODE_MESSAGES[codeOrStatus])
   if (codeOrStatus in STATUS_MESSAGES) {
-    return STATUS_MESSAGES[codeOrStatus as Exclude<FetchStatus, 'ok'>]
+    return i18n.t(STATUS_MESSAGES[codeOrStatus as Exclude<FetchStatus, 'ok'>])
   }
-  return '刷新失败，请稍后重试'
+  return i18n.t('subscription.feedErrorGeneric')
 }

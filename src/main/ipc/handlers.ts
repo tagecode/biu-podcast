@@ -1,4 +1,4 @@
-import { BrowserWindow, dialog, shell } from 'electron'
+import { app, BrowserWindow, dialog, shell } from 'electron'
 import {
   AddSubscriptionInputSchema,
   ChooseDirectoryInputSchema,
@@ -25,6 +25,7 @@ import {
   ReorderPlaylistInputSchema,
   SetPausedInputSchema,
   SetSettingInputSchema,
+  UpdateActionInputSchema,
   UpdateProgressInputSchema,
   VerifyLocalInputSchema,
   WindowActionInputSchema
@@ -36,6 +37,9 @@ import { episodeService } from '../features/episode/episode.service'
 import { playbackService } from '../features/playback/playback.service'
 import { playlistService } from '../features/playlist/playlist.service'
 import { settingsStore } from '../infra/settings/store'
+import { updateService } from '../infra/updater'
+import { getTrayInstance } from '../infra/tray'
+import { installApplicationMenu } from '../infra/menu'
 import { autoRefreshScheduler } from '../features/subscription/auto-refresh'
 import { subscriptionService } from '../features/subscription/subscription.service'
 import { getRegisteredShortcuts } from '../infra/shortcuts'
@@ -261,6 +265,11 @@ export function registerSettingsHandlers(): void {
     if (input.key === 'autoRefreshMinutes') {
       autoRefreshScheduler.restart()
     }
+    // Language change affects main-process UI (menu / tray) — rebuild them.
+    if (input.key === 'language') {
+      installApplicationMenu()
+      getTrayInstance()?.rebuild()
+    }
   })
 
   registerHandler(IPC_CHANNELS.settings.chooseDirectory, ChooseDirectoryInputSchema, async () => {
@@ -319,6 +328,29 @@ export function registerNoteHandlers(): void {
   )
 }
 
+export function registerAppHandlers(): void {
+  registerNoInputHandler(IPC_CHANNELS.app.getInfo, () => ({
+    name: app.getName(),
+    version: app.getVersion(),
+    productName: '博播 BiuPodcast',
+    homepage: 'https://github.com/tagecode/biu-podcast',
+    isPackaged: app.isPackaged
+  }))
+}
+
+export function registerUpdateHandlers(): void {
+  registerVoidHandler(IPC_CHANNELS.update.check, UpdateActionInputSchema, () => {
+    updateService.check()
+  })
+  registerVoidHandler(IPC_CHANNELS.update.download, UpdateActionInputSchema, () => {
+    updateService.download()
+  })
+  registerVoidHandler(IPC_CHANNELS.update.install, UpdateActionInputSchema, () => {
+    updateService.install()
+  })
+  registerNoInputHandler(IPC_CHANNELS.update.getStatus, () => updateService.getStatus())
+}
+
 export function registerAllHandlers(): void {
   registerSubscriptionHandlers()
   registerEpisodeHandlers()
@@ -329,4 +361,6 @@ export function registerAllHandlers(): void {
   registerPlaylistHandlers()
   registerNoteHandlers()
   registerWindowHandlers()
+  registerAppHandlers()
+  registerUpdateHandlers()
 }

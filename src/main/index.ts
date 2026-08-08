@@ -8,8 +8,9 @@ import { downloadService } from './features/download/download.service'
 import { autoRefreshScheduler } from './features/subscription/auto-refresh'
 import { setupDeepLink, routeDeepLinkArgv } from './infra/deep-link'
 import { registerPlaybackShortcuts, unregisterPlaybackShortcuts } from './infra/shortcuts'
-import { AppTray } from './infra/tray'
+import { AppTray, setTrayInstance } from './infra/tray'
 import { settingsStore } from './infra/settings/store'
+import { updateService } from './infra/updater'
 import { registerAllHandlers } from './ipc/handlers'
 import { setMainWindow } from './ipc/register'
 import { closeDb, getDb } from './infra/db/client'
@@ -143,7 +144,16 @@ if (
     setupDeepLink(() => mainWindowRef)
     registerPlaybackShortcuts(() => mainWindowRef)
     tray = new AppTray(() => mainWindowRef, icon)
+    setTrayInstance(tray)
     tray.create()
+
+    // Check for updates silently after the window is up (packaged builds only).
+    updateService.init(() => mainWindowRef)
+    if (updateService.enabled()) {
+      setTimeout(() => {
+        updateService.check()
+      }, 10_000)
+    }
 
     app.on('activate', () => {
       // A hidden (close-to-tray) window should come back on dock click too.

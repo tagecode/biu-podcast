@@ -1,6 +1,7 @@
 import { Minus, Square, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
+import { useTranslation } from 'react-i18next'
 
 declare module 'react' {
   interface CSSProperties {
@@ -18,6 +19,7 @@ const noDragRegion: CSSProperties = { WebkitAppRegion: 'no-drag' }
  * the buttons.
  */
 export function WindowControls(): React.JSX.Element {
+  const { t } = useTranslation()
   const [isMaximized, setIsMaximized] = useState(false)
 
   useEffect(() => {
@@ -38,7 +40,7 @@ export function WindowControls(): React.JSX.Element {
     <div className="flex h-full items-center" style={noDragRegion}>
       <button
         type="button"
-        aria-label="最小化"
+        aria-label={t('window.minimize')}
         className="flex h-full w-10 items-center justify-center text-muted-700 hover:bg-amber-100 hover:text-ink"
         onClick={() => void window.api.window.minimize()}
       >
@@ -46,7 +48,7 @@ export function WindowControls(): React.JSX.Element {
       </button>
       <button
         type="button"
-        aria-label={isMaximized ? '还原' : '最大化'}
+        aria-label={isMaximized ? t('window.restore') : t('window.maximize')}
         className="flex h-full w-10 items-center justify-center text-muted-700 hover:bg-amber-100 hover:text-ink"
         onClick={toggleMaximize}
       >
@@ -54,7 +56,7 @@ export function WindowControls(): React.JSX.Element {
       </button>
       <button
         type="button"
-        aria-label="关闭"
+        aria-label={t('window.close')}
         className="flex h-full w-10 items-center justify-center text-muted-700 hover:bg-danger hover:text-white"
         onClick={() => void window.api.window.close()}
       >

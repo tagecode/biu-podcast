@@ -12,7 +12,10 @@ const defaults: AppSettings = {
   playbackRate: 1,
   openFullPlayerDefault: false,
   notificationsEnabled: true,
-  closeToTray: true
+  closeToTray: true,
+  theme: 'system',
+  fontScale: 100,
+  language: 'system'
 }
 
 // electron-store v9+ is ESM-only. electron-vite externalizes it into CJS
@@ -47,7 +50,10 @@ export class SettingsStore {
       playbackRate: this.store.get('playbackRate'),
       openFullPlayerDefault: this.store.get('openFullPlayerDefault'),
       notificationsEnabled: this.store.get('notificationsEnabled'),
-      closeToTray: this.store.get('closeToTray')
+      closeToTray: this.store.get('closeToTray'),
+      theme: this.store.get('theme'),
+      fontScale: this.store.get('fontScale'),
+      language: this.store.get('language')
     }
   }
 

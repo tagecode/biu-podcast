@@ -1,5 +1,5 @@
 import { _electron as electron, type ElectronApplication } from 'playwright'
-import { mkdtempSync, rmSync } from 'fs'
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
@@ -15,11 +15,23 @@ function resolveMainEntry(): string {
  * directory, so runs never share state (SQLite DB, settings, single-instance
  * lock). The app creates the DB under userData via `app.getPath('userData')`.
  *
+ * A settings.json is pre-seeded with `language: "zh"` (only when the file does
+ * NOT already exist) so the E2E suite — whose assertions are written against
+ * the Chinese UI — runs deterministically regardless of the host OS language;
+ * the app's default `language: "system"` would otherwise flip the UI to English
+ * on non-Chinese CI runners. Restart scenarios reuse the same userDataDir and
+ * must keep the settings the app persisted on the previous run (playback
+ * session, downloads), so an existing settings.json is never overwritten.
+ *
  * Pass `userDataDir` to reuse a directory (restart scenarios); otherwise a
  * fresh temp dir is created.
  */
 export async function launchApp(options?: { userDataDir?: string }): Promise<ElectronApplication> {
   const userDataDir = options?.userDataDir ?? mkdtempSync(join(tmpdir(), 'biu-podcast-e2e-'))
+  const settingsPath = join(userDataDir, 'settings.json')
+  if (!existsSync(settingsPath)) {
+    writeFileSync(settingsPath, JSON.stringify({ language: 'zh' }), 'utf-8')
+  }
   const app = await electron.launch({
     args: [resolveMainEntry(), `--user-data-dir=${userDataDir}`],
     cwd: join(__dirname, '..', '..', '..')

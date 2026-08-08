@@ -1,4 +1,6 @@
 import type {
+  AppInfo,
+  UpdateStatus,
   AddSubscriptionInput,
   CreateNoteInput,
   CreatePlaylistInput,
@@ -132,6 +134,16 @@ declare global {
         listAll: () => Promise<IpcResult<Note[]>>
         delete: (input: NoteIdInput) => Promise<IpcResult<void>>
         export: () => Promise<IpcResult<{ filePath: string } | null>>
+      }
+      app: {
+        getInfo: () => Promise<IpcResult<AppInfo>>
+      }
+      update: {
+        check: () => Promise<IpcResult<void>>
+        download: () => Promise<IpcResult<void>>
+        install: () => Promise<IpcResult<void>>
+        getStatus: () => Promise<IpcResult<UpdateStatus>>
+        onStatus: (callback: (status: UpdateStatus) => void) => () => void
       }
     }
   }

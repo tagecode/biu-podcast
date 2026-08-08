@@ -1,8 +1,10 @@
 import { CheckCircle2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { formatFileSize } from '@/lib/format'
+import i18n from '@/lib/i18n'
 import type { DownloadTask } from '@shared/types'
 
 import { useDownloadStore } from '../store'
@@ -11,15 +13,15 @@ import { cn } from '@/lib/utils'
 function statusLabel(task: DownloadTask): string {
   switch (task.status) {
     case 'downloading':
-      return '下载中'
+      return i18n.t('download.downloading')
     case 'queued':
-      return '等待中'
+      return i18n.t('download.queued')
     case 'paused':
-      return '已暂停'
+      return i18n.t('download.paused')
     case 'failed':
-      return '失败'
+      return i18n.t('download.failed')
     case 'completed':
-      return '已完成'
+      return i18n.t('download.completed')
     default:
       return task.status
   }
@@ -31,6 +33,7 @@ function progressPercent(task: DownloadTask): number {
 }
 
 export function DownloadPanel(): React.JSX.Element | null {
+  const { t } = useTranslation()
   const panelOpen = useDownloadStore((state) => state.panelOpen)
   const tasks = useDownloadStore((state) => state.tasks)
   const history = useDownloadStore((state) => state.history)
@@ -65,7 +68,9 @@ export function DownloadPanel(): React.JSX.Element | null {
     <aside className="flex w-80 shrink-0 flex-col border-l border-line bg-surface">
       <div className="flex h-14 items-center justify-between border-b border-line px-4">
         <span className="text-sm font-medium text-ink">
-          {tab === 'active' ? `下载队列 · ${tasks.length} 项` : '下载历史'}
+          {tab === 'active'
+            ? t('download.queueCount', { count: tasks.length })
+            : t('download.historyTitle')}
         </span>
         <div className="flex items-center gap-1">
           <button
@@ -76,7 +81,7 @@ export function DownloadPanel(): React.JSX.Element | null {
             )}
             onClick={() => setTab('active')}
           >
-            活跃
+            {t('download.active')}
           </button>
           <button
             type="button"
@@ -86,12 +91,12 @@ export function DownloadPanel(): React.JSX.Element | null {
             )}
             onClick={() => setTab('history')}
           >
-            历史
+            {t('download.history')}
           </button>
           <Button
             variant="ghost"
             size="icon"
-            aria-label="关闭下载队列"
+            aria-label={t('download.closePanel')}
             onClick={() => setPanelOpen(false)}
           >
             <X className="size-4" />
@@ -101,7 +106,7 @@ export function DownloadPanel(): React.JSX.Element | null {
       <div ref={scrollRef} onScroll={onScroll} className="min-h-0 flex-1 overflow-y-auto">
         {list.length === 0 ? (
           <div className="px-4 py-8 text-center text-sm text-muted">
-            {tab === 'active' ? '暂无下载任务' : '暂无下载历史'}
+            {tab === 'active' ? t('download.empty') : t('download.historyEmpty')}
           </div>
         ) : (
           list.map((task) => (
@@ -110,8 +115,8 @@ export function DownloadPanel(): React.JSX.Element | null {
                 {task.episodeTitle ?? task.episodeId}
               </div>
               <div className="mt-0.5 text-xs text-muted">
-                {task.podcastTitle ?? '未知播客'} · {formatFileSize(task.totalBytes)} ·{' '}
-                {statusLabel(task)}
+                {task.podcastTitle ?? t('download.unknownPodcast')} ·{' '}
+                {formatFileSize(task.totalBytes)} · {statusLabel(task)}
               </div>
               {tab === 'active' ? (
                 <>
@@ -128,7 +133,7 @@ export function DownloadPanel(): React.JSX.Element | null {
                         className="text-xs text-muted hover:text-ink"
                         onClick={() => void pause(task.id)}
                       >
-                        暂停
+                        {t('download.pause')}
                       </button>
                     ) : null}
                     {task.status === 'paused' || task.status === 'failed' ? (
@@ -137,7 +142,7 @@ export function DownloadPanel(): React.JSX.Element | null {
                         className="text-xs text-muted hover:text-ink"
                         onClick={() => void resume(task.id)}
                       >
-                        {task.status === 'failed' ? '重试' : '继续'}
+                        {task.status === 'failed' ? t('download.retry') : t('download.resume')}
                       </button>
                     ) : null}
                     {task.status !== 'completed' ? (
@@ -146,7 +151,7 @@ export function DownloadPanel(): React.JSX.Element | null {
                         className="text-xs text-muted hover:text-ink"
                         onClick={() => void cancel(task.id)}
                       >
-                        取消
+                        {t('common.cancel')}
                       </button>
                     ) : null}
                   </div>
@@ -154,7 +159,7 @@ export function DownloadPanel(): React.JSX.Element | null {
               ) : (
                 <div className="mt-1 flex items-center gap-1 text-xs text-success">
                   <CheckCircle2 className="size-3.5" strokeWidth={1.75} />
-                  已下载到本机
+                  {t('download.downloadedToDisk')}
                 </div>
               )}
             </div>
@@ -163,10 +168,10 @@ export function DownloadPanel(): React.JSX.Element | null {
         {tab === 'history' && history.length > 0 ? (
           <div className="px-4 py-3 text-center text-xs text-muted">
             {historyLoading
-              ? '加载中…'
+              ? t('common.loading')
               : history.length >= historyTotal
-                ? `已加载全部 ${historyTotal} 条`
-                : `已加载 ${history.length} / ${historyTotal} 条，继续滚动加载`}
+                ? t('download.allLoaded', { count: historyTotal })
+                : t('download.scrollMore', { count: history.length, total: historyTotal })}
           </div>
         ) : null}
       </div>

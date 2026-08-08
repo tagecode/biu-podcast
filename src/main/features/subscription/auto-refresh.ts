@@ -1,5 +1,6 @@
 import { settingsStore, SettingsStore } from '../../infra/settings/store'
 import { showNotification } from '../../infra/notification'
+import { t } from '../../infra/i18n'
 import { subscriptionService, SubscriptionService } from './subscription.service'
 
 export interface AutoRefreshDeps {
@@ -56,7 +57,10 @@ export class AutoRefreshScheduler {
     const totalNew = results.reduce((sum, r) => sum + r.addedCount, 0)
     if (totalNew > 0) {
       showNotification(
-        { title: '博播', body: `发现 ${totalNew} 集新内容` },
+        {
+          title: t('notification.appName'),
+          body: t('notification.newEpisodes', { count: totalNew })
+        },
         this.settings.getAll().notificationsEnabled
       )
     }

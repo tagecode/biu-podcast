@@ -1,5 +1,6 @@
 import { ArrowLeft, RefreshCw } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -24,6 +25,7 @@ export function PodcastDetailPage({
   podcastId,
   onBack
 }: PodcastDetailPageProps): React.JSX.Element {
+  const { t } = useTranslation()
   const podcast = useSubscriptionStore((state) =>
     state.podcasts.find((item) => item.id === podcastId)
   )
@@ -59,11 +61,11 @@ export function PodcastDetailPage({
       setUnreadCount(page.unreadCount)
       setHasMore(page.hasMore)
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : '加载集数失败')
+      setError(loadError instanceof Error ? loadError.message : t('episode.loadFailed'))
     } finally {
       setLoading(false)
     }
-  }, [podcastId])
+  }, [podcastId, t])
 
   const loadMore = useCallback(async (): Promise<void> => {
     if (loadingMore || !hasMore) return
@@ -78,23 +80,26 @@ export function PodcastDetailPage({
       setUnreadCount(page.unreadCount)
       setHasMore(page.hasMore)
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : '加载更多失败')
+      setError(loadError instanceof Error ? loadError.message : t('episode.loadMoreFailed'))
     } finally {
       setLoadingMore(false)
     }
-  }, [episodes.length, hasMore, loadingMore, podcastId])
+  }, [episodes.length, hasMore, loadingMore, podcastId, t])
 
-  const openEpisodeDetail = useCallback(async (episodeId: string): Promise<void> => {
-    setDetailLoading(true)
-    try {
-      const detail = await episodeApi.getEpisode(episodeId)
-      setSelectedEpisode(detail)
-    } catch (detailError) {
-      setError(detailError instanceof Error ? detailError.message : '加载集数详情失败')
-    } finally {
-      setDetailLoading(false)
-    }
-  }, [])
+  const openEpisodeDetail = useCallback(
+    async (episodeId: string): Promise<void> => {
+      setDetailLoading(true)
+      try {
+        const detail = await episodeApi.getEpisode(episodeId)
+        setSelectedEpisode(detail)
+      } catch (detailError) {
+        setError(detailError instanceof Error ? detailError.message : t('episode.loadDetailFailed'))
+      } finally {
+        setDetailLoading(false)
+      }
+    },
+    [t]
+  )
 
   useEffect(() => {
     const unsubscribe = window.api.episode.onChanged((payload) => {
@@ -121,7 +126,7 @@ export function PodcastDetailPage({
   if (!podcast) {
     return (
       <div className="flex flex-1 items-center justify-center text-sm text-muted">
-        播客不存在或已被删除
+        {t('subscription.podcastNotFound')}
       </div>
     )
   }
@@ -136,13 +141,13 @@ export function PodcastDetailPage({
             onClick={onBack}
           >
             <ArrowLeft className="size-4" />
-            返回订阅列表
+            {t('subscription.backToList')}
           </button>
           <div className="flex-1" />
           <Button
             variant="ghost"
             size="icon"
-            aria-label="刷新"
+            aria-label={t('subscription.refresh')}
             onClick={() => void refreshSubscription(podcastId).then(loadFirstPage)}
           >
             <RefreshCw className="size-4" />
@@ -151,7 +156,7 @@ export function PodcastDetailPage({
             variant="secondary"
             onClick={() => void episodeApi.markAllPlayed(podcastId).then(loadFirstPage)}
           >
-            标记全部已听
+            {t('episode.markAllPlayed')}
           </Button>
         </div>
 
@@ -173,7 +178,9 @@ export function PodcastDetailPage({
             <div className="min-w-0 flex-1">
               <h1 className="text-xl font-semibold text-ink">{podcast.title}</h1>
               <p className="mt-1 text-sm text-muted">
-                {podcast.author ? `主播：${podcast.author}` : '作者未知'}
+                {podcast.author
+                  ? t('subscription.authorByline', { author: podcast.author })
+                  : t('subscription.authorUnknown')}
                 {podcast.language ? ` · ${podcast.language}` : ''}
               </p>
               {podcast.description ? (
@@ -182,8 +189,12 @@ export function PodcastDetailPage({
                 </p>
               ) : null}
               <div className="mt-4 flex flex-wrap gap-2">
-                <Badge variant="secondary">{unreadCount} 集未听</Badge>
-                <Badge variant="secondary">共 {total} 集</Badge>
+                <Badge variant="secondary">
+                  {t('subscription.unplayedCount', { count: unreadCount })}
+                </Badge>
+                <Badge variant="secondary">
+                  {t('subscription.totalEpisodes', { count: total })}
+                </Badge>
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button
@@ -193,25 +204,27 @@ export function PodcastDetailPage({
                   }}
                   disabled={episodes.length === 0}
                 >
-                  播放最新一集
+                  {t('episode.playLatest')}
                 </Button>
                 <Button variant="secondary" onClick={() => setUnsubscribeOpen(true)}>
-                  取消订阅
+                  {t('subscription.remove')}
                 </Button>
                 <Button
                   variant="ghost"
                   onClick={() => void setSubscriptionPaused(podcastId, !podcast.isPaused)}
                 >
-                  {podcast.isPaused ? '恢复订阅' : '暂停订阅'}
+                  {podcast.isPaused ? t('subscription.resume') : t('subscription.pause')}
                 </Button>
               </div>
             </div>
           </div>
 
           <div className="mb-3 text-sm text-muted">
-            集数列表
-            {total > 0 ? ` · 已加载 ${episodes.length} / ${total}` : null}
-            {detailLoading ? ' · 加载详情…' : null}
+            {t('episode.listTitle')}
+            {total > 0
+              ? ` · ${t('episode.loadedProgress', { count: episodes.length, total })}`
+              : null}
+            {detailLoading ? ` · ${t('episode.loadingDetail')}` : null}
           </div>
           {loading ? (
             <div className="space-y-2">
@@ -244,10 +257,12 @@ export function PodcastDetailPage({
                 />
               ))}
               {loadingMore ? (
-                <div className="py-3 text-center text-xs text-muted">加载更多…</div>
+                <div className="py-3 text-center text-xs text-muted">
+                  {t('episode.loadingMore')}
+                </div>
               ) : null}
               {!hasMore && episodes.length > 0 ? (
-                <div className="py-3 text-center text-xs text-muted">已加载全部集数</div>
+                <div className="py-3 text-center text-xs text-muted">{t('episode.allLoaded')}</div>
               ) : null}
             </div>
           )}

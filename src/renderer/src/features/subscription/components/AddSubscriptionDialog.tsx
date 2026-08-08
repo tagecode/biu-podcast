@@ -1,5 +1,6 @@
 import { AlertCircle } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -25,6 +26,7 @@ export function AddSubscriptionDialog({
   onOpenChange,
   onSubmit
 }: AddSubscriptionDialogProps): React.JSX.Element {
+  const { t } = useTranslation()
   const [feedUrl, setFeedUrl] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -32,7 +34,7 @@ export function AddSubscriptionDialog({
   const handleSubmit = async (): Promise<void> => {
     const parsed = AddSubscriptionInputSchema.safeParse({ feedUrl })
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? '请输入有效的 URL 地址')
+      setError(parsed.error.issues[0]?.message ?? t('subscription.feedUrlInvalid'))
       return
     }
 
@@ -43,7 +45,7 @@ export function AddSubscriptionDialog({
       setFeedUrl('')
       onOpenChange(false)
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : '添加订阅失败')
+      setError(submitError instanceof Error ? submitError.message : t('subscription.addFailed'))
     } finally {
       setSubmitting(false)
     }
@@ -62,16 +64,14 @@ export function AddSubscriptionDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>添加订阅</DialogTitle>
-          <DialogDescription>
-            输入播客的 RSS Feed 地址，我们将解析并展示播客信息供您确认。
-          </DialogDescription>
+          <DialogTitle>{t('subscription.add')}</DialogTitle>
+          <DialogDescription>{t('subscription.addHint')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <Label htmlFor="feed-url">RSS Feed 地址</Label>
+          <Label htmlFor="feed-url">{t('subscription.feedUrlLabel')}</Label>
           <Input
             id="feed-url"
-            placeholder="https://example.com/podcast/feed.xml"
+            placeholder={t('subscription.feedUrlPlaceholder')}
             value={feedUrl}
             aria-invalid={Boolean(error)}
             onChange={(event) => {
@@ -88,10 +88,10 @@ export function AddSubscriptionDialog({
         </div>
         <DialogFooter>
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
-            取消
+            {t('common.cancel')}
           </Button>
           <Button disabled={submitting} onClick={() => void handleSubmit()}>
-            {submitting ? '解析中…' : '解析并添加'}
+            {submitting ? t('subscription.resolving') : t('subscription.resolveAdd')}
           </Button>
         </DialogFooter>
       </DialogContent>

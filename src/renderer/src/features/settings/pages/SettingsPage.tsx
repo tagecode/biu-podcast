@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import type { ImportPreview } from '@shared/backup'
+import type { UpdateStatus } from '@shared/ipc-contract'
 import { useSubscriptionStore } from '@/features/subscription/store'
 
 import * as settingsApi from '../api'
+import { applyFontScale, applyTheme } from '@/lib/appearance'
+import i18n, { resolveLanguage } from '@/lib/i18n'
 import {
   Select,
   SelectContent,
@@ -15,25 +19,37 @@ import {
 
 interface SettingsPageProps {
   onBack: () => void
+  /** Navigate to the About page (version / license / feedback). */
+  onOpenAbout: () => void
 }
 
 const REFRESH_OPTIONS = [
-  { value: 'null', label: '手动' },
-  { value: '30', label: '每 30 分钟' },
-  { value: '60', label: '每 1 小时' },
-  { value: '360', label: '每 6 小时' }
+  { value: 'null', labelKey: 'settings.manual' },
+  { value: '30', labelKey: 'settings.every30min' },
+  { value: '60', labelKey: 'settings.every1hour' },
+  { value: '360', labelKey: 'settings.every6hours' }
 ]
 
-function formatPreview(preview: ImportPreview): string {
-  return [
-    `播客：新增 ${preview.podcastsAdded} / 冲突 ${preview.podcastsConflict}`,
-    `集数：新增 ${preview.episodesAdded} / 冲突 ${preview.episodesConflict}`,
-    `下载任务：新增 ${preview.downloadTasksAdded} / 冲突 ${preview.downloadTasksConflict}`
-  ].join('\n')
-}
-
-export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
+export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.JSX.Element {
+  const { t } = useTranslation()
   const loadSubscriptions = useSubscriptionStore((state) => state.load)
+
+  const formatPreview = (preview: ImportPreview): string =>
+    [
+      t('settings.previewPodcasts', {
+        added: preview.podcastsAdded,
+        conflict: preview.podcastsConflict
+      }),
+      t('settings.previewEpisodes', {
+        added: preview.episodesAdded,
+        conflict: preview.episodesConflict
+      }),
+      t('settings.previewTasks', {
+        added: preview.downloadTasksAdded,
+        conflict: preview.downloadTasksConflict
+      })
+    ].join('\n')
+
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -41,6 +57,10 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
   const [openFullDefault, setOpenFullDefault] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const [closeToTray, setCloseToTray] = useState(false)
+  const [theme, setTheme] = useState<'system' | 'light' | 'dark'>('system')
+  const [fontScale, setFontScale] = useState<90 | 100 | 110 | 120>(100)
+  const [language, setLanguage] = useState<'system' | 'zh' | 'en'>('system')
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ phase: 'idle' })
   const [downloadDir, setDownloadDir] = useState<string>('')
   const [pendingImport, setPendingImport] = useState<{
     filePath: string
@@ -55,6 +75,9 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
       setOpenFullDefault(settings.openFullPlayerDefault)
       setNotificationsEnabled(settings.notificationsEnabled)
       setCloseToTray(settings.closeToTray)
+      setTheme(settings.theme)
+      setFontScale(settings.fontScale)
+      setLanguage(settings.language)
     })
     // Resolve the actual download directory (default or custom).
     void window.api.download.getDir().then((r) => {
@@ -62,11 +85,20 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
     })
   }, [])
 
+  // Update-status subscription: react to lifecycle events pushed by main.
+  useEffect(() => {
+    const unsubscribe = window.api.update.onStatus((status) => setUpdateStatus(status))
+    void window.api.update.getStatus().then((result) => {
+      if (result.ok) setUpdateStatus(result.data)
+    })
+    return unsubscribe
+  }, [])
+
   const handleOpenDownloadDir = async (): Promise<void> => {
     try {
       await window.api.settings.openDirectory()
     } catch (e) {
-      setError(e instanceof Error ? e.message : '打开目录失败')
+      setError(e instanceof Error ? e.message : t('settings.openDirFailed'))
     }
   }
 
@@ -79,7 +111,7 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
       setDownloadDir(result.data)
       await settingsApi.setSetting('downloadPath', result.data)
     } catch (e) {
-      setError(e instanceof Error ? e.message : '选择目录失败')
+      setError(e instanceof Error ? e.message : t('settings.chooseDirFailed'))
     } finally {
       setBusy(false)
     }
@@ -92,12 +124,12 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
     try {
       const result = await settingsApi.exportBackup()
       if (!result) {
-        setMessage('已取消导出')
+        setMessage(t('settings.exportCancelled'))
         return
       }
-      setMessage(`已导出到：${result.filePath}`)
+      setMessage(t('settings.exportDone', { path: result.filePath }))
     } catch (exportError) {
-      setError(exportError instanceof Error ? exportError.message : '导出失败')
+      setError(exportError instanceof Error ? exportError.message : t('settings.exportFailed'))
     } finally {
       setBusy(false)
     }
@@ -110,12 +142,12 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
     try {
       const result = await settingsApi.previewImportBackup()
       if (!result) {
-        setMessage('已取消导入')
+        setMessage(t('settings.importCancelled'))
         return
       }
       setPendingImport(result)
     } catch (importError) {
-      setError(importError instanceof Error ? importError.message : '读取备份失败')
+      setError(importError instanceof Error ? importError.message : t('settings.readBackupFailed'))
     } finally {
       setBusy(false)
     }
@@ -129,9 +161,9 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
       const preview = await settingsApi.importBackup(pendingImport.filePath, strategy)
       setPendingImport(null)
       await loadSubscriptions()
-      setMessage(`导入完成\n${formatPreview(preview)}`)
+      setMessage(`${t('settings.importDone')}\n${formatPreview(preview)}`)
     } catch (importError) {
-      setError(importError instanceof Error ? importError.message : '导入失败')
+      setError(importError instanceof Error ? importError.message : t('settings.importFailed'))
     } finally {
       setBusy(false)
     }
@@ -144,21 +176,21 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
     try {
       const result = await window.api.subscription.importOpml()
       if (!result.ok) {
-        setMessage('已取消导入')
+        setMessage(t('settings.importCancelled'))
         return
       }
       const { data } = result
       if (!data) {
-        setMessage('已取消导入')
+        setMessage(t('settings.importCancelled'))
         return
       }
       const { added, skipped, failed } = data
       await loadSubscriptions()
       setMessage(
-        `OPML 导入完成：新增 ${added} 个，跳过 ${skipped} 个已订阅${failed.length ? `，失败 ${failed.length} 个` : ''}`
+        `${t('settings.importOpmlDone', { added, skipped })}${failed.length ? t('settings.importOpmlFailedCount', { count: failed.length }) : ''}`
       )
     } catch (importError) {
-      setError(importError instanceof Error ? importError.message : 'OPML 导入失败')
+      setError(importError instanceof Error ? importError.message : t('settings.opmlImportFailed'))
     } finally {
       setBusy(false)
     }
@@ -171,12 +203,12 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
     try {
       const result = await window.api.subscription.exportOpml()
       if (!result.ok || !result.data) {
-        setMessage('已取消导出')
+        setMessage(t('settings.exportCancelled'))
         return
       }
-      setMessage(`已导出 OPML 到：${result.data.filePath}`)
+      setMessage(t('settings.exportOpmlDone', { path: result.data.filePath }))
     } catch (exportError) {
-      setError(exportError instanceof Error ? exportError.message : 'OPML 导出失败')
+      setError(exportError instanceof Error ? exportError.message : t('settings.opmlExportFailed'))
     } finally {
       setBusy(false)
     }
@@ -186,7 +218,32 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
     setAutoRefresh(value)
     const minutes = value === 'null' ? null : Number(value)
     void settingsApi.setSetting('autoRefreshMinutes', minutes).catch((e) => {
-      setError(e instanceof Error ? e.message : '保存自动刷新设置失败')
+      setError(e instanceof Error ? e.message : t('settings.saveAutoRefreshFailed'))
+    })
+  }
+
+  const handleThemeChange = (value: 'system' | 'light' | 'dark'): void => {
+    setTheme(value)
+    applyTheme(value)
+    void settingsApi.setSetting('theme', value).catch((e) => {
+      setError(e instanceof Error ? e.message : t('settings.saveThemeFailed'))
+    })
+  }
+
+  const handleFontScaleChange = (value: string): void => {
+    const scale = Number(value) as 90 | 100 | 110 | 120
+    setFontScale(scale)
+    applyFontScale(scale)
+    void settingsApi.setSetting('fontScale', scale).catch((e) => {
+      setError(e instanceof Error ? e.message : t('settings.saveFontScaleFailed'))
+    })
+  }
+
+  const handleLanguageChange = (value: 'system' | 'zh' | 'en'): void => {
+    setLanguage(value)
+    void i18n.changeLanguage(resolveLanguage(value))
+    void settingsApi.setSetting('language', value).catch((e) => {
+      setError(e instanceof Error ? e.message : t('settings.saveFailed'))
     })
   }
 
@@ -194,109 +251,107 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-3 border-b border-line px-6 py-4">
         <button type="button" className="text-sm text-muted hover:text-ink" onClick={onBack}>
-          返回
+          {t('common.back')}
         </button>
-        <h1 className="text-base font-semibold text-ink">设置</h1>
+        <h1 className="text-base font-semibold text-ink">{t('settings.title')}</h1>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
         <section className="max-w-2xl space-y-6">
           <div>
-            <h2 className="text-sm font-semibold text-ink">数据管理</h2>
-            <p className="mt-1 text-sm text-muted">
-              导出/导入订阅、播放进度与下载记录（不含音频文件本身）。
-            </p>
+            <h2 className="text-sm font-semibold text-ink">{t('settings.dataSection')}</h2>
+            <p className="mt-1 text-sm text-muted">{t('settings.dataSectionHint')}</p>
           </div>
 
           <div className="flex items-center justify-between gap-4 border-b border-line py-4">
             <div>
-              <div className="text-sm font-medium text-ink">导出全部数据</div>
-              <div className="mt-1 text-xs text-muted">生成 `.biubackup` 备份文件</div>
+              <div className="text-sm font-medium text-ink">{t('settings.exportData')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.exportDataHint')}</div>
             </div>
             <Button variant="secondary" disabled={busy} onClick={() => void handleExport()}>
-              导出…
+              {t('settings.export')}
             </Button>
           </div>
 
           <div className="flex items-center justify-between gap-4 border-b border-line py-4">
             <div>
-              <div className="text-sm font-medium text-ink">导入数据</div>
-              <div className="mt-1 text-xs text-muted">导入前会预览新增与冲突数量</div>
+              <div className="text-sm font-medium text-ink">{t('settings.importData')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.importDataHint')}</div>
             </div>
             <Button variant="secondary" disabled={busy} onClick={() => void handleChooseImport()}>
-              导入…
+              {t('settings.import')}
             </Button>
           </div>
 
           {pendingImport ? (
             <div className="rounded-lg border border-line bg-surface p-4">
-              <div className="text-sm font-medium text-ink">导入预览</div>
+              <div className="text-sm font-medium text-ink">{t('settings.preview')}</div>
               <pre className="mt-2 whitespace-pre-wrap text-xs text-muted">
                 {formatPreview(pendingImport.preview)}
               </pre>
-              <p className="mt-2 text-xs text-muted">文件：{pendingImport.filePath}</p>
+              <p className="mt-2 text-xs text-muted">
+                {t('settings.previewFile', { path: pendingImport.filePath })}
+              </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button disabled={busy} onClick={() => void handleConfirmImport('skip')}>
-                  跳过冲突并导入
+                  {t('settings.importSkip')}
                 </Button>
                 <Button
                   variant="secondary"
                   disabled={busy}
                   onClick={() => void handleConfirmImport('overwrite')}
                 >
-                  覆盖冲突并导入
+                  {t('settings.importOverwrite')}
                 </Button>
                 <Button variant="ghost" disabled={busy} onClick={() => setPendingImport(null)}>
-                  取消
+                  {t('settings.importCancel')}
                 </Button>
               </div>
             </div>
           ) : null}
 
           <div>
-            <h2 className="text-sm font-semibold text-ink">订阅迁移（OPML）</h2>
-            <p className="mt-1 text-sm text-muted">导入/导出订阅列表为标准 OPML 文件。</p>
+            <h2 className="text-sm font-semibold text-ink">{t('settings.opmlSection')}</h2>
+            <p className="mt-1 text-sm text-muted">{t('settings.opmlSectionHint')}</p>
           </div>
 
           <div className="flex items-center justify-between gap-4 border-b border-line py-4">
             <div>
-              <div className="text-sm font-medium text-ink">导入 OPML</div>
-              <div className="mt-1 text-xs text-muted">批量导入订阅，重复条目自动跳过</div>
+              <div className="text-sm font-medium text-ink">{t('settings.importOpml')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.importOpmlHint')}</div>
             </div>
             <Button variant="secondary" disabled={busy} onClick={() => void handleOpmlImport()}>
-              导入 OPML…
+              {t('settings.importOpml')}…
             </Button>
           </div>
 
           <div className="flex items-center justify-between gap-4 border-b border-line py-4">
             <div>
-              <div className="text-sm font-medium text-ink">导出 OPML</div>
-              <div className="mt-1 text-xs text-muted">
-                导出当前全部订阅，可被其他播客客户端识别
-              </div>
+              <div className="text-sm font-medium text-ink">{t('settings.exportOpml')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.exportOpmlHint')}</div>
             </div>
             <Button variant="secondary" disabled={busy} onClick={() => void handleOpmlExport()}>
-              导出 OPML…
+              {t('settings.exportOpml')}…
             </Button>
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold text-ink">刷新设置</h2>
+            <h2 className="text-sm font-semibold text-ink">{t('settings.refreshSection')}</h2>
           </div>
 
           <div className="flex items-center justify-between gap-4 border-b border-line py-4">
             <div>
-              <div className="text-sm font-medium text-ink">自动刷新间隔</div>
-              <div className="mt-1 text-xs text-muted">按设定间隔后台刷新订阅，发现新集通知</div>
+              <div className="text-sm font-medium text-ink">{t('settings.autoRefresh')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.autoRefreshHint')}</div>
             </div>
             <Select value={autoRefresh} onValueChange={handleAutoRefreshChange}>
-              <SelectTrigger className="w-32" aria-label="自动刷新间隔">
+              <SelectTrigger className="w-32" aria-label={t('settings.autoRefresh')}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {REFRESH_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
+                    {t(opt.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -304,13 +359,13 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold text-ink">播放设置</h2>
+            <h2 className="text-sm font-semibold text-ink">{t('settings.playbackSection')}</h2>
           </div>
 
           <div className="flex items-center justify-between gap-4 border-b border-line py-4">
             <div>
-              <div className="text-sm font-medium text-ink">默认打开全屏播放器</div>
-              <div className="mt-1 text-xs text-muted">点击播放时直接进入全屏播放器视图</div>
+              <div className="text-sm font-medium text-ink">{t('settings.openFullDefault')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.openFullDefaultHint')}</div>
             </div>
             <label className="flex cursor-pointer items-center">
               <input
@@ -321,17 +376,21 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
                   setOpenFullDefault(e.target.checked)
                   void settingsApi
                     .setSetting('openFullPlayerDefault', e.target.checked)
-                    .catch((err) => setError(err instanceof Error ? err.message : '保存设置失败'))
+                    .catch((err) =>
+                      setError(err instanceof Error ? err.message : t('settings.saveFailed'))
+                    )
                 }}
               />
-              <span className="ml-2 text-sm text-muted">{openFullDefault ? '开启' : '关闭'}</span>
+              <span className="ml-2 text-sm text-muted">
+                {openFullDefault ? t('common.on') : t('common.off')}
+              </span>
             </label>
           </div>
 
           <div className="flex items-center justify-between gap-4 border-b border-line py-4">
             <div>
-              <div className="text-sm font-medium text-ink">系统通知</div>
-              <div className="mt-1 text-xs text-muted">新集数、下载完成时弹出系统通知</div>
+              <div className="text-sm font-medium text-ink">{t('settings.notifications')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.notificationsHint')}</div>
             </div>
             <label className="flex cursor-pointer items-center">
               <input
@@ -342,19 +401,21 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
                   setNotificationsEnabled(e.target.checked)
                   void settingsApi
                     .setSetting('notificationsEnabled', e.target.checked)
-                    .catch((err) => setError(err instanceof Error ? err.message : '保存设置失败'))
+                    .catch((err) =>
+                      setError(err instanceof Error ? err.message : t('settings.saveFailed'))
+                    )
                 }}
               />
               <span className="ml-2 text-sm text-muted">
-                {notificationsEnabled ? '开启' : '关闭'}
+                {notificationsEnabled ? t('common.on') : t('common.off')}
               </span>
             </label>
           </div>
 
           <div className="flex items-center justify-between gap-4 border-b border-line py-4">
             <div>
-              <div className="text-sm font-medium text-ink">关闭时最小化到托盘</div>
-              <div className="mt-1 text-xs text-muted">点击窗口关闭按钮后驻留系统托盘而非退出</div>
+              <div className="text-sm font-medium text-ink">{t('settings.closeToTray')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.closeToTrayHint')}</div>
             </div>
             <label className="flex cursor-pointer items-center">
               <input
@@ -365,22 +426,26 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
                   setCloseToTray(e.target.checked)
                   void settingsApi
                     .setSetting('closeToTray', e.target.checked)
-                    .catch((err) => setError(err instanceof Error ? err.message : '保存设置失败'))
+                    .catch((err) =>
+                      setError(err instanceof Error ? err.message : t('settings.saveFailed'))
+                    )
                 }}
               />
-              <span className="ml-2 text-sm text-muted">{closeToTray ? '开启' : '关闭'}</span>
+              <span className="ml-2 text-sm text-muted">
+                {closeToTray ? t('common.on') : t('common.off')}
+              </span>
             </label>
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold text-ink">存储设置</h2>
+            <h2 className="text-sm font-semibold text-ink">{t('settings.storageSection')}</h2>
           </div>
 
           <div className="flex items-center justify-between gap-4 border-b border-line py-4">
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium text-ink">下载目录</div>
+              <div className="text-sm font-medium text-ink">{t('settings.downloadDir')}</div>
               <div className="mt-1 truncate text-xs text-muted" title={downloadDir}>
-                {downloadDir || '正在获取目录…'}
+                {downloadDir || t('settings.getDir')}
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-2">
@@ -389,16 +454,142 @@ export function SettingsPage({ onBack }: SettingsPageProps): React.JSX.Element {
                 disabled={busy || !downloadDir}
                 onClick={() => void handleOpenDownloadDir()}
               >
-                打开目录
+                {t('settings.openDir')}
               </Button>
               <Button
                 variant="secondary"
                 disabled={busy}
                 onClick={() => void handleChooseDownloadDir()}
               >
-                选择…
+                {t('settings.chooseDir')}
               </Button>
             </div>
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold text-ink">{t('settings.appearanceSection')}</h2>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">{t('settings.theme')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.themeHint')}</div>
+            </div>
+            <Select
+              value={theme}
+              onValueChange={(v) => handleThemeChange(v as 'system' | 'light' | 'dark')}
+            >
+              <SelectTrigger className="w-32" aria-label={t('settings.theme')}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="system">{t('settings.themeSystem')}</SelectItem>
+                <SelectItem value="light">{t('settings.themeLight')}</SelectItem>
+                <SelectItem value="dark">{t('settings.themeDark')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">{t('settings.fontScale')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.fontScaleHint')}</div>
+            </div>
+            <Select value={String(fontScale)} onValueChange={handleFontScaleChange}>
+              <SelectTrigger className="w-32" aria-label={t('settings.fontScale')}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="90">90%</SelectItem>
+                <SelectItem value="100">100%</SelectItem>
+                <SelectItem value="110">110%</SelectItem>
+                <SelectItem value="120">120%</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">{t('settings.language')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.languageHint')}</div>
+            </div>
+            <Select
+              value={language}
+              onValueChange={(v) => handleLanguageChange(v as 'system' | 'zh' | 'en')}
+            >
+              <SelectTrigger className="w-32" aria-label={t('settings.language')}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="system">{t('settings.langSystem')}</SelectItem>
+                <SelectItem value="zh">{t('settings.langZh')}</SelectItem>
+                <SelectItem value="en">{t('settings.langEn')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold text-ink">{t('settings.updateSection')}</h2>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">{t('settings.checkUpdate')}</div>
+              <div className="mt-1 text-xs text-muted">
+                {updateStatus.phase === 'disabled'
+                  ? t('settings.devNoUpdate')
+                  : updateStatus.phase === 'checking'
+                    ? t('settings.checking')
+                    : updateStatus.phase === 'available'
+                      ? t('settings.updateAvailable', { version: updateStatus.version })
+                      : updateStatus.phase === 'downloading'
+                        ? t('settings.downloading', { percent: updateStatus.percent ?? 0 })
+                        : updateStatus.phase === 'downloaded'
+                          ? t('settings.downloaded')
+                          : updateStatus.phase === 'error'
+                            ? t('settings.updateError', {
+                                message: updateStatus.message ?? t('settings.unknownError')
+                              })
+                            : updateStatus.phase === 'not-available'
+                              ? t('settings.upToDate')
+                              : t('settings.checkUpdateHint')}
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {updateStatus.phase === 'available' ? (
+                <Button variant="secondary" onClick={() => void window.api.update.download()}>
+                  {t('settings.download')}
+                </Button>
+              ) : null}
+              {updateStatus.phase === 'downloaded' ? (
+                <Button variant="secondary" onClick={() => void window.api.update.install()}>
+                  {t('settings.installRestart')}
+                </Button>
+              ) : null}
+              {updateStatus.phase !== 'disabled' && updateStatus.phase !== 'downloaded' ? (
+                <Button
+                  variant="secondary"
+                  disabled={updateStatus.phase === 'checking'}
+                  onClick={() => void window.api.update.check()}
+                >
+                  {t('settings.checkUpdate')}
+                </Button>
+              ) : null}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold text-ink">{t('settings.aboutSection')}</h2>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">{t('settings.aboutEntry')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.aboutEntryHint')}</div>
+            </div>
+            <Button variant="secondary" onClick={onOpenAbout}>
+              {t('settings.view')}
+            </Button>
           </div>
 
           {message ? (

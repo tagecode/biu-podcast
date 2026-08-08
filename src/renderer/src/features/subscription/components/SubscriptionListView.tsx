@@ -1,5 +1,6 @@
 import { Plus, RefreshCw, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,6 +26,7 @@ export function SubscriptionListView({
   onOpenPodcast
 }: SubscriptionListViewProps): React.JSX.Element {
   const [dialogOpen, setDialogOpen] = useState(false)
+  const { t } = useTranslation()
   const { loading, error, query, sortKey, load, add, setQuery, setSortKey, visiblePodcasts } =
     useSubscriptionStore()
 
@@ -43,7 +45,7 @@ export function SubscriptionListView({
     <div className="flex min-h-0 flex-1 flex-col">
       {offline ? (
         <div className="flex h-10 items-center gap-2 bg-offline px-4 text-sm font-medium text-white">
-          当前无网络，无法添加新订阅。已下载内容可正常播放。
+          {t('subscription.offlineBanner')}
         </div>
       ) : null}
 
@@ -52,28 +54,33 @@ export function SubscriptionListView({
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" />
           <Input
             className="pl-9"
-            placeholder="搜索播客…"
+            placeholder={t('subscription.searchPlaceholder')}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
         </div>
         <Select value={sortKey} onValueChange={setSortKey}>
-          <SelectTrigger className="w-[9.5rem] shrink-0" aria-label="排序方式">
-            <SelectValue placeholder="排序方式" />
+          <SelectTrigger className="w-[9.5rem] shrink-0" aria-label={t('subscription.sortBy')}>
+            <SelectValue placeholder={t('subscription.sortBy')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="recent">最近更新</SelectItem>
-            <SelectItem value="unread">未听数量</SelectItem>
-            <SelectItem value="title">名称</SelectItem>
+            <SelectItem value="recent">{t('subscription.sortRecent')}</SelectItem>
+            <SelectItem value="unread">{t('subscription.sortUnread')}</SelectItem>
+            <SelectItem value="title">{t('subscription.sortName')}</SelectItem>
           </SelectContent>
         </Select>
         <div className="flex-1" />
-        <Button variant="ghost" size="icon" onClick={() => void load()} aria-label="刷新全部">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => void load()}
+          aria-label={t('subscription.refreshAll')}
+        >
           <RefreshCw className="size-4" />
         </Button>
         <Button disabled={offline} onClick={() => setDialogOpen(true)}>
           <Plus className="size-4" />
-          添加订阅
+          {t('subscription.add')}
         </Button>
       </div>
 
@@ -92,7 +99,9 @@ export function SubscriptionListView({
           <EmptyState onAdd={() => setDialogOpen(true)} />
         ) : (
           <>
-            <div className="mb-4 text-sm text-muted">我的订阅 · {podcasts.length} 个播客</div>
+            <div className="mb-4 text-sm text-muted">
+              {t('subscription.subscriptionCount', { count: podcasts.length })}
+            </div>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
               {podcasts.map((podcast) => (
                 <PodcastCard

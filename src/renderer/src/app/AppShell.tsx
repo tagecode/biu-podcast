@@ -1,6 +1,7 @@
 import { Download, ListMusic, Play, Settings, StickyNote } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { WindowControls } from '@/app/WindowControls'
@@ -12,6 +13,7 @@ import { loadPlaybackPrefs, usePlaybackStore } from '@/features/playback/store'
 import { NotesPage } from '@/features/playlist/pages/NotesPage'
 import { PlaylistsPage } from '@/features/playlist/pages/PlaylistsPage'
 import { SettingsPage } from '@/features/settings/pages/SettingsPage'
+import { AboutPage } from '@/features/settings/pages/AboutPage'
 import { SubscriptionListView } from '@/features/subscription/components/SubscriptionListView'
 import { useSubscriptionStore } from '@/features/subscription/store'
 
@@ -32,8 +34,10 @@ type Route =
   | { name: 'playlists' }
   | { name: 'notes' }
   | { name: 'settings' }
+  | { name: 'about' }
 
 export function AppShell(): React.JSX.Element {
+  const { t } = useTranslation()
   const [route, setRoute] = useState<Route>({ name: 'subscriptions' })
   const playbackView = usePlaybackStore((state) => state.view)
   const panelOpen = useDownloadStore((state) => state.panelOpen)
@@ -116,15 +120,15 @@ export function AppShell(): React.JSX.Element {
           <div className="flex size-7 items-center justify-center rounded-md bg-amber-600">
             <Play className="size-3.5 text-ink" strokeWidth={1.75} />
           </div>
-          <span className="text-base font-semibold">博播</span>
+          <span className="text-base font-semibold">{t('app.title')}</span>
         </button>
-        <span className="text-sm text-muted">BiuPodcast</span>
+        <span className="text-sm text-muted">{t('app.subtitle')}</span>
         <div className="min-w-0 flex-1" />
         <div className="flex h-full items-center gap-1" style={noDragRegion}>
           <Button
             variant="ghost"
             size="icon"
-            aria-label="播放列表"
+            aria-label={t('app.playlists')}
             onClick={() => setRoute({ name: 'playlists' })}
           >
             <ListMusic className="size-4" />
@@ -132,7 +136,7 @@ export function AppShell(): React.JSX.Element {
           <Button
             variant="ghost"
             size="icon"
-            aria-label="笔记"
+            aria-label={t('app.notes')}
             onClick={() => setRoute({ name: 'notes' })}
           >
             <StickyNote className="size-4" />
@@ -140,7 +144,7 @@ export function AppShell(): React.JSX.Element {
           <Button
             variant="ghost"
             size="icon"
-            aria-label="设置"
+            aria-label={t('app.settings')}
             onClick={() => setRoute({ name: 'settings' })}
           >
             <Settings className="size-4" />
@@ -148,7 +152,7 @@ export function AppShell(): React.JSX.Element {
           <Button
             variant="ghost"
             size="icon"
-            aria-label="下载队列"
+            aria-label={t('app.downloads')}
             className="relative"
             onClick={() => setPanelOpen(!panelOpen)}
           >
@@ -177,8 +181,13 @@ export function AppShell(): React.JSX.Element {
             <PlaylistsPage onBack={() => setRoute({ name: 'subscriptions' })} />
           ) : route.name === 'notes' ? (
             <NotesPage onBack={() => setRoute({ name: 'subscriptions' })} />
+          ) : route.name === 'about' ? (
+            <AboutPage onBack={() => setRoute({ name: 'settings' })} />
           ) : (
-            <SettingsPage onBack={() => setRoute({ name: 'subscriptions' })} />
+            <SettingsPage
+              onBack={() => setRoute({ name: 'subscriptions' })}
+              onOpenAbout={() => setRoute({ name: 'about' })}
+            />
           )}
           <FullScreenPlayer />
         </main>

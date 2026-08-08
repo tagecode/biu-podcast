@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { Podcast } from '@shared/types'
 
 import { Badge } from '@/components/ui/badge'
@@ -9,7 +10,8 @@ interface PodcastCardProps {
 }
 
 function CoverPlaceholder({ title }: { title: string }): React.JSX.Element {
-  const initial = title.trim().charAt(0) || '播'
+  const { t } = useTranslation()
+  const initial = title.trim().charAt(0) || t('subscription.fallbackInitial')
   return (
     <div className="flex size-full items-center justify-center bg-gradient-to-br from-amber-100 to-line text-3xl font-semibold text-muted">
       {initial}
@@ -18,6 +20,7 @@ function CoverPlaceholder({ title }: { title: string }): React.JSX.Element {
 }
 
 export function PodcastCard({ podcast, onClick }: PodcastCardProps): React.JSX.Element {
+  const { t } = useTranslation()
   return (
     <button
       type="button"
@@ -32,7 +35,7 @@ export function PodcastCard({ podcast, onClick }: PodcastCardProps): React.JSX.E
         )}
         {podcast.isPaused ? (
           <Badge className="absolute top-2 left-2 rounded-full bg-muted px-2 py-0.5 text-xs text-white">
-            已暂停
+            {t('subscription.paused')}
           </Badge>
         ) : null}
         {(podcast.unreadCount ?? 0) > 0 ? (
@@ -45,9 +48,11 @@ export function PodcastCard({ podcast, onClick }: PodcastCardProps): React.JSX.E
         <h3 className="line-clamp-2 text-sm font-medium text-ink">{podcast.title}</h3>
         <p className="text-xs text-muted">{formatRelativeTime(podcast.lastFetchedAt)}</p>
         <p className="text-xs text-muted">
-          <span className="text-amber-700">{podcast.unreadCount ?? 0} 集未听</span>
+          <span className="text-amber-700">
+            {t('subscription.unplayedCount', { count: podcast.unreadCount ?? 0 })}
+          </span>
           <span className="mx-1 text-line">·</span>
-          <span>{podcast.playedCount ?? 0} 集已听</span>
+          <span>{t('subscription.playedCount', { count: podcast.playedCount ?? 0 })}</span>
         </p>
       </div>
     </button>

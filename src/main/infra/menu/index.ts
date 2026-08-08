@@ -1,75 +1,83 @@
 import { Menu, shell, type MenuItemConstructorOptions } from 'electron'
 
-export function buildMenuTemplate(platform: NodeJS.Platform): MenuItemConstructorOptions[] {
+import { resolveMainLanguage, translate, type MainLanguage } from '../i18n'
+
+export function buildMenuTemplate(
+  platform: NodeJS.Platform,
+  language: MainLanguage = 'zh'
+): MenuItemConstructorOptions[] {
   const isMac = platform === 'darwin'
+  const tr = (key: Parameters<typeof translate>[1]): string => translate(language, key)
   const template: MenuItemConstructorOptions[] = []
 
   if (isMac) {
     template.push({
-      label: '博播',
+      label: tr('menu.app'),
       submenu: [
-        { role: 'about', label: '关于博播' },
+        { role: 'about', label: tr('menu.about') },
         { type: 'separator' },
-        { role: 'hide', label: '隐藏博播' },
-        { role: 'hideOthers', label: '隐藏其他' },
-        { role: 'unhide', label: '全部显示' },
+        { role: 'hide', label: tr('menu.hide') },
+        { role: 'hideOthers', label: tr('menu.hideOthers') },
+        { role: 'unhide', label: tr('menu.unhide') },
         { type: 'separator' },
-        { role: 'quit', label: '退出博播' }
+        { role: 'quit', label: tr('menu.quit') }
       ]
     })
   }
 
   template.push({
-    label: '文件',
-    submenu: isMac ? [{ role: 'close', label: '关闭窗口' }] : [{ role: 'quit', label: '退出' }]
+    label: tr('menu.file'),
+    submenu: isMac
+      ? [{ role: 'close', label: tr('menu.closeWindow') }]
+      : [{ role: 'quit', label: tr('menu.quitApp') }]
   })
 
   template.push({
-    label: '编辑',
+    label: tr('menu.edit'),
     submenu: [
-      { role: 'undo', label: '撤销' },
-      { role: 'redo', label: '重做' },
+      { role: 'undo', label: tr('menu.undo') },
+      { role: 'redo', label: tr('menu.redo') },
       { type: 'separator' },
-      { role: 'cut', label: '剪切' },
-      { role: 'copy', label: '复制' },
-      { role: 'paste', label: '粘贴' },
-      { role: 'selectAll', label: '全选' }
+      { role: 'cut', label: tr('menu.cut') },
+      { role: 'copy', label: tr('menu.copy') },
+      { role: 'paste', label: tr('menu.paste') },
+      { role: 'selectAll', label: tr('menu.selectAll') }
     ]
   })
 
   template.push({
-    label: '视图',
+    label: tr('menu.view'),
     submenu: [
-      { role: 'reload', label: '重新加载' },
-      { role: 'toggleDevTools', label: '开发者工具' },
+      { role: 'reload', label: tr('menu.reload') },
+      { role: 'toggleDevTools', label: tr('menu.devTools') },
       { type: 'separator' },
-      { role: 'resetZoom', label: '实际大小' },
-      { role: 'zoomIn', label: '放大' },
-      { role: 'zoomOut', label: '缩小' },
+      { role: 'resetZoom', label: tr('menu.resetZoom') },
+      { role: 'zoomIn', label: tr('menu.zoomIn') },
+      { role: 'zoomOut', label: tr('menu.zoomOut') },
       { type: 'separator' },
-      { role: 'togglefullscreen', label: '切换全屏' }
+      { role: 'togglefullscreen', label: tr('menu.fullscreen') }
     ]
   })
 
   template.push({
-    label: '窗口',
+    label: tr('menu.window'),
     submenu: [
-      { role: 'minimize', label: '最小化' },
-      { role: 'close', label: '关闭' },
+      { role: 'minimize', label: tr('menu.minimize') },
+      { role: 'close', label: tr('menu.close') },
       ...(isMac
         ? ([
             { type: 'separator' as const },
-            { role: 'front' as const, label: '全部置于顶层' }
+            { role: 'front' as const, label: tr('menu.front') }
           ] as const)
         : [])
     ]
   })
 
   template.push({
-    label: '帮助',
+    label: tr('menu.help'),
     submenu: [
       {
-        label: '了解博播',
+        label: tr('menu.learn'),
         click: (): void => {
           void shell.openExternal('https://github.com/tagecode/biu-podcast')
         }
@@ -80,10 +88,13 @@ export function buildMenuTemplate(platform: NodeJS.Platform): MenuItemConstructo
   return template
 }
 
-export function createApplicationMenu(platform: NodeJS.Platform = process.platform): Menu {
-  return Menu.buildFromTemplate(buildMenuTemplate(platform))
+export function createApplicationMenu(
+  platform: NodeJS.Platform = process.platform,
+  language: MainLanguage = resolveMainLanguage()
+): Menu {
+  return Menu.buildFromTemplate(buildMenuTemplate(platform, language))
 }
 
 export function installApplicationMenu(): void {
-  Menu.setApplicationMenu(createApplicationMenu())
+  Menu.setApplicationMenu(createApplicationMenu(process.platform, resolveMainLanguage()))
 }

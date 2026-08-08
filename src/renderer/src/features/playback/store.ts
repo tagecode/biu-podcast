@@ -1,3 +1,4 @@
+import i18n from '@/lib/i18n'
 import type { Episode, Podcast } from '@shared/types'
 import { create } from 'zustand'
 
@@ -144,7 +145,7 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
       }
       if (!verified.data.exists) {
         set({
-          playbackError: '文件已丢失，请重新下载',
+          playbackError: i18n.t('playback.fileMissing'),
           currentEpisode: verified.data.episode,
           currentPodcast: podcast
         })

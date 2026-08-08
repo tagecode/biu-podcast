@@ -12,6 +12,7 @@ import {
   SkipForward
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -30,6 +31,7 @@ import { fetchRegisteredShortcuts, formatAccelerator } from '../lib/shortcut-hin
 import type { RegisteredShortcuts } from '@shared/ipc-contract'
 
 export function MiniPlayer(): React.JSX.Element | null {
+  const { t } = useTranslation()
   const currentEpisode = usePlaybackStore((state) => state.currentEpisode)
   const currentPodcast = usePlaybackStore((state) => state.currentPodcast)
   const isPlaying = usePlaybackStore((state) => state.isPlaying)
@@ -57,7 +59,7 @@ export function MiniPlayer(): React.JSX.Element | null {
       <div className="shrink-0 border-t border-line bg-danger/5 px-6 py-3 text-sm text-danger">
         {playbackError}
         <button type="button" className="ml-3 underline" onClick={clearPlaybackError}>
-          关闭
+          {t('common.close')}
         </button>
       </div>
     )
@@ -73,7 +75,7 @@ export function MiniPlayer(): React.JSX.Element | null {
         <div className="border-b border-danger/20 bg-danger/5 px-6 py-2 text-xs text-danger">
           {playbackError}
           <button type="button" className="ml-3 underline" onClick={clearPlaybackError}>
-            关闭
+            {t('common.close')}
           </button>
         </div>
       ) : null}
@@ -105,7 +107,7 @@ export function MiniPlayer(): React.JSX.Element | null {
                 <Button
                   variant="ghost"
                   size="icon"
-                  aria-label="上一集"
+                  aria-label={t('playback.previous')}
                   disabled={!hasPrevious}
                   onClick={() => void playPrevious()}
                 >
@@ -113,7 +115,7 @@ export function MiniPlayer(): React.JSX.Element | null {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                上一集
+                {t('playback.previous')}
                 {formatAccelerator(shortcuts.previous)
                   ? ` (${formatAccelerator(shortcuts.previous)})`
                   : ''}
@@ -135,7 +137,7 @@ export function MiniPlayer(): React.JSX.Element | null {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                播放/暂停
+                {t('playback.playPause')}
                 {formatAccelerator(shortcuts.toggle)
                   ? ` (${formatAccelerator(shortcuts.toggle)})`
                   : ''}
@@ -146,7 +148,7 @@ export function MiniPlayer(): React.JSX.Element | null {
                 <Button
                   variant="ghost"
                   size="icon"
-                  aria-label="下一集"
+                  aria-label={t('playback.next')}
                   disabled={!hasNext}
                   onClick={() => void playNext()}
                 >
@@ -154,7 +156,7 @@ export function MiniPlayer(): React.JSX.Element | null {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                下一集
+                {t('playback.next')}
                 {formatAccelerator(shortcuts.next) ? ` (${formatAccelerator(shortcuts.next)})` : ''}
               </TooltipContent>
             </Tooltip>
@@ -168,7 +170,14 @@ export function MiniPlayer(): React.JSX.Element | null {
             <TooltipTrigger asChild>
               <button
                 type="button"
-                aria-label={`播放模式：${queueMode === 'list' ? '列表循环' : queueMode === 'repeat-one' ? '单曲循环' : '随机播放'}`}
+                aria-label={t('playback.queueModeAria', {
+                  mode:
+                    queueMode === 'list'
+                      ? t('playback.modeList')
+                      : queueMode === 'repeat-one'
+                        ? t('playback.modeRepeatOne')
+                        : t('playback.modeShuffle')
+                })}
                 className="text-muted-700 hover:text-ink"
                 onClick={() =>
                   setQueueMode(
@@ -191,14 +200,19 @@ export function MiniPlayer(): React.JSX.Element | null {
             </TooltipTrigger>
             <TooltipContent>
               {queueMode === 'list'
-                ? '列表循环'
+                ? t('playback.modeList')
                 : queueMode === 'repeat-one'
-                  ? '单曲循环'
-                  : '随机播放'}
+                  ? t('playback.modeRepeatOne')
+                  : t('playback.modeShuffle')}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <Button variant="ghost" size="icon" onClick={openFullPlayer} aria-label="展开播放器">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={openFullPlayer}
+          aria-label={t('playback.expand')}
+        >
           <Maximize2 className="size-4" />
         </Button>
       </div>
@@ -207,6 +221,7 @@ export function MiniPlayer(): React.JSX.Element | null {
 }
 
 export function FullScreenPlayer(): React.JSX.Element | null {
+  const { t } = useTranslation()
   const currentEpisode = usePlaybackStore((state) => state.currentEpisode)
   const currentPodcast = usePlaybackStore((state) => state.currentPodcast)
   const isPlaying = usePlaybackStore((state) => state.isPlaying)
@@ -271,10 +286,10 @@ export function FullScreenPlayer(): React.JSX.Element | null {
                 onClick={closeFullPlayer}
               >
                 <ChevronDown className="size-4" strokeWidth={1.75} />
-                收起播放器
+                {t('playback.collapse')}
               </button>
             </TooltipTrigger>
-            <TooltipContent>收起到迷你播放器</TooltipContent>
+            <TooltipContent>{t('playback.collapseHint')}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>
@@ -318,7 +333,7 @@ export function FullScreenPlayer(): React.JSX.Element | null {
                   variant="ghost"
                   size="icon"
                   className="size-12"
-                  aria-label="上一集"
+                  aria-label={t('playback.previous')}
                   disabled={!hasPrevious}
                   onClick={() => void playPrevious()}
                 >
@@ -326,7 +341,7 @@ export function FullScreenPlayer(): React.JSX.Element | null {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                上一集
+                {t('playback.previous')}
                 {formatAccelerator(shortcuts.previous)
                   ? ` (${formatAccelerator(shortcuts.previous)})`
                   : ''}
@@ -339,11 +354,11 @@ export function FullScreenPlayer(): React.JSX.Element | null {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                播放/暂停
+                {t('playback.playPause')}
                 {formatAccelerator(shortcuts.toggle)
                   ? ` (${formatAccelerator(shortcuts.toggle)})`
                   : ''}{' '}
-                · 空格
+                · {t('playback.accelSpace')}
               </TooltipContent>
             </Tooltip>
             <Tooltip>
@@ -352,7 +367,7 @@ export function FullScreenPlayer(): React.JSX.Element | null {
                   variant="ghost"
                   size="icon"
                   className="size-12"
-                  aria-label="下一集"
+                  aria-label={t('playback.next')}
                   disabled={!hasNext}
                   onClick={() => void playNext()}
                 >
@@ -360,7 +375,7 @@ export function FullScreenPlayer(): React.JSX.Element | null {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                下一集
+                {t('playback.next')}
                 {formatAccelerator(shortcuts.next) ? ` (${formatAccelerator(shortcuts.next)})` : ''}
               </TooltipContent>
             </Tooltip>
@@ -371,9 +386,9 @@ export function FullScreenPlayer(): React.JSX.Element | null {
         <div className="mt-8 flex items-center gap-8">
           <div className="flex items-center gap-2">
             <Gauge className="size-4 text-muted" strokeWidth={1.75} />
-            <span className="text-sm text-muted">倍速</span>
+            <span className="text-sm text-muted">{t('playback.rate')}</span>
             <Select value={String(playbackRate)} onValueChange={(v) => setPlaybackRate(Number(v))}>
-              <SelectTrigger className="h-8 w-20" aria-label="播放速度">
+              <SelectTrigger className="h-8 w-20" aria-label={t('playback.rateAria')}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -387,7 +402,7 @@ export function FullScreenPlayer(): React.JSX.Element | null {
           </div>
           <div className="flex items-center gap-2">
             <Moon className="size-4 text-muted" strokeWidth={1.75} />
-            <span className="text-sm text-muted">睡眠</span>
+            <span className="text-sm text-muted">{t('playback.sleep')}</span>
             {sleepTimerRemaining !== null ? (
               <div className="flex items-center gap-1.5">
                 <span className="font-mono text-sm text-amber-700">
@@ -396,7 +411,7 @@ export function FullScreenPlayer(): React.JSX.Element | null {
                 </span>
                 <button
                   type="button"
-                  aria-label="取消睡眠定时器"
+                  aria-label={t('playback.cancelSleep')}
                   className="text-sm text-muted hover:text-danger"
                   onClick={() => setSleepTimer(null)}
                 >
@@ -408,18 +423,18 @@ export function FullScreenPlayer(): React.JSX.Element | null {
                 value="off"
                 onValueChange={(v) => setSleepTimer(v === 'off' ? null : Number(v))}
               >
-                <SelectTrigger className="h-8 w-24" aria-label="睡眠定时器">
-                  <SelectValue placeholder="选择" />
+                <SelectTrigger className="h-8 w-24" aria-label={t('playback.sleepAria')}>
+                  <SelectValue placeholder={t('playback.sleepSelect')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="off">关闭</SelectItem>
+                  <SelectItem value="off">{t('playback.sleepOff')}</SelectItem>
                   {[10, 30, 60, 300, 900, 1800, 3600].map((sec) => (
                     <SelectItem key={sec} value={String(sec)}>
                       {sec < 60
                         ? `${sec}s`
                         : sec < 3600
-                          ? `${sec / 60} 分钟`
-                          : `${sec / 3600} 小时`}
+                          ? t('playback.minutes', { count: sec / 60 })
+                          : t('playback.hours', { count: sec / 3600 })}
                     </SelectItem>
                   ))}
                 </SelectContent>

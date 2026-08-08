@@ -1,3 +1,4 @@
+import i18n from '@/lib/i18n'
 import type { Playlist } from '@shared/types'
 import { create } from 'zustand'
 
@@ -23,7 +24,10 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
       const playlists = await playlistApi.listPlaylists()
       set({ playlists, loading: false })
     } catch (error) {
-      set({ loading: false, error: error instanceof Error ? error.message : '加载播放列表失败' })
+      set({
+        loading: false,
+        error: error instanceof Error ? error.message : i18n.t('playlist.loadFailed')
+      })
     }
   },
   create: async (name) => {

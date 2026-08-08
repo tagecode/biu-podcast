@@ -1,4 +1,5 @@
 import { AlertCircle, CheckCircle2, Download, Pause, Play } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import type { Episode } from '@shared/types'
@@ -26,6 +27,7 @@ export function EpisodeListItem({
   onDownload,
   onOpenDetail
 }: EpisodeListItemProps): React.JSX.Element {
+  const { t } = useTranslation()
   return (
     <div
       className={cn(
@@ -73,7 +75,7 @@ export function EpisodeListItem({
           <Button
             variant="ghost"
             size="icon"
-            aria-label="下载"
+            aria-label={t('episode.download')}
             onClick={onDownload}
             disabled={!onDownload}
           >
@@ -83,7 +85,7 @@ export function EpisodeListItem({
         <Button
           variant="ghost"
           size="icon"
-          aria-label={isCurrentPlaying ? '暂停' : '播放'}
+          aria-label={isCurrentPlaying ? t('episode.pause') : t('episode.play')}
           onClick={onPlay}
         >
           {isCurrentPlaying ? <Pause className="size-4" /> : <Play className="size-4" />}

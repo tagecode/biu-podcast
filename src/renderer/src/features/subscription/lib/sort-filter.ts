@@ -1,3 +1,4 @@
+import i18n from '@/lib/i18n'
 import type { Podcast } from '@shared/types'
 
 export type SortKey = 'recent' | 'title' | 'unread'
@@ -24,14 +25,14 @@ export function sortPodcasts(podcasts: Podcast[], sortKey: SortKey): Podcast[] {
 }
 
 export function formatRelativeTime(timestamp: number | null): string {
-  if (!timestamp) return '未知'
+  if (!timestamp) return i18n.t('subscription.timeUnknown')
   const diffMs = Date.now() - timestamp
   const minutes = Math.floor(diffMs / 60000)
-  if (minutes < 60) return `${Math.max(minutes, 1)} 分钟前更新`
+  if (minutes < 60) return i18n.t('subscription.timeMinutesAgo', { count: Math.max(minutes, 1) })
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours} 小时前更新`
+  if (hours < 24) return i18n.t('subscription.timeHoursAgo', { count: hours })
   const days = Math.floor(hours / 24)
-  if (days < 7) return `${days} 天前更新`
+  if (days < 7) return i18n.t('subscription.timeDaysAgo', { count: days })
   const weeks = Math.floor(days / 7)
-  return `${weeks} 周前更新`
+  return i18n.t('subscription.timeWeeksAgo', { count: weeks })
 }

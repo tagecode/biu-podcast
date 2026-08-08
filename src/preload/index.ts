@@ -2,6 +2,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 
 import { IPC_CHANNELS } from '@shared/ipc-channels'
 import type {
+  AppInfo,
+  UpdateStatus,
   AddSubscriptionInput,
   CreateNoteInput,
   CreatePlaylistInput,
@@ -204,6 +206,22 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.note.delete, input),
     export: (): Promise<IpcResult<{ filePath: string } | null>> =>
       ipcRenderer.invoke(IPC_CHANNELS.note.export)
+  },
+  app: {
+    getInfo: (): Promise<IpcResult<AppInfo>> => ipcRenderer.invoke(IPC_CHANNELS.app.getInfo)
+  },
+  update: {
+    check: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC_CHANNELS.update.check, {}),
+    download: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC_CHANNELS.update.download, {}),
+    install: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC_CHANNELS.update.install, {}),
+    getStatus: (): Promise<IpcResult<UpdateStatus>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.update.getStatus),
+    onStatus: (callback: (status: UpdateStatus) => void): (() => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, status: UpdateStatus): void =>
+        callback(status)
+      ipcRenderer.on(IPC_CHANNELS.update.status, listener)
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.update.status, listener)
+    }
   }
 }
 

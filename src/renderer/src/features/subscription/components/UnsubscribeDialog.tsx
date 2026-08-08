@@ -1,5 +1,6 @@
 import { AlertCircle } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -25,6 +26,7 @@ export function UnsubscribeDialog({
   onOpenChange,
   onConfirm
 }: UnsubscribeDialogProps): React.JSX.Element {
+  const { t } = useTranslation()
   const [deleteData, setDeleteData] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,7 +39,9 @@ export function UnsubscribeDialog({
       setDeleteData(false)
       onOpenChange(false)
     } catch (confirmError) {
-      setError(confirmError instanceof Error ? confirmError.message : '取消订阅失败')
+      setError(
+        confirmError instanceof Error ? confirmError.message : t('subscription.removeFailed')
+      )
     } finally {
       setSubmitting(false)
     }
@@ -56,9 +60,9 @@ export function UnsubscribeDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>取消订阅</DialogTitle>
+          <DialogTitle>{t('subscription.remove')}</DialogTitle>
           <DialogDescription>
-            确定取消订阅「{podcastTitle}」吗？默认保留本地集数与已下载文件，便于日后重新订阅。
+            {t('subscription.removeConfirmHint', { title: podcastTitle })}
           </DialogDescription>
         </DialogHeader>
         <label className="flex items-start gap-3 rounded-md border border-line bg-paper px-3 py-3">
@@ -69,10 +73,10 @@ export function UnsubscribeDialog({
             onChange={(event) => setDeleteData(event.target.checked)}
           />
           <div>
-            <Label className="text-sm font-medium text-ink">同时删除全部本地数据</Label>
-            <p className="mt-1 text-xs text-muted">
-              将删除该播客的集数记录、下载任务，并清理已下载的音频文件。此操作不可恢复。
-            </p>
+            <Label className="text-sm font-medium text-ink">
+              {t('subscription.deleteDataLabel')}
+            </Label>
+            <p className="mt-1 text-xs text-muted">{t('subscription.removeConfirm')}</p>
           </div>
         </label>
         {error ? (
@@ -83,14 +87,18 @@ export function UnsubscribeDialog({
         ) : null}
         <DialogFooter>
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
-            再想想
+            {t('subscription.reconsider')}
           </Button>
           <Button
             variant={deleteData ? 'destructive' : 'default'}
             disabled={submitting}
             onClick={() => void handleConfirm()}
           >
-            {submitting ? '处理中…' : deleteData ? '取消并删除数据' : '取消订阅'}
+            {submitting
+              ? t('subscription.processing')
+              : deleteData
+                ? t('subscription.removeWithData')
+                : t('subscription.remove')}
           </Button>
         </DialogFooter>
       </DialogContent>

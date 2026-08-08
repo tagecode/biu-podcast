@@ -119,6 +119,12 @@ export interface AppSettings {
   notificationsEnabled: boolean
   /** Closing the window keeps the app running in the system tray. */
   closeToTray: boolean
+  /** Theme preference: follow system / force light / force dark. */
+  theme: 'system' | 'light' | 'dark'
+  /** UI font scale as a percentage (90 / 100 / 110 / 120). */
+  fontScale: 90 | 100 | 110 | 120
+  /** UI language: follow system / force Chinese / force English. */
+  language: 'system' | 'zh' | 'en'
 }
 
 export interface PlaybackSession {

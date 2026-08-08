@@ -14,7 +14,10 @@ export async function setSetting(
     | 'openFullPlayerDefault'
     | 'notificationsEnabled'
     | 'downloadPath'
-    | 'closeToTray',
+    | 'closeToTray'
+    | 'theme'
+    | 'fontScale'
+    | 'language',
   value: number | boolean | string | null
 ): Promise<void> {
   const result = await window.api.settings.set({ key, value })

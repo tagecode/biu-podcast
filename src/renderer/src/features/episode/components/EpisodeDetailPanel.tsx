@@ -1,5 +1,6 @@
 import { Download, ListPlus, ListVideo, Pause, Play, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -36,6 +37,7 @@ export function EpisodeDetailPanel({
   isCurrentPlaying,
   currentPositionSec
 }: EpisodeDetailPanelProps): React.JSX.Element {
+  const { t } = useTranslation()
   const [playlists, setPlaylists] = useState<Playlist[]>([])
   const [noteText, setNoteText] = useState('')
   const [notes, setNotes] = useState<Note[]>([])
@@ -71,7 +73,7 @@ export function EpisodeDetailPanel({
             {formatFileSize(episode.fileSizeBytes)}
           </p>
         </div>
-        <Button variant="ghost" size="icon" aria-label="关闭集数详情" onClick={onClose}>
+        <Button variant="ghost" size="icon" aria-label={t('episode.closeDetail')} onClick={onClose}>
           <X className="size-4" />
         </Button>
       </div>
@@ -79,24 +81,29 @@ export function EpisodeDetailPanel({
       <div className="flex flex-wrap gap-2 border-b border-line px-4 py-3">
         <Button onClick={onPlay}>
           {isCurrentPlaying ? <Pause className="size-4" /> : <Play className="size-4" />}
-          {isCurrentPlaying ? '暂停' : '播放'}
+          {isCurrentPlaying ? t('episode.pause') : t('episode.play')}
         </Button>
         {!episode.isDownloaded && onDownload ? (
           <Button variant="secondary" onClick={onDownload}>
             <Download className="size-4" />
-            下载
+            {t('episode.download')}
           </Button>
         ) : null}
-        <Button variant="ghost" size="icon" aria-label="加入播放队列" onClick={() => addToQueue()}>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={t('episode.addToQueue')}
+          onClick={() => addToQueue()}
+        >
           <ListVideo className="size-4" />
         </Button>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         <div className="mb-4">
-          <div className="mb-1.5 text-sm font-medium text-ink">添加到播放列表</div>
+          <div className="mb-1.5 text-sm font-medium text-ink">{t('episode.addToPlaylist')}</div>
           {playlists.length === 0 ? (
-            <p className="text-xs text-muted">暂无播放列表，去「播放列表」页创建</p>
+            <p className="text-xs text-muted">{t('playlist.emptyHint')}</p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {playlists.map((playlist) => (
@@ -115,15 +122,15 @@ export function EpisodeDetailPanel({
         </div>
 
         <div className="mb-4">
-          <div className="mb-1.5 text-sm font-medium text-ink">时间戳笔记</div>
+          <div className="mb-1.5 text-sm font-medium text-ink">{t('note.timestampNotes')}</div>
           {currentPositionSec !== undefined ? (
             <p className="mb-1.5 text-xs text-muted">
-              当前进度 {formatTimestamp(currentPositionSec)}，将记录在此时间点
+              {t('note.currentPosition', { time: formatTimestamp(currentPositionSec) })}
             </p>
           ) : null}
           <div className="flex gap-2">
             <Input
-              placeholder="写一条笔记…"
+              placeholder={t('note.addPlaceholder')}
               value={noteText}
               onChange={(e) => setNoteText(e.target.value)}
               onKeyDown={(e) => {
@@ -131,7 +138,7 @@ export function EpisodeDetailPanel({
               }}
             />
             <Button size="sm" onClick={() => void addNote()} disabled={!noteText.trim()}>
-              添加
+              {t('note.add')}
             </Button>
           </div>
           {notes.length > 0 ? (
@@ -147,7 +154,7 @@ export function EpisodeDetailPanel({
                   <span className="min-w-0 flex-1 text-xs text-ink">{note.content}</span>
                   <button
                     type="button"
-                    aria-label="删除笔记"
+                    aria-label={t('note.delete')}
                     className="text-xs text-muted hover:text-danger"
                     onClick={() => {
                       void playlistApi
@@ -170,7 +177,7 @@ export function EpisodeDetailPanel({
             dangerouslySetInnerHTML={{ __html: episode.descriptionHtml }}
           />
         ) : (
-          <p className="text-sm text-muted">暂无集数简介</p>
+          <p className="text-sm text-muted">{t('episode.noDescription')}</p>
         )}
       </div>
     </aside>

@@ -1,3 +1,4 @@
+import i18n from '@/lib/i18n'
 import type { RegisteredShortcuts } from '@shared/ipc-contract'
 
 /** Format an Electron accelerator for display in tooltips. */
@@ -9,12 +10,12 @@ export function formatAccelerator(accel: string | undefined): string | null {
     Command: '⌘',
     Alt: 'Alt',
     Shift: 'Shift',
-    MediaPlayPause: '播放/暂停键',
-    MediaNextTrack: '下一曲键',
-    MediaPreviousTrack: '上一曲键',
+    MediaPlayPause: i18n.t('playback.accelPlayPause'),
+    MediaNextTrack: i18n.t('playback.accelNextTrack'),
+    MediaPreviousTrack: i18n.t('playback.accelPreviousTrack'),
     ArrowRight: '→',
     ArrowLeft: '←',
-    Space: '空格',
+    Space: i18n.t('playback.accelSpace'),
     Right: '→',
     Left: '←'
   }

@@ -58,6 +58,22 @@ export const IPC_CHANNELS = {
     isMaximized: 'window:is-maximized',
     maximizedChanged: 'window:maximized-changed'
   },
+  app: {
+    /** App metadata for the About page (version, homepage, etc.). */
+    getInfo: 'app:get-info'
+  },
+  update: {
+    /** Renderer → main: check for an update now (manual). */
+    check: 'update:check',
+    /** Renderer → main: download an available update. */
+    download: 'update:download',
+    /** Renderer → main: quit + install a downloaded update. */
+    install: 'update:install',
+    /** Renderer → main: current update status snapshot. */
+    getStatus: 'update:get-status',
+    /** Main → renderer: update lifecycle state changed. */
+    status: 'update:status'
+  },
   playlist: {
     create: 'playlist:create',
     list: 'playlist:list',

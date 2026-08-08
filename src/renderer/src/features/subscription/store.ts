@@ -1,3 +1,4 @@
+import i18n from '@/lib/i18n'
 import type { Podcast } from '@shared/types'
 import { create } from 'zustand'
 
@@ -49,7 +50,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     } catch (error) {
       set({
         loading: false,
-        error: error instanceof Error ? error.message : '加载订阅列表失败'
+        error: error instanceof Error ? error.message : i18n.t('subscription.loadFailed')
       })
     }
   },
