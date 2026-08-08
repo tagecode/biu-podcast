@@ -20,8 +20,9 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          # Keep Node 22: jsdom/undici need markAsUncloneable (broken on Node 20).
-          node-version: 22
+          # Pin Node 22.21.1: Node 22.23.x breaks electron-rebuild's node-gyp
+          # (undici ERR_ASSERTION in better-sqlite3 postinstall rebuild).
+          node-version: 22.21.1
           cache: pnpm
 
       - name: Install dependencies
