@@ -132,6 +132,11 @@ export interface AppSettings {
   cleanupRetentionDays: number | null
   /** Write diagnostic logs to userData/logs (toggleable). */
   loggingEnabled: boolean
+  /**
+   * Custom global-shortcut bindings per playback command (accelerator strings).
+   * Commands absent from this map fall back to their default accelerator.
+   */
+  shortcutBindings: Partial<Record<'toggle' | 'next' | 'previous', string>>
 }
 
 export interface PlaybackSession {

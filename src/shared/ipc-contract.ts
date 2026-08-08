@@ -173,8 +173,34 @@ export type NoteIdInput = z.infer<typeof NoteIdInputSchema>
 /** Playback commands sent main→renderer (global shortcuts / media keys). */
 export type PlaybackCommand = 'toggle' | 'next' | 'previous'
 
+/** Accelerator candidates per command, tried in order until one registers. */
+export type ShortcutBindings = Record<PlaybackCommand, string[]>
+
+/** Result of (re)applying a shortcut binding. */
+export interface ShortcutSetResult {
+  /** Accelerator that actually registered, if any. */
+  registered: string | null
+  /** true when the chosen accelerator was already owned by another app. */
+  taken?: boolean
+}
+
 /** Maps a playback command to the accelerator actually registered (for UI display). */
 export type RegisteredShortcuts = Partial<Record<PlaybackCommand, string>>
+
+/** Payload for saving a shortcut binding. */
+export const ShortcutSetInputSchema = z.object({
+  command: z.enum(['toggle', 'next', 'previous']),
+  /** Accelerator to bind, or null to unset (fall back to defaults). */
+  accelerator: z.string().min(1).max(64).nullable()
+})
+export type ShortcutSetInput = z.infer<typeof ShortcutSetInputSchema>
+
+export interface ShortcutConfig {
+  /** User override per command; commands without a user binding use defaults. */
+  custom: Partial<Record<PlaybackCommand, string>>
+  /** Default accelerator per command (for display before any override). */
+  defaults: Record<PlaybackCommand, string>
+}
 
 /** App metadata surfaced for the About page. */
 export interface AppInfo {

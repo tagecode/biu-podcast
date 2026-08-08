@@ -25,6 +25,7 @@ import {
   ReorderPlaylistInputSchema,
   SetPausedInputSchema,
   SetSettingInputSchema,
+  ShortcutSetInputSchema,
   StorageActionInputSchema,
   UpdateActionInputSchema,
   UpdateProgressInputSchema,
@@ -46,7 +47,7 @@ import { cleanupService } from '../features/cleanup/cleanup.service'
 import { exportDiagnostics } from '../infra/logger'
 import { autoRefreshScheduler } from '../features/subscription/auto-refresh'
 import { subscriptionService } from '../features/subscription/subscription.service'
-import { getRegisteredShortcuts } from '../infra/shortcuts'
+import { applyShortcutBinding, getRegisteredShortcuts, getShortcutConfig } from '../infra/shortcuts'
 import { broadcast, registerHandler, registerNoInputHandler, registerVoidHandler } from './register'
 
 export function registerSubscriptionHandlers(): void {
@@ -372,6 +373,13 @@ export function registerStorageHandlers(): void {
   )
 }
 
+export function registerShortcutHandlers(): void {
+  registerNoInputHandler(IPC_CHANNELS.shortcuts.getConfig, () => getShortcutConfig())
+  registerHandler(IPC_CHANNELS.shortcuts.set, ShortcutSetInputSchema, async (_event, input) =>
+    applyShortcutBinding(input.command, input.accelerator)
+  )
+}
+
 export function registerAllHandlers(): void {
   registerSubscriptionHandlers()
   registerEpisodeHandlers()
@@ -385,4 +393,5 @@ export function registerAllHandlers(): void {
   registerAppHandlers()
   registerUpdateHandlers()
   registerStorageHandlers()
+  registerShortcutHandlers()
 }

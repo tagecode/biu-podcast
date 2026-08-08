@@ -17,7 +17,8 @@ const defaults: AppSettings = {
   fontScale: 100,
   language: 'system',
   cleanupRetentionDays: null,
-  loggingEnabled: true
+  loggingEnabled: true,
+  shortcutBindings: {}
 }
 
 // electron-store v9+ is ESM-only. electron-vite externalizes it into CJS
@@ -57,12 +58,17 @@ export class SettingsStore {
       fontScale: this.store.get('fontScale'),
       language: this.store.get('language'),
       cleanupRetentionDays: this.store.get('cleanupRetentionDays'),
-      loggingEnabled: this.store.get('loggingEnabled')
+      loggingEnabled: this.store.get('loggingEnabled'),
+      shortcutBindings: this.store.get('shortcutBindings')
     }
   }
 
   set<K extends keyof AppSettings>(key: K, value: AppSettings[K]): void {
     this.store.set(key, value)
+  }
+
+  get<K extends keyof AppSettings>(key: K): AppSettings[K] {
+    return this.store.get(key)
   }
 
   setLastSession(episodeId: string, podcastId: string, positionSec: number): void {

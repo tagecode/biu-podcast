@@ -10,6 +10,7 @@ import { formatFileSize } from '@/lib/format'
 import * as settingsApi from '../api'
 import { applyFontScale, applyTheme } from '@/lib/appearance'
 import i18n, { resolveLanguage } from '@/lib/i18n'
+import { ShortcutSettings } from '../components/ShortcutSettings'
 import {
   Select,
   SelectContent,
@@ -595,6 +596,12 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
               </span>
             </label>
           </div>
+
+          <div>
+            <h2 className="text-sm font-semibold text-ink">{t('settings.shortcutSection')}</h2>
+          </div>
+
+          <ShortcutSettings />
 
           <div>
             <h2 className="text-sm font-semibold text-ink">{t('settings.storageSection')}</h2>

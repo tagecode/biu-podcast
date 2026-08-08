@@ -29,6 +29,14 @@ export const IPC_CHANNELS = {
     /** Main → renderer: deep link wants to play an episode. */
     deepLinkPlay: 'playback:deep-link-play'
   },
+  shortcuts: {
+    /** Renderer → main: current shortcut configuration (defaults + custom overrides). */
+    getConfig: 'shortcuts:get-config',
+    /** Renderer → main: save a custom binding for one command; re-registers. */
+    set: 'shortcuts:set',
+    /** Main → renderer: a shortcut (re)registration result for display. */
+    applied: 'shortcuts:applied'
+  },
   download: {
     enqueue: 'download:enqueue',
     list: 'download:list',

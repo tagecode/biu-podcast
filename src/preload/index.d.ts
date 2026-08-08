@@ -29,6 +29,9 @@ import type {
   ReorderPlaylistInput,
   SetPausedInput,
   SetSettingInput,
+  ShortcutConfig,
+  ShortcutSetInput,
+  ShortcutSetResult,
   UpdateProgressInput,
   VerifyLocalInput
 } from '@shared/ipc-contract'
@@ -88,6 +91,13 @@ declare global {
         getRegisteredShortcuts: () => Promise<IpcResult<RegisteredShortcuts>>
         onCommand: (callback: (command: PlaybackCommand) => void) => () => void
         onDeepLinkPlay: (callback: (episodeId: string) => void) => () => void
+      }
+      shortcuts: {
+        getConfig: () => Promise<IpcResult<ShortcutConfig>>
+        set: (input: ShortcutSetInput) => Promise<IpcResult<ShortcutSetResult>>
+        onApplied: (
+          callback: (result: ShortcutSetResult & { command: PlaybackCommand }) => void
+        ) => () => void
       }
       download: {
         enqueue: (input: EnqueueDownloadInput) => Promise<IpcResult<DownloadTask>>

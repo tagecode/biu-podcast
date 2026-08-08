@@ -32,6 +32,9 @@ import type {
   ReorderPlaylistInput,
   SetPausedInput,
   SetSettingInput,
+  ShortcutConfig,
+  ShortcutSetInput,
+  ShortcutSetResult,
   UpdateProgressInput,
   VerifyLocalInput
 } from '@shared/ipc-contract'
@@ -128,6 +131,22 @@ const api = {
         callback(episodeId)
       ipcRenderer.on(IPC_CHANNELS.playback.deepLinkPlay, listener)
       return () => ipcRenderer.removeListener(IPC_CHANNELS.playback.deepLinkPlay, listener)
+    }
+  },
+  shortcuts: {
+    getConfig: (): Promise<IpcResult<ShortcutConfig>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.shortcuts.getConfig),
+    set: (input: ShortcutSetInput): Promise<IpcResult<ShortcutSetResult>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.shortcuts.set, input),
+    onApplied: (
+      callback: (result: ShortcutSetResult & { command: PlaybackCommand }) => void
+    ): (() => void) => {
+      const listener = (
+        _event: Electron.IpcRendererEvent,
+        result: ShortcutSetResult & { command: PlaybackCommand }
+      ): void => callback(result)
+      ipcRenderer.on(IPC_CHANNELS.shortcuts.applied, listener)
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.shortcuts.applied, listener)
     }
   },
   download: {
