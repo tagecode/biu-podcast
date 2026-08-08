@@ -2,11 +2,24 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { mkdtempSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
+import { readFile, writeFile } from 'fs/promises'
 
 process.env.BIU_PODCAST_DB_PATH = ':memory:'
 
+// Mock dialog up-front so the OPML import/export flows can be driven headlessly.
+const dialogState = vi.hoisted(() => {
+  return {
+    openResult: null as { canceled: boolean; filePaths: string[] } | null,
+    saveResult: null as { canceled: boolean; filePath?: string } | null
+  }
+})
+
 vi.mock('electron', () => ({
-  app: { getPath: () => '/tmp/fake-userdata' }
+  app: { getPath: () => '/tmp/fake-userdata' },
+  dialog: {
+    showOpenDialog: vi.fn(async () => dialogState.openResult),
+    showSaveDialog: vi.fn(async () => dialogState.saveResult)
+  }
 }))
 
 import { createMemoryDb } from '../../infra/db/client'
@@ -105,6 +118,8 @@ function setup(): {
 describe('SubscriptionService', () => {
   beforeEach(() => {
     mockFetch.mockReset()
+    dialogState.openResult = null
+    dialogState.saveResult = null
   })
 
   it('add: inserts podcast + episodes when feed parses', async () => {
@@ -313,6 +328,100 @@ describe('SubscriptionService', () => {
     expect(p1Result?.addedCount).toBe(1)
     // p2 was paused → refreshAll should not have produced a result for it.
     expect(results.find((r) => r.podcastId === p2.id)).toBeUndefined()
+    sqlite.close()
+  })
+
+  it('importOpmlFromFile: imports feeds, skips duplicates, records failures', async () => {
+    const { db, sqlite, settings } = setup()
+    const service = new SubscriptionService({ db, settings })
+    // Pre-subscribe one feed so the import treats it as a duplicate.
+    mockFetch.mockImplementation(async (url: string) => {
+      if (url === 'not-a-url') throw new Error('invalid url')
+      return makeFeed()
+    })
+    await service.add('https://example.com/existing.xml')
+
+    // OPML file with 3 outlines: one existing, one valid new, one invalid URL.
+    const opmlPath = join(TMP, 'import.opml')
+    await writeFile(
+      opmlPath,
+      [
+        '<opml version="2.0"><body>',
+        '<outline type="rss" text="Existing" xmlUrl="https://example.com/existing.xml"/>',
+        '<outline type="rss" text="New" xmlUrl="https://example.com/new.xml"/>',
+        '<outline type="rss" text="Bad" xmlUrl="not-a-url"/>',
+        '</body></opml>'
+      ].join(''),
+      'utf8'
+    )
+
+    dialogState.openResult = { canceled: false, filePaths: [opmlPath] }
+    const result = await service.importOpmlFromFile()
+    expect(result).not.toBeNull()
+    expect(result!.added).toBe(1) // "New"
+    expect(result!.skipped).toBe(1) // "Existing"
+    expect(result!.failed).toHaveLength(1) // "Bad"
+
+    // The valid new feed landed in the DB.
+    const all = service.list()
+    expect(all.some((p) => p.feedUrl === 'https://example.com/new.xml')).toBe(true)
+    sqlite.close()
+  })
+
+  it('importOpmlFromFile: returns null when the open dialog is canceled', async () => {
+    const { db, sqlite, settings } = setup()
+    dialogState.openResult = { canceled: true, filePaths: [] }
+    const service = new SubscriptionService({ db, settings })
+    expect(await service.importOpmlFromFile()).toBeNull()
+    sqlite.close()
+  })
+
+  it('exportOpmlToFile: writes a valid OPML with all subscriptions', async () => {
+    const { db, sqlite, settings } = setup()
+    const service = new SubscriptionService({ db, settings })
+    mockFetch.mockResolvedValue(makeFeed())
+    await service.add('https://example.com/one.xml')
+    await service.add('https://example.com/two.xml')
+
+    const outPath = join(TMP, 'export.opml')
+    dialogState.saveResult = { canceled: false, filePath: outPath }
+    const result = await service.exportOpmlToFile()
+    expect(result?.filePath).toBe(outPath)
+
+    const xml = await readFile(outPath, 'utf8')
+    expect(xml).toContain('<?xml')
+    expect(xml).toContain('https://example.com/one.xml')
+    expect(xml).toContain('https://example.com/two.xml')
+    expect(xml).toContain('outline')
+    sqlite.close()
+  })
+
+  it('exportOpmlToFile: returns null when the save dialog is canceled', async () => {
+    const { db, sqlite, settings } = setup()
+    dialogState.saveResult = { canceled: true }
+    const service = new SubscriptionService({ db, settings })
+    expect(await service.exportOpmlToFile()).toBeNull()
+    sqlite.close()
+  })
+
+  it('refreshAll: continues past an individual feed failure', async () => {
+    const { db, sqlite, settings } = setup()
+    const service = new SubscriptionService({ db, settings })
+    mockFetch.mockResolvedValue(makeFeed())
+    const p1 = await service.add('https://example.com/ok.xml')
+    const p2 = await service.add('https://example.com/bad.xml')
+
+    // p1 succeeds, p2's refresh rejects.
+    mockFetch.mockReset()
+    mockFetch.mockResolvedValueOnce(makeFeed())
+    mockFetch.mockRejectedValueOnce(new Error('network down'))
+
+    const results = await service.refreshAll()
+    const p1Result = results.find((r) => r.podcastId === p1.id)
+    const p2Result = results.find((r) => r.podcastId === p2.id)
+    expect(p1Result?.addedCount).toBe(0)
+    expect(p2Result?.addedCount).toBe(0)
+    expect(results).toHaveLength(2)
     sqlite.close()
   })
 })
