@@ -401,7 +401,15 @@ export function bindAudioEvents(target?: HTMLAudioElement): () => void {
     }
   }
   const onLoadedMetadata = (): void => {
-    usePlaybackStore.getState().setDuration(audio.duration)
+    const state = usePlaybackStore.getState()
+    // Prefer the feed's declared duration (the display baseline) when known;
+    // the measured audio duration can differ (e.g. a truncated/sampled file)
+    // and would otherwise make the timeline bounce on every metadata load.
+    if (state.currentEpisode?.durationSec) {
+      state.setDuration(state.currentEpisode.durationSec)
+    } else if (Number.isFinite(audio.duration)) {
+      state.setDuration(audio.duration)
+    }
   }
   const onEnded = (): void => {
     const state = usePlaybackStore.getState()

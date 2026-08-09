@@ -73,6 +73,62 @@ describe('playback store ended handler', () => {
     expect(markPlayed).not.toHaveBeenCalled()
     unsubscribe()
   })
+
+  it('loadedmetadata keeps the feed duration when the episode declares one', () => {
+    const episode = {
+      id: 'ep-1',
+      podcastId: 'pod-1',
+      title: 'EP',
+      descriptionHtml: null,
+      publishedAt: 1700000000000,
+      audioUrl: 'https://example.com/ep.mp3',
+      durationSec: 600,
+      fileSizeBytes: 1,
+      isPlayed: false,
+      playbackPositionSec: 0,
+      isDownloaded: false,
+      localFilePath: null,
+      downloadStatus: null,
+      downloadedAt: null,
+      guid: 'g1'
+    }
+    usePlaybackStore.setState({ currentEpisode: episode, durationSec: 600 })
+    const audio = document.createElement('audio')
+    // The measured WAV duration differs from the feed's declared one.
+    Object.defineProperty(audio, 'duration', { value: 4, configurable: true })
+    const unsubscribe = bindAudioEvents(audio)
+    audio.dispatchEvent(new Event('loadedmetadata'))
+    // Feed duration wins — the timeline doesn't bounce to the measured value.
+    expect(usePlaybackStore.getState().durationSec).toBe(600)
+    unsubscribe()
+  })
+
+  it('loadedmetadata falls back to the measured duration when feed duration is unknown', () => {
+    const episode = {
+      id: 'ep-1',
+      podcastId: 'pod-1',
+      title: 'EP',
+      descriptionHtml: null,
+      publishedAt: 1700000000000,
+      audioUrl: 'https://example.com/ep.mp3',
+      durationSec: null,
+      fileSizeBytes: 1,
+      isPlayed: false,
+      playbackPositionSec: 0,
+      isDownloaded: false,
+      localFilePath: null,
+      downloadStatus: null,
+      downloadedAt: null,
+      guid: 'g1'
+    }
+    usePlaybackStore.setState({ currentEpisode: episode, durationSec: 0 })
+    const audio = document.createElement('audio')
+    Object.defineProperty(audio, 'duration', { value: 42, configurable: true })
+    const unsubscribe = bindAudioEvents(audio)
+    audio.dispatchEvent(new Event('loadedmetadata'))
+    expect(usePlaybackStore.getState().durationSec).toBe(42)
+    unsubscribe()
+  })
 })
 
 describe('playback store stopIfPlayingPodcast', () => {

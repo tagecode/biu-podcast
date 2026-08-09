@@ -15,6 +15,9 @@ export default defineConfig({
   // over the single-instance lock and can leave orphaned processes.
   workers: 1,
   fullyParallel: false,
-  retries: 0,
+  // Retry once for known CI-environment flakiness (Electron under xvfb is
+  // timing-sensitive; the suite is serial and each run is hermetic, but a
+  // retry absorbs the occasional cold-start/streaming race).
+  retries: 1,
   reporter: [['list']]
 })

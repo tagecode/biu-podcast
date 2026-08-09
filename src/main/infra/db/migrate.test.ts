@@ -37,9 +37,13 @@ describe('migrateDatabase', () => {
     expect(applied.map((r) => r.hash)).toContain('0005_episode_chapters_url.sql')
 
     // New tables/columns exist.
-    const playbackQueue = sqlite.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='playback_queue'").get()
+    const playbackQueue = sqlite
+      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='playback_queue'")
+      .get()
     expect(playbackQueue).toBeTruthy()
-    const chaptersCol = sqlite.prepare("PRAGMA table_info('episodes')").all() as Array<{ name: string }>
+    const chaptersCol = sqlite.prepare("PRAGMA table_info('episodes')").all() as Array<{
+      name: string
+    }>
     expect(chaptersCol.some((c) => c.name === 'chapters_url')).toBe(true)
   })
 
@@ -47,10 +51,17 @@ describe('migrateDatabase', () => {
     migrateDatabase()
     migrateDatabase()
     const sqlite = getSqlite()
-    const count = sqlite
-      .prepare('SELECT COUNT(*) AS n FROM __drizzle_migrations')
-      .get() as { n: number }
-    const files = ['0000_init.sql', '0001_episode_indexes.sql', '0002_unsubscribe_soft.sql', '0003_playlist_note.sql', '0004_playback_queue.sql', '0005_episode_chapters_url.sql']
+    const count = sqlite.prepare('SELECT COUNT(*) AS n FROM __drizzle_migrations').get() as {
+      n: number
+    }
+    const files = [
+      '0000_init.sql',
+      '0001_episode_indexes.sql',
+      '0002_unsubscribe_soft.sql',
+      '0003_playlist_note.sql',
+      '0004_playback_queue.sql',
+      '0005_episode_chapters_url.sql'
+    ]
     expect(count.n).toBe(files.length)
   })
 })
