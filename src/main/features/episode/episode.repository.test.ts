@@ -53,6 +53,7 @@ describe('EpisodeRepository.insertMany', () => {
         local_file_path text,
         download_status text,
         downloaded_at integer,
+        chapters_url text,
         FOREIGN KEY (podcast_id) REFERENCES podcasts(id) ON DELETE cascade
       );
     `)

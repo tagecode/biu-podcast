@@ -37,6 +37,7 @@ CREATE TABLE episodes (
   local_file_path text,
   download_status text,
   downloaded_at integer,
+  chapters_url text,
   FOREIGN KEY (podcast_id) REFERENCES podcasts(id) ON DELETE cascade
 );
 CREATE TABLE download_tasks (
@@ -48,6 +49,13 @@ CREATE TABLE download_tasks (
   retry_count integer DEFAULT 0 NOT NULL,
   updated_at integer NOT NULL,
   FOREIGN KEY (episode_id) REFERENCES episodes(id) ON DELETE cascade
+);
+CREATE TABLE playback_queue (
+  id text PRIMARY KEY NOT NULL,
+  episode_ids text NOT NULL,
+  mode text NOT NULL,
+  current_episode_id text,
+  updated_at integer NOT NULL
 );
 `
 

@@ -1,4 +1,4 @@
-import { Plus, Trash2, ListMusic } from 'lucide-react'
+import { Plus, Trash2, ListMusic, Download } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import type { PlaylistItem } from '@shared/types'
 
+import { useDownloadStore } from '@/features/download/store'
 import * as playlistApi from '../api'
 import { usePlaylistStore } from '../store'
 
@@ -22,6 +23,7 @@ export function PlaylistsPage({ onBack }: PlaylistsPageProps): React.JSX.Element
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [items, setItems] = useState<PlaylistItem[]>([])
   const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const enqueueMany = useDownloadStore((state) => state.enqueueMany)
 
   useEffect(() => {
     void load()
@@ -168,8 +170,29 @@ export function PlaylistsPage({ onBack }: PlaylistsPageProps): React.JSX.Element
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
           {selectedId ? (
             <>
-              <div className="mb-3 text-sm font-medium text-ink">
-                {playlists.find((p) => p.id === selectedId)?.name}
+              <div className="mb-3 flex items-center gap-2">
+                <div className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
+                  {playlists.find((p) => p.id === selectedId)?.name}
+                </div>
+                {items.length > 0 ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      void enqueueMany(items.map((i) => i.episodeId)).then((r) =>
+                        window.alert(
+                          t('playlist.downloadAllDone', {
+                            enqueued: r.enqueued,
+                            skipped: r.skipped
+                          })
+                        )
+                      )
+                    }}
+                  >
+                    <Download className="size-3.5" />
+                    {t('playlist.downloadAll')}
+                  </Button>
+                ) : null}
               </div>
               {items.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted">{t('playlist.noItems')}</p>

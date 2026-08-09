@@ -2,7 +2,13 @@ import { mkdtempSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { writeFileSync } from 'fs'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+process.env.BIU_PODCAST_DB_PATH = ':memory:'
+
+vi.mock('electron', () => ({
+  app: { getPath: () => '/tmp/fake-userdata' }
+}))
 
 import { createMemoryDb, type AppDatabase } from '../../infra/db/client'
 import { episodes, podcasts } from '../../infra/db/schema'
@@ -42,6 +48,7 @@ function createSchema(sqlite: ReturnType<typeof createMemoryDb>['sqlite']): void
       local_file_path text,
       download_status text,
       downloaded_at integer,
+      chapters_url text,
       FOREIGN KEY (podcast_id) REFERENCES podcasts(id) ON DELETE cascade
     );
   `)
@@ -241,5 +248,24 @@ describe('StorageService', () => {
 
     expect(preview.items).toHaveLength(0)
     expect(result.removedCount).toBe(0)
+  })
+
+  it('checkFreeSpace reports enough when free space is above the threshold', async () => {
+    const settings = makeSettings(null)
+    settings.set = vi.fn()
+    const service = new StorageService({ db, settings })
+    vi.spyOn(service, 'freeDiskSpaceBytes').mockResolvedValueOnce(1024 * 1024 * 1024) // 1 GB
+    const result = await service.checkFreeSpace()
+    expect(result.enough).toBe(true)
+    expect(result.freeBytes).toBe(1024 * 1024 * 1024)
+  })
+
+  it('checkFreeSpace reports not enough below the threshold', async () => {
+    const settings = makeSettings(null)
+    settings.set = vi.fn()
+    const service = new StorageService({ db, settings })
+    vi.spyOn(service, 'freeDiskSpaceBytes').mockResolvedValueOnce(100 * 1024 * 1024) // 100 MB
+    const result = await service.checkFreeSpace()
+    expect(result.enough).toBe(false)
   })
 })

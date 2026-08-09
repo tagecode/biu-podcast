@@ -3,6 +3,8 @@ import { dirname, join } from 'path'
 import { app } from 'electron'
 
 import { getDatabasePath, getSqlite } from './client'
+import { checkDatabaseHealth } from './health'
+import { logInfo } from '../logger'
 
 function getMigrationsDir(): string {
   const candidates = [
@@ -32,9 +34,14 @@ function runSqlStatements(sql: string): void {
   }
 }
 
-export function migrateDatabase(): void {
+export function migrateDatabase(): string {
   const dbPath = getDatabasePath()
   mkdirSync(dirname(dbPath), { recursive: true })
+
+  // Self-heal before migrations: repair/replace a corrupt database on disk so
+  // opening it (and running migrations) can't crash the app.
+  const health = checkDatabaseHealth()
+  if (health.message) logInfo('db', health.message)
 
   const sqlite = getSqlite()
   sqlite.exec(`
@@ -52,7 +59,7 @@ export function migrateDatabase(): void {
   )
 
   const migrationsDir = getMigrationsDir()
-  if (!existsSync(migrationsDir)) return
+  if (!existsSync(migrationsDir)) return health.message
 
   const files = readdirSync(migrationsDir)
     .filter((file) => file.endsWith('.sql'))
@@ -83,4 +90,6 @@ export function migrateDatabase(): void {
       throw error
     }
   }
+
+  return health.message
 }

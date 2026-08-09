@@ -19,17 +19,25 @@ import { broadcast } from '../../ipc/register'
 import { DownloadQueue, type QueueTask, type DownloadRunner } from './download-queue'
 import { DownloadRepository } from './download.repository'
 import { assertDownloadComplete } from './integrity'
+import { StorageService } from '../storage/storage.service'
 
 export interface DownloadServiceDeps {
   db?: AppDatabase
   settings?: SettingsStore
   runner?: DownloadRunner
+  storage?: StorageService
 }
 
 export function getDownloadDir(settings: SettingsStore): string {
   const configured = settings.getAll().downloadPath
   if (configured) return configured
   return join(app.getPath('userData'), 'downloads')
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GB`
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+  return `${Math.round(bytes / 1024)} KB`
 }
 
 export async function downloadToFile(
@@ -103,6 +111,7 @@ export class DownloadService {
   private readonly downloads: DownloadRepository
   private readonly episodes: EpisodeRepository
   private readonly queue: DownloadQueue
+  private readonly storage: StorageService
   private started = false
   /** When each task began actually downloading (taskId → timestamp). */
   private readonly downloadStartedAt = new Map<string, number>()
@@ -112,6 +121,7 @@ export class DownloadService {
     this.settings = deps.settings ?? settingsStore
     this.downloads = new DownloadRepository(this.db)
     this.episodes = new EpisodeRepository(this.db)
+    this.storage = deps.storage ?? new StorageService({ db: this.db, settings: this.settings })
 
     const defaultRunner: DownloadRunner = async (task, signal, onProgress) => {
       return downloadToFile(task, signal, onProgress, this.episodes, this.settings)
@@ -218,7 +228,19 @@ export class DownloadService {
     }
   }
 
-  enqueue(episodeId: string): DownloadTask {
+  async enqueue(episodeId: string): Promise<DownloadTask> {
+    const space = await this.storage.checkFreeSpace()
+    if (!space.enough) {
+      throw new AppError(
+        'DISK_FULL',
+        `磁盘空间不足（剩余 ${formatBytes(space.freeBytes)}），请清理后重试`
+      )
+    }
+    return this.enqueueCore(episodeId)
+  }
+
+  /** Synchronous enqueue without the disk-space gate (used internally after a check). */
+  private enqueueCore(episodeId: string): DownloadTask {
     const episode = this.episodes.findById(episodeId)
     if (!episode) throw new AppError('NOT_FOUND', '集数不存在')
     if (episode.isDownloaded) {
@@ -239,6 +261,42 @@ export class DownloadService {
       retryCount: 0
     })
     return { ...task, episodeTitle: episode.title }
+  }
+
+  /**
+   * Batch-enqueue episode ids into the download queue. Skips episodes already
+   * downloaded or already queued/active; per-episode failures don't block the
+   * rest. Returns counts for the UI.
+   */
+  async enqueueMany(episodeIds: string[]): Promise<{ enqueued: number; skipped: number }> {
+    let enqueued = 0
+    let skipped = 0
+    // One disk check for the whole batch (only relevant when enqueueing).
+    const space = await this.storage.checkFreeSpace()
+    if (!space.enough) {
+      throw new AppError(
+        'DISK_FULL',
+        `磁盘空间不足（剩余 ${formatBytes(space.freeBytes)}），请清理后重试`
+      )
+    }
+    for (const episodeId of episodeIds) {
+      const episode = this.episodes.findById(episodeId)
+      if (!episode || episode.isDownloaded) {
+        skipped += 1
+        continue
+      }
+      if (this.downloads.findActiveByEpisode(episodeId)) {
+        skipped += 1
+        continue
+      }
+      try {
+        this.enqueueCore(episodeId)
+        enqueued += 1
+      } catch {
+        skipped += 1
+      }
+    }
+    return { enqueued, skipped }
   }
 
   list(): DownloadTask[] {

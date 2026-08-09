@@ -49,6 +49,7 @@ export class EpisodeRepository {
       isPlayed: boolean
       playbackPositionSec: number
       isDownloaded: boolean
+      chaptersUrl: string | null
     }> = []
     for (const item of items) {
       const key = episodeKey(item.guid, item.audioUrl)
@@ -66,7 +67,8 @@ export class EpisodeRepository {
         fileSizeBytes: item.fileSizeBytes,
         isPlayed: false,
         playbackPositionSec: 0,
-        isDownloaded: false
+        isDownloaded: false,
+        chaptersUrl: item.chaptersUrl ?? null
       })
     }
 
@@ -118,7 +120,8 @@ export class EpisodeRepository {
         isDownloaded: episodes.isDownloaded,
         localFilePath: episodes.localFilePath,
         downloadStatus: episodes.downloadStatus,
-        downloadedAt: episodes.downloadedAt
+        downloadedAt: episodes.downloadedAt,
+        chaptersUrl: episodes.chaptersUrl
       })
       .from(episodes)
       .where(eq(episodes.podcastId, podcastId))
@@ -142,7 +145,8 @@ export class EpisodeRepository {
       localFilePath: row.localFilePath,
       downloadStatus: row.downloadStatus as Episode['downloadStatus'],
       downloadedAt: row.downloadedAt,
-      guid: row.guid
+      guid: row.guid,
+      chaptersUrl: row.chaptersUrl
     }))
 
     return {
@@ -302,7 +306,8 @@ export class EpisodeRepository {
       localFilePath: row.localFilePath,
       downloadStatus: row.downloadStatus as Episode['downloadStatus'],
       downloadedAt: row.downloadedAt,
-      guid: row.guid
+      guid: row.guid,
+      chaptersUrl: row.chaptersUrl
     }
   }
 }

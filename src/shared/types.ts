@@ -3,6 +3,9 @@ export type FetchStatus =
 
 export type DownloadTaskStatus = 'queued' | 'downloading' | 'paused' | 'completed' | 'failed'
 
+/** Playback queue mode (also used for the persisted queue). */
+export type QueueMode = 'list' | 'repeat-one' | 'shuffle'
+
 export interface Podcast {
   id: string
   feedUrl: string
@@ -36,6 +39,10 @@ export interface Episode {
   downloadStatus: DownloadTaskStatus | null
   downloadedAt: number | null
   guid?: string | null
+  /** URL of the chapters JSON (podcast:chapters / psc:chapters), if any. */
+  chaptersUrl?: string | null
+  /** Parsed chapters for this episode, if the feed provided them. */
+  chapters?: Chapter[] | null
 }
 
 export interface DownloadTask {
@@ -85,6 +92,14 @@ export interface ParsedFeedEpisode {
   durationSec: number | null
   fileSizeBytes: number | null
   guid: string | null
+  /** URL of a chapters JSON file (podcast:chapters / psc:chapters), if any. */
+  chaptersUrl?: string | null
+}
+
+/** A chapter from a podcast:chapters JSON file (startTime in seconds). */
+export interface Chapter {
+  startTime: number
+  title: string
 }
 
 export interface ParsedFeed {
@@ -133,6 +148,11 @@ export interface AppSettings {
   /** Write diagnostic logs to userData/logs (toggleable). */
   loggingEnabled: boolean
   /**
+   * Minimum free disk space (MB) required before a download is accepted.
+   * When the download volume has less free space, enqueue is refused.
+   */
+  freeSpaceThresholdMB: number
+  /**
    * Custom global-shortcut bindings per playback command (accelerator strings).
    * Commands absent from this map fall back to their default accelerator.
    */
@@ -143,6 +163,15 @@ export interface PlaybackSession {
   episode: Episode
   podcast: Podcast
   positionSec: number
+}
+
+/** Persisted playback queue (survives app restart). */
+export interface PlaybackQueue {
+  /** Episode ids in queue order. */
+  episodeIds: string[]
+  mode: QueueMode
+  /** Currently-playing episode id, if the queue has a current track. */
+  currentEpisodeId: string | null
 }
 
 export type AppRoute = 'subscriptions' | 'detail' | 'player' | 'settings'

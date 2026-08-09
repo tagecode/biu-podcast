@@ -1,6 +1,5 @@
-export const BACKUP_SCHEMA_VERSION = 2
+export const BACKUP_SCHEMA_VERSION = 3
 export const BACKUP_APP_ID = 'biu-podcast'
-
 export interface BackupManifest {
   app: string
   appVersion: string
@@ -64,6 +63,15 @@ export interface BackupData {
   episodes: BackupEpisode[]
   downloadTasks: BackupDownloadTask[]
   settings: BackupSettings
+  /** Persisted playback queue (added in schema 3; optional for old backups). */
+  queue?: BackupPlaybackQueue | null
+}
+
+/** Serialized playback queue for a backup. */
+export interface BackupPlaybackQueue {
+  episodeIds: string[]
+  mode: string
+  currentEpisodeId: string | null
 }
 
 export interface BackupBundle {

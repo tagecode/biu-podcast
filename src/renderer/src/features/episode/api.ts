@@ -1,6 +1,6 @@
 import type { EpisodeListPage } from '@shared/episode-list'
 import { EPISODE_PAGE_SIZE } from '@shared/episode-list'
-import type { Episode } from '@shared/types'
+import type { Chapter, Episode } from '@shared/types'
 
 export async function listEpisodesPage(
   podcastId: string,
@@ -14,6 +14,12 @@ export async function listEpisodesPage(
 
 export async function getEpisode(episodeId: string): Promise<Episode> {
   const result = await window.api.episode.getById({ episodeId })
+  if (!result.ok) throw new Error(result.error.message)
+  return result.data
+}
+
+export async function getChapters(episodeId: string): Promise<Chapter[]> {
+  const result = await window.api.episode.getChapters({ episodeId })
   if (!result.ok) throw new Error(result.error.message)
   return result.data
 }

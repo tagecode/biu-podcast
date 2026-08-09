@@ -77,6 +77,51 @@ describe('parseFeedXml', () => {
     expect(feed.episodes).toHaveLength(1)
     expect(feed.episodes[0]?.title).toBe('Has Audio')
   })
+
+  it('prefers an audio/mpeg enclosure over a non-audio one', async () => {
+    const feed = await parseFeedXml(
+      `<rss version="2.0"><channel><title>T</title>
+        <item>
+          <title>Multi</title><guid>m1</guid>
+          <enclosure url="https://x.com/a.mp4" type="video/mp4" length="5000" />
+          <enclosure url="https://x.com/a.mp3" type="audio/mpeg" length="1000" />
+        </item>
+      </channel></rss>`
+    )
+    expect(feed.episodes[0]?.audioUrl).toBe('https://x.com/a.mp3')
+    expect(feed.episodes[0]?.fileSizeBytes).toBe(1000)
+  })
+
+  it('picks the largest enclosure among same-type audio', async () => {
+    const feed = await parseFeedXml(
+      `<rss version="2.0"><channel><title>T</title>
+        <item>
+          <title>Two Audio</title><guid>m2</guid>
+          <enclosure url="https://x.com/low.mp3" type="audio/mpeg" length="100" />
+          <enclosure url="https://x.com/high.mp3" type="audio/mpeg" length="10000" />
+        </item>
+      </channel></rss>`
+    )
+    expect(feed.episodes[0]?.audioUrl).toBe('https://x.com/high.mp3')
+  })
+
+  it('extracts a podcast:chapters reference', async () => {
+    const feed = await parseFeedXml(
+      `<rss version="2.0" xmlns:podcast="https://podcastindex.org/namespace/1.0"><channel><title>T</title>
+        <item>
+          <title>With Chapters</title><guid>c1</guid>
+          <enclosure url="https://x.com/a.mp3" type="audio/mpeg" />
+          <podcast:chapters url="https://x.com/chapters.json" type="application/json" />
+        </item>
+        <item>
+          <title>No Chapters</title><guid>c2</guid>
+          <enclosure url="https://x.com/b.mp3" type="audio/mpeg" />
+        </item>
+      </channel></rss>`
+    )
+    expect(feed.episodes[0]?.chaptersUrl).toBe('https://x.com/chapters.json')
+    expect(feed.episodes[1]?.chaptersUrl).toBeNull()
+  })
 })
 
 describe('fetchAndParseFeed', () => {

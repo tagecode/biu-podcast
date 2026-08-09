@@ -111,12 +111,15 @@ export const en: TranslationSchema = {
     loadMoreFailed: 'Failed to load more',
     loadDetailFailed: 'Failed to load episode details',
     playLatest: 'Play latest episode',
+    downloadAll: 'Download all',
+    downloadAllDone: 'Queued {{enqueued}}, skipped {{skipped}}',
     listTitle: 'Episodes',
     loadedProgress: '{{count}} / {{total}} loaded',
     loadingDetail: 'Loading details…',
     loadingMore: 'Loading more…',
     allLoaded: 'All episodes loaded',
-    noDescription: 'No description'
+    noDescription: 'No description',
+    chapters: 'Chapters'
   },
   playlist: {
     create: 'New playlist',
@@ -134,7 +137,9 @@ export const en: TranslationSchema = {
     myPlaylists: 'My playlists',
     removeItem: 'Remove',
     selectPrompt: 'Select a playlist to view its contents',
-    loadFailed: 'Failed to load playlists'
+    loadFailed: 'Failed to load playlists',
+    downloadAll: 'Download all',
+    downloadAllDone: 'Queued {{enqueued}}, skipped {{skipped}}'
   },
   note: {
     title: 'Notes',
@@ -165,6 +170,10 @@ export const en: TranslationSchema = {
     modeRepeatOne: 'Repeat one',
     modeShuffle: 'Shuffle',
     fileMissing: 'File is missing, please download it again',
+    networkError: 'Network error — playback failed. Check your connection and retry',
+    decodeError: "Can't decode this audio — the file may be corrupted or unsupported",
+    retry: 'Retry',
+    redownload: 'Download again',
     queueModeAria: 'Playback mode: {{mode}}',
     collapseHint: 'Collapse to mini player',
     rateAria: 'Playback speed',
@@ -327,6 +336,9 @@ export const en: TranslationSchema = {
     cleanupPreviewTitle: 'Will remove {{count}} file(s) ({{size}})',
     cleanupPreviewEmpty: 'Nothing to clean right now',
     cleanupDone: 'Cleaned {{count}} file(s), freed {{size}}',
+    freeSpaceThreshold: 'Free-space warning threshold',
+    freeSpaceThresholdHint: 'New downloads are refused when free disk space drops below this',
+    freeSpaceOff: 'Off',
     cleanupFailed: 'Cleanup failed',
     loadingUsage: 'Calculating…',
     noDownloads: 'No downloaded files yet',

@@ -21,6 +21,14 @@ export async function enqueueDownload(episodeId: string): Promise<DownloadTask> 
   return result.data
 }
 
+export async function enqueueManyDownloads(
+  episodeIds: string[]
+): Promise<{ enqueued: number; skipped: number }> {
+  const result = await window.api.download.enqueueMany({ episodeIds })
+  if (!result.ok) throw new Error(result.error.message)
+  return result.data
+}
+
 export async function pauseDownload(taskId: string): Promise<void> {
   const result = await window.api.download.pause({ taskId })
   if (!result.ok) throw new Error(result.error.message)

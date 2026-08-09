@@ -10,10 +10,16 @@ import { formatDate, formatDuration, formatFileSize } from '@/lib/format'
 import { usePlaybackStore } from '@/features/playback/store'
 import * as playlistApi from '@/features/playlist/api'
 
+import { linkifyTimestamps } from '../lib/timestamp-link'
+import * as episodeApi from '../api'
+import type { Chapter } from '@shared/types'
+
 interface EpisodeDetailPanelProps {
   episode: Episode
   onClose: () => void
   onPlay: () => void
+  /** Play this episode starting at a given position (timestamp links). */
+  onPlayFrom?: (seconds: number) => void
   onDownload?: () => void
   /** This episode is the current track AND audio is playing — show pause. */
   isCurrentPlaying?: boolean
@@ -33,6 +39,7 @@ export function EpisodeDetailPanel({
   episode,
   onClose,
   onPlay,
+  onPlayFrom,
   onDownload,
   isCurrentPlaying,
   currentPositionSec
@@ -41,11 +48,25 @@ export function EpisodeDetailPanel({
   const [playlists, setPlaylists] = useState<Playlist[]>([])
   const [noteText, setNoteText] = useState('')
   const [notes, setNotes] = useState<Note[]>([])
+  const [chapters, setChapters] = useState<Chapter[]>([])
 
   useEffect(() => {
     void playlistApi.listPlaylists().then((r) => setPlaylists(r))
     void playlistApi.listNotesByEpisode(episode.id).then((r) => setNotes(r))
   }, [episode.id])
+
+  // Load chapter list when the episode's feed provides a chapters URL.
+  // (Chapters state is per-episode; the panel remounts per selected episode.)
+  useEffect(() => {
+    if (!episode.chaptersUrl) return
+    let cancelled = false
+    void episodeApi.getChapters(episode.id).then((c) => {
+      if (!cancelled) setChapters(c)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [episode.id, episode.chaptersUrl])
 
   const addToPlaylist = async (playlistId: string): Promise<void> => {
     await playlistApi.addToPlaylist(playlistId, episode.id)
@@ -61,6 +82,27 @@ export function EpisodeDetailPanel({
     const note = await playlistApi.createNote(episode.id, ts, noteText.trim())
     setNotes((prev) => [note, ...prev])
     setNoteText('')
+  }
+
+  /** Jump to a timestamp in the description: seek if this episode is current,
+      otherwise play it from that position. */
+  const jumpToTimestamp = (seconds: number): void => {
+    const playback = usePlaybackStore.getState()
+    if (playback.currentEpisode?.id === episode.id) {
+      playback.seek(seconds)
+    } else if (onPlayFrom) {
+      onPlayFrom(seconds)
+    } else {
+      onPlay()
+    }
+  }
+
+  const handleDescriptionClick = (event: React.MouseEvent<HTMLDivElement>): void => {
+    const target = event.target as HTMLElement
+    if (target.tagName !== 'BUTTON' || !target.dataset.ts) return
+    event.preventDefault()
+    const seconds = Number(target.dataset.ts)
+    if (Number.isFinite(seconds)) jumpToTimestamp(seconds)
   }
 
   return (
@@ -170,11 +212,37 @@ export function EpisodeDetailPanel({
           ) : null}
         </div>
 
+        {chapters.length > 0 ? (
+          <div className="mb-4">
+            <div className="mb-1.5 text-sm font-medium text-ink">{t('episode.chapters')}</div>
+            <ol className="space-y-1">
+              {chapters.map((chapter, index) => (
+                <li key={`${chapter.startTime}-${index}`}>
+                  <button
+                    type="button"
+                    className="flex w-full items-start gap-2 rounded-md px-2 py-1 text-left text-xs hover:bg-amber-100/50"
+                    onClick={() => jumpToTimestamp(chapter.startTime)}
+                  >
+                    <span className="shrink-0 font-mono text-amber-700">
+                      {formatTimestamp(chapter.startTime)}
+                    </span>
+                    <span className="min-w-0 flex-1 text-ink">{chapter.title}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ) : null}
+
         {episode.descriptionHtml ? (
           <div
-            className="episode-html text-sm leading-6 text-ink [&_a]:text-amber-700 [&_a]:underline [&_li]:my-1 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5"
-            // Sanitized in main process via sanitizeRichHtml before IPC.
-            dangerouslySetInnerHTML={{ __html: episode.descriptionHtml }}
+            className="episode-html text-sm leading-6 text-ink [&_.ts-link]:text-amber-700 [&_.ts-link]:underline [&_.ts-link]:cursor-pointer [&_a]:text-amber-700 [&_a]:underline [&_li]:my-1 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5"
+            // Sanitized in main process via sanitizeRichHtml before IPC;
+            // timestamps are turned into buttons here (linkifyTimestamps).
+            dangerouslySetInnerHTML={{
+              __html: linkifyTimestamps(episode.descriptionHtml) ?? ''
+            }}
+            onClick={handleDescriptionClick}
           />
         ) : (
           <p className="text-sm text-muted">{t('episode.noDescription')}</p>

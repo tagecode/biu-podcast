@@ -85,7 +85,7 @@ describe('DownloadService', () => {
     })
 
     const service = new DownloadService({ db, settings, runner })
-    const task = service.enqueue(episodeId)
+    const task = await service.enqueue(episodeId)
     expect(task.status).toBe('queued')
 
     await wait(100)
@@ -102,16 +102,37 @@ describe('DownloadService', () => {
       totalBytes: 1024
     }))
     const service = new DownloadService({ db, settings: createTestSettings(), runner })
-    service.enqueue(episodeId)
+    await service.enqueue(episodeId)
     await wait(80)
 
-    expect(() => service.enqueue(episodeId)).toThrow('已下载')
+    await expect(service.enqueue(episodeId)).rejects.toThrow('已下载')
   })
 
-  it('enqueue throws NOT_FOUND for missing episode', () => {
+  it('enqueue throws NOT_FOUND for missing episode', async () => {
     const { db } = createTestDb()
     const service = new DownloadService({ db, settings: createTestSettings() })
-    expect(() => service.enqueue('nope')).toThrow('集数不存在')
+    await expect(service.enqueue('nope')).rejects.toThrow('集数不存在')
+  })
+
+  it('enqueue refuses when disk space is below the threshold', async () => {
+    const { db } = createTestDb()
+    const episodeId = seedEpisode(db)
+    const storage = {
+      checkFreeSpace: vi.fn(async () => ({
+        enough: false,
+        freeBytes: 50 * 1024 * 1024,
+        thresholdBytes: 500 * 1024 * 1024
+      }))
+    } as never
+    const service = new DownloadService({
+      db,
+      settings: createTestSettings(),
+      runner: blockedRunner,
+      storage
+    })
+
+    await expect(service.enqueue(episodeId)).rejects.toThrow('磁盘空间不足')
+    expect(service.list()).toHaveLength(0)
   })
 
   it('pause stops an active download', async () => {
@@ -119,7 +140,7 @@ describe('DownloadService', () => {
     const episodeId = seedEpisode(db)
     const runner = vi.fn(blockedRunner)
     const service = new DownloadService({ db, settings: createTestSettings(), runner })
-    const task = service.enqueue(episodeId)
+    const task = await service.enqueue(episodeId)
     await wait(50)
 
     service.pause(task.id)
@@ -140,7 +161,7 @@ describe('DownloadService', () => {
       return { localFilePath: `/tmp/${task.episodeId}.mp3`, totalBytes: 1024 }
     })
     const service = new DownloadService({ db, settings: createTestSettings(), runner })
-    const task = service.enqueue(episodeId)
+    const task = await service.enqueue(episodeId)
     await wait(30)
 
     await service.cancel(task.id)
@@ -172,7 +193,7 @@ describe('DownloadService', () => {
     const episodeId = seedEpisode(db)
     const runner = vi.fn(blockedRunner)
     const service = new DownloadService({ db, settings: createTestSettings(), runner })
-    const task = service.enqueue(episodeId)
+    const task = await service.enqueue(episodeId)
     await wait(30)
     service.pause(task.id)
     await wait(30)
@@ -196,7 +217,7 @@ describe('DownloadService', () => {
       return { localFilePath: `/tmp/${task.episodeId}.mp3`, totalBytes: 1024 }
     })
     const service = new DownloadService({ db, settings: createTestSettings(), runner })
-    const task = service.enqueue(episodeId)
+    const task = await service.enqueue(episodeId)
     await wait(30)
 
     const tasks = service.list()
@@ -212,7 +233,7 @@ describe('DownloadService', () => {
       return { localFilePath: `/tmp/${task.episodeId}.mp3`, totalBytes: 1024 }
     })
     const service = new DownloadService({ db, settings: createTestSettings(), runner })
-    const task = service.enqueue(episodeId)
+    const task = await service.enqueue(episodeId)
     await wait(30)
 
     // simulate interrupted: set status to downloading in db (as if app crashed)
@@ -229,6 +250,131 @@ describe('DownloadService', () => {
       .where(eq(schema.downloadTasks.id, task.id))
       .get()
     expect(['queued', 'downloading'].includes(row!.status)).toBe(true)
+  })
+
+  it('enqueueMany enqueues all undownloaded episodes and reports counts', async () => {
+    const { db } = createTestDb()
+    // Three episodes in one podcast.
+    const repo = new EpisodeRepository(db)
+    db.insert(schema.podcasts)
+      .values({
+        id: 'pod-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Pod',
+        description: null,
+        coverUrl: null,
+        author: null,
+        language: null,
+        isPaused: false,
+        subscribedAt: 1700000000000,
+        lastFetchedAt: 1700000000000,
+        lastFetchStatus: 'ok'
+      })
+      .run()
+    repo.insertMany('pod-1', [
+      {
+        title: 'A',
+        descriptionHtml: null,
+        publishedAt: 1700000000000,
+        audioUrl: 'https://x.com/a.mp3',
+        durationSec: 60,
+        fileSizeBytes: 10,
+        guid: 'a'
+      },
+      {
+        title: 'B',
+        descriptionHtml: null,
+        publishedAt: 1700000000001,
+        audioUrl: 'https://x.com/b.mp3',
+        durationSec: 60,
+        fileSizeBytes: 10,
+        guid: 'b'
+      },
+      {
+        title: 'C',
+        descriptionHtml: null,
+        publishedAt: 1700000000002,
+        audioUrl: 'https://x.com/c.mp3',
+        durationSec: 60,
+        fileSizeBytes: 10,
+        guid: 'c'
+      }
+    ])
+    const all = db.select().from(schema.episodes).all()
+    const service = new DownloadService({
+      db,
+      settings: createTestSettings(),
+      runner: blockedRunner
+    })
+
+    const result = await service.enqueueMany(all.map((e) => e.id))
+    expect(result).toEqual({ enqueued: 3, skipped: 0 })
+    expect(service.list()).toHaveLength(3)
+  })
+
+  it('enqueueMany skips downloaded and already-queued episodes', async () => {
+    const { db } = createTestDb()
+    const repo = new EpisodeRepository(db)
+    db.insert(schema.podcasts)
+      .values({
+        id: 'pod-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Pod',
+        description: null,
+        coverUrl: null,
+        author: null,
+        language: null,
+        isPaused: false,
+        subscribedAt: 1700000000000,
+        lastFetchedAt: 1700000000000,
+        lastFetchStatus: 'ok'
+      })
+      .run()
+    repo.insertMany('pod-1', [
+      {
+        title: 'A',
+        descriptionHtml: null,
+        publishedAt: 1700000000000,
+        audioUrl: 'https://x.com/a.mp3',
+        durationSec: 60,
+        fileSizeBytes: 10,
+        guid: 'a'
+      },
+      {
+        title: 'B',
+        descriptionHtml: null,
+        publishedAt: 1700000000001,
+        audioUrl: 'https://x.com/b.mp3',
+        durationSec: 60,
+        fileSizeBytes: 10,
+        guid: 'b'
+      },
+      {
+        title: 'C',
+        descriptionHtml: null,
+        publishedAt: 1700000000002,
+        audioUrl: 'https://x.com/c.mp3',
+        durationSec: 60,
+        fileSizeBytes: 10,
+        guid: 'c'
+      }
+    ])
+    const all = db.select().from(schema.episodes).all()
+    // Mark B as downloaded; enqueue A first so it's already active.
+    db.update(schema.episodes)
+      .set({ isDownloaded: true, downloadStatus: 'completed' })
+      .where(eq(schema.episodes.id, all.find((e) => e.title === 'B')!.id))
+      .run()
+    const service = new DownloadService({
+      db,
+      settings: createTestSettings(),
+      runner: blockedRunner
+    })
+    await service.enqueue(all.find((e) => e.title === 'A')!.id)
+
+    const result = await service.enqueueMany(all.map((e) => e.id))
+    expect(result.enqueued).toBe(1) // only C
+    expect(result.skipped).toBe(2) // A already queued, B downloaded
   })
 })
 

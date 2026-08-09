@@ -1,9 +1,10 @@
 import { EpisodeRepository } from './episode.repository'
+import { parseChaptersJson } from './chapters'
 import { getDb, type AppDatabase } from '../../infra/db/client'
 import { sanitizeRichHtml } from '../../infra/sanitize/html'
 import { AppError } from '@shared/errors'
 import type { EpisodeListPage } from '@shared/episode-list'
-import type { Episode } from '@shared/types'
+import type { Chapter, Episode } from '@shared/types'
 
 export interface EpisodeServiceDeps {
   db?: AppDatabase
@@ -64,6 +65,35 @@ export class EpisodeService {
 
   getLatest(podcastId: string): Episode | null {
     return this.episodes.findLatest(podcastId)
+  }
+
+  /**
+   * Fetch and parse the episode's chapters JSON (podcast:chapters / psc).
+   * Returns [] when the episode has no chapters ref or the fetch/parse fails —
+   * chapters are additive and must never break playback.
+   */
+  async getChapters(episodeId: string): Promise<Chapter[]> {
+    const episode = this.episodes.findById(episodeId)
+    if (!episode) throw new AppError('NOT_FOUND', '集数不存在')
+    const url = episode.chaptersUrl
+    if (!url) return []
+
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 15_000)
+      try {
+        const response = await fetch(url, {
+          signal: controller.signal,
+          headers: { 'User-Agent': 'BiuPodcast/1.0 (+https://github.com/tagecode/biu-podcast)' }
+        })
+        if (!response.ok) return []
+        return parseChaptersJson(await response.text())
+      } finally {
+        clearTimeout(timeout)
+      }
+    } catch {
+      return []
+    }
   }
 }
 

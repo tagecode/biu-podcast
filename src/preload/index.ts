@@ -13,8 +13,10 @@ import type {
   DownloadTaskIdInput,
   DownloadHistoryInput,
   EnqueueDownloadInput,
+  EnqueueManyDownloadInput,
   EpisodeIdInput,
   GetAdjacentInput,
+  GetChaptersInput,
   GetEpisodeInput,
   ImportBackupInput,
   ListEpisodesInput,
@@ -31,6 +33,7 @@ import type {
   RemoveSubscriptionInput,
   RenamePlaylistInput,
   ReorderPlaylistInput,
+  SaveQueueInput,
   SetPausedInput,
   SetSettingInput,
   ShortcutConfig,
@@ -42,11 +45,13 @@ import type {
 import type { ImportPreview } from '@shared/backup'
 import type {
   AppSettings,
+  Chapter,
   DownloadTask,
   DownloadTaskStatus,
   Episode,
   IpcResult,
   Note,
+  PlaybackQueue,
   PlaybackSession,
   Playlist,
   PlaylistItem,
@@ -107,6 +112,8 @@ const api = {
       input: GetAdjacentInput
     ): Promise<IpcResult<{ previous: Episode | null; next: Episode | null }>> =>
       ipcRenderer.invoke(IPC_CHANNELS.episode.getAdjacent, input),
+    getChapters: (input: GetChaptersInput): Promise<IpcResult<Chapter[]>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.episode.getChapters, input),
     onChanged: (callback: (payload: { podcastId: string }) => void): (() => void) => {
       const listener = (_event: Electron.IpcRendererEvent, payload: { podcastId: string }): void =>
         callback(payload)
@@ -134,6 +141,12 @@ const api = {
       return () => ipcRenderer.removeListener(IPC_CHANNELS.playback.deepLinkPlay, listener)
     }
   },
+  queue: {
+    save: (input: SaveQueueInput): Promise<IpcResult<PlaybackQueue>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.queue.save, input),
+    load: (): Promise<IpcResult<{ queue: PlaybackQueue; episodes: Episode[] } | null>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.queue.load)
+  },
   mediaSession: {
     update: (input: MediaSessionUpdateInput): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC_CHANNELS.mediaSession.update, input)
@@ -157,6 +170,10 @@ const api = {
   download: {
     enqueue: (input: EnqueueDownloadInput): Promise<IpcResult<DownloadTask>> =>
       ipcRenderer.invoke(IPC_CHANNELS.download.enqueue, input),
+    enqueueMany: (
+      input: EnqueueManyDownloadInput
+    ): Promise<IpcResult<{ enqueued: number; skipped: number }>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.download.enqueueMany, input),
     list: (): Promise<IpcResult<DownloadTask[]>> => ipcRenderer.invoke(IPC_CHANNELS.download.list),
     history: (
       input: DownloadHistoryInput

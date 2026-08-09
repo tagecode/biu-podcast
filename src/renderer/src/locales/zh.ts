@@ -105,12 +105,15 @@ export const zh = {
     loadMoreFailed: '加载更多失败',
     loadDetailFailed: '加载集数详情失败',
     playLatest: '播放最新一集',
+    downloadAll: '下载全部',
+    downloadAllDone: '已加入下载队列：{{enqueued}} 个，跳过 {{skipped}} 个',
     listTitle: '集数列表',
     loadedProgress: '已加载 {{count}} / {{total}}',
     loadingDetail: '加载详情…',
     loadingMore: '加载更多…',
     allLoaded: '已加载全部集数',
-    noDescription: '暂无集数简介'
+    noDescription: '暂无集数简介',
+    chapters: '章节'
   },
   playlist: {
     create: '新建播放列表',
@@ -128,7 +131,9 @@ export const zh = {
     myPlaylists: '我的列表',
     removeItem: '移除',
     selectPrompt: '选择一个播放列表查看内容',
-    loadFailed: '加载播放列表失败'
+    loadFailed: '加载播放列表失败',
+    downloadAll: '下载全部',
+    downloadAllDone: '已加入下载队列：{{enqueued}} 个，跳过 {{skipped}} 个'
   },
   note: {
     title: '笔记',
@@ -159,6 +164,10 @@ export const zh = {
     modeRepeatOne: '单曲循环',
     modeShuffle: '随机播放',
     fileMissing: '文件已丢失，请重新下载',
+    networkError: '网络错误，播放失败。请检查网络后重试',
+    decodeError: '无法解码该音频，可能文件损坏或格式不受支持',
+    retry: '重试',
+    redownload: '重新下载',
     queueModeAria: '播放模式：{{mode}}',
     collapseHint: '收起到迷你播放器',
     rateAria: '播放速度',
@@ -317,6 +326,9 @@ export const zh = {
     cleanupPreviewTitle: '将清理 {{count}} 个文件（{{size}}）',
     cleanupPreviewEmpty: '当前没有可清理的文件',
     cleanupDone: '已清理 {{count}} 个文件，释放 {{size}}',
+    freeSpaceThreshold: '下载前剩余空间预警',
+    freeSpaceThresholdHint: '磁盘剩余空间低于该值时，新下载将被拒绝并提示',
+    freeSpaceOff: '关闭预警',
     cleanupFailed: '清理失败',
     loadingUsage: '计算中…',
     noDownloads: '暂无已下载文件',

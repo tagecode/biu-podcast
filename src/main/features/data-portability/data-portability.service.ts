@@ -15,7 +15,7 @@ import { AppError } from '@shared/errors'
 import type { AppSettings } from '@shared/types'
 
 import { getDb, type AppDatabase } from '../../infra/db/client'
-import { downloadTasks, episodes, podcasts } from '../../infra/db/schema'
+import { downloadTasks, episodes, playbackQueue, podcasts } from '../../infra/db/schema'
 import { settingsStore, SettingsStore } from '../../infra/settings/store'
 import { previewImport } from './preview'
 
@@ -28,6 +28,7 @@ function collectBackupData(db: AppDatabase, settings: SettingsStore): BackupData
   const podcastRows = db.select().from(podcasts).all()
   const episodeRows = db.select().from(episodes).all()
   const taskRows = db.select().from(downloadTasks).all()
+  const queueRow = db.select().from(playbackQueue).all()[0]
   const settingsData = settings.getAll()
 
   return {
@@ -71,7 +72,23 @@ function collectBackupData(db: AppDatabase, settings: SettingsStore): BackupData
       retryCount: row.retryCount,
       updatedAt: row.updatedAt
     })),
-    settings: settingsData
+    settings: settingsData,
+    queue: queueRow
+      ? {
+          episodeIds: safeParseQueueIds(queueRow.episodeIds),
+          mode: queueRow.mode,
+          currentEpisodeId: queueRow.currentEpisodeId
+        }
+      : null
+  }
+}
+
+function safeParseQueueIds(raw: string): string[] {
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : []
+  } catch {
+    return []
   }
 }
 
@@ -274,6 +291,38 @@ export class DataPortabilityService {
         } else {
           tx.insert(downloadTasks).values(task).run()
         }
+      }
+
+      // Restore the persisted queue (present in schema 3+ backups; absent →
+      // keep whatever the local DB already holds).
+      const backupQueue = bundle.data.queue
+      if (backupQueue && Array.isArray(backupQueue.episodeIds)) {
+        const validIds = new Set(
+          tx
+            .select({ id: episodes.id })
+            .from(episodes)
+            .all()
+            .map((row) => row.id)
+        )
+        const episodeIds = backupQueue.episodeIds.filter((id) => validIds.has(id))
+        const mode =
+          backupQueue.mode === 'repeat-one' || backupQueue.mode === 'shuffle'
+            ? backupQueue.mode
+            : 'list'
+        const currentEpisodeId =
+          backupQueue.currentEpisodeId && episodeIds.includes(backupQueue.currentEpisodeId)
+            ? backupQueue.currentEpisodeId
+            : null
+        tx.delete(playbackQueue).run()
+        tx.insert(playbackQueue)
+          .values({
+            id: 'current',
+            episodeIds: JSON.stringify(episodeIds),
+            mode,
+            currentEpisodeId,
+            updatedAt: Date.now()
+          })
+          .run()
       }
     })
 

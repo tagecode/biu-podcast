@@ -49,6 +49,7 @@ export function PodcastDetailPage({
   const togglePlay = usePlaybackStore((state) => state.togglePlay)
   const stopIfPlayingPodcast = usePlaybackStore((state) => state.stopIfPlayingPodcast)
   const enqueueDownload = useDownloadStore((state) => state.enqueue)
+  const enqueueMany = useDownloadStore((state) => state.enqueueMany)
   const listRef = useRef<HTMLDivElement>(null)
 
   const loadFirstPage = useCallback(async (): Promise<void> => {
@@ -85,6 +86,27 @@ export function PodcastDetailPage({
       setLoadingMore(false)
     }
   }, [episodes.length, hasMore, loadingMore, podcastId, t])
+
+  /** Enqueue every not-yet-downloaded episode of this podcast (paginated, capped). */
+  const downloadAll = useCallback(async (): Promise<void> => {
+    const ids: string[] = []
+    let offset = 0
+    // Cap the sweep so a huge back-catalog can't enqueue thousands of tasks at
+    // once; 500 episodes is well beyond a typical user's immediate needs.
+    const MAX_SWEEP = 500
+    while (offset < MAX_SWEEP) {
+      const page = await episodeApi.listEpisodesPage(podcastId, offset, EPISODE_PAGE_SIZE)
+      for (const episode of page.items) {
+        if (!episode.isDownloaded) ids.push(episode.id)
+      }
+      if (ids.length >= MAX_SWEEP) break
+      if (!page.hasMore) break
+      offset += page.items.length
+    }
+    if (ids.length === 0) return
+    const r = await enqueueMany(ids.slice(0, MAX_SWEEP))
+    window.alert(t('episode.downloadAllDone', { enqueued: r.enqueued, skipped: r.skipped }))
+  }, [enqueueMany, podcastId, t])
 
   const openEpisodeDetail = useCallback(
     async (episodeId: string): Promise<void> => {
@@ -206,6 +228,13 @@ export function PodcastDetailPage({
                 >
                   {t('episode.playLatest')}
                 </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => void downloadAll()}
+                  disabled={episodes.length === 0}
+                >
+                  {t('episode.downloadAll')}
+                </Button>
                 <Button variant="secondary" onClick={() => setUnsubscribeOpen(true)}>
                   {t('subscription.remove')}
                 </Button>
@@ -281,6 +310,9 @@ export function PodcastDetailPage({
             } else {
               void playEpisode(selectedEpisode, podcast)
             }
+          }}
+          onPlayFrom={(seconds) => {
+            void playEpisode(selectedEpisode, podcast, { fromSec: seconds })
           }}
           onDownload={
             selectedEpisode.isDownloaded

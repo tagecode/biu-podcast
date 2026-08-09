@@ -18,6 +18,7 @@ const defaults: AppSettings = {
   language: 'system',
   cleanupRetentionDays: null,
   loggingEnabled: true,
+  freeSpaceThresholdMB: 500,
   shortcutBindings: {}
 }
 
@@ -59,6 +60,7 @@ export class SettingsStore {
       language: this.store.get('language'),
       cleanupRetentionDays: this.store.get('cleanupRetentionDays'),
       loggingEnabled: this.store.get('loggingEnabled'),
+      freeSpaceThresholdMB: this.store.get('freeSpaceThresholdMB'),
       shortcutBindings: this.store.get('shortcutBindings')
     }
   }

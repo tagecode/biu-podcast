@@ -16,6 +16,8 @@ interface PlaybackState {
   hasPrevious: boolean
   hasNext: boolean
   playbackError: string | null
+  /** Action shown next to a playback error. */
+  playbackErrorAction: 'retry' | 'redownload' | null
   playbackRate: number
   setPlaybackRate: (rate: number) => void
   /** Remaining sleep-timer seconds; null when not armed. */
@@ -44,6 +46,7 @@ interface PlaybackState {
   refreshAdjacent: () => Promise<void>
   persistProgress: () => void
   clearPlaybackError: () => void
+  retryPlayback: () => Promise<void>
   /** Stop playback and clear the player if it's playing an episode of this podcast. */
   stopIfPlayingPodcast: (podcastId: string) => void
 }
@@ -105,6 +108,37 @@ export async function loadPlaybackPrefs(): Promise<void> {
   }
 }
 
+/**
+ * Persist the current queue (order + mode + currently-playing episode) so it
+ * survives an app restart. Best-effort: a failed write just means the next
+ * launch starts with whatever was last saved. Skips when the queue is empty so
+ * a launch-time race (queue not restored yet) can't wipe a saved queue.
+ */
+function persistQueue(): void {
+  const api = window.api?.queue
+  if (!api) return
+  const state = usePlaybackStore.getState()
+  const episodeIds = state.queueItems.map((e) => e.id)
+  if (episodeIds.length === 0) return
+  const current = state.currentEpisode
+  const currentEpisodeId =
+    current && state.queueItems.some((e) => e.id === current.id) ? current.id : null
+  void api.save({ episodeIds, mode: state.queueMode, currentEpisodeId }).catch(() => undefined)
+}
+
+/** Restore the persisted queue (order + mode) after session restore. */
+export async function restoreQueue(): Promise<void> {
+  try {
+    const result = await window.api.queue.load()
+    if (!result.ok || !result.data) return
+    const { episodes, queue } = result.data
+    // Episodes come back in queue order, already pruned of deleted entries.
+    usePlaybackStore.setState({ queueItems: episodes, queueMode: queue.mode })
+  } catch {
+    // Non-fatal — an empty queue applies.
+  }
+}
+
 export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   currentEpisode: null,
   currentPodcast: null,
@@ -115,6 +149,7 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   hasPrevious: false,
   hasNext: false,
   playbackError: null,
+  playbackErrorAction: null,
   playbackRate: 1,
   setPlaybackRate: (rate) => {
     getAudio().playbackRate = rate
@@ -151,10 +186,14 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   },
   queueItems: [],
   queueMode: 'list',
-  setQueueMode: (mode) => set({ queueMode: mode }),
+  setQueueMode: (mode) => {
+    set({ queueMode: mode })
+    persistQueue()
+  },
   addToQueue: (episode) => {
     if (get().queueItems.some((e) => e.id === episode.id)) return
     set((state) => ({ queueItems: [...state.queueItems, episode] }))
+    persistQueue()
   },
   playEpisode: async (episode, podcast, options) => {
     const online = typeof navigator === 'undefined' ? true : navigator.onLine
@@ -202,11 +241,13 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
         hasPrevious: false,
         hasNext: false,
         playbackError: null,
+        playbackErrorAction: null,
         view: openFullPlayerDefault ? 'full' : get().view
       })
+      persistQueue()
       void get().refreshAdjacent()
     } else {
-      set({ playbackError: null })
+      set({ playbackError: null, playbackErrorAction: null })
     }
     void audio.play()
     set({ isPlaying: true })
@@ -225,12 +266,18 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
       isPlaying: false,
       hasPrevious: false,
       hasNext: false,
-      playbackError: null
+      playbackError: null,
+      playbackErrorAction: null
     })
     pushMediaSession()
     void get().refreshAdjacent()
   },
-  clearPlaybackError: () => set({ playbackError: null }),
+  clearPlaybackError: () => set({ playbackError: null, playbackErrorAction: null }),
+  retryPlayback: async () => {
+    const state = get()
+    if (!state.currentEpisode || !state.currentPodcast) return
+    await state.playEpisode(state.currentEpisode, state.currentPodcast)
+  },
   togglePlay: () => {
     const audio = getAudio()
     if (!get().currentEpisode) return
@@ -335,7 +382,8 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
       durationSec: 0,
       hasPrevious: false,
       hasNext: false,
-      playbackError: null
+      playbackError: null,
+      playbackErrorAction: null
     })
   }
 }))
@@ -378,11 +426,67 @@ export function bindAudioEvents(target?: HTMLAudioElement): () => void {
     pushMediaSession()
   }
 
+  // Playback failure handling (PRD §5.2 / Feature.md 11.3「播放失败自动重试」):
+  //  - MEDIA_ERR_NETWORK (2) → transient network issue: auto-retry once, then
+  //    surface a "重试" action.
+  //  - MEDIA_ERR_SRC_NOT_SUPPORTED (4) / MEDIA_ERR_DECODE (3) → content can't be
+  //    played here: no retry, direct message.
+  //  - Local downloaded files: verify the file still exists and offer re-download.
+  let playbackErrorRetried = false
+  const onError = (): void => {
+    const state = usePlaybackStore.getState()
+    const episode = state.currentEpisode
+    const audio = target ?? getAudio()
+    const code = audio.error?.code
+
+    if (episode?.isDownloaded) {
+      // A local file failing to load usually means the file was deleted/moved.
+      const verified = window.api.download?.verifyLocal
+      if (verified) {
+        void verified({ episodeId: episode.id }).then((result) => {
+          if (result.ok && !result.data.exists) {
+            usePlaybackStore.setState({
+              playbackError: i18n.t('playback.fileMissing'),
+              playbackErrorAction: 'redownload',
+              isPlaying: false
+            })
+          } else {
+            usePlaybackStore.setState({
+              playbackError: i18n.t('playback.decodeError'),
+              playbackErrorAction: null,
+              isPlaying: false
+            })
+          }
+        })
+      }
+      return
+    }
+
+    if (code === 2 && !playbackErrorRetried) {
+      // Transient network failure — retry once automatically.
+      playbackErrorRetried = true
+      setTimeout(() => {
+        const s = usePlaybackStore.getState()
+        if (s.currentEpisode && s.currentPodcast) {
+          void s.playEpisode(s.currentEpisode, s.currentPodcast)
+        }
+      }, 2000)
+      return
+    }
+
+    usePlaybackStore.setState({
+      playbackError: code === 2 ? i18n.t('playback.networkError') : i18n.t('playback.decodeError'),
+      playbackErrorAction: code === 2 ? 'retry' : null,
+      isPlaying: false
+    })
+  }
+
   audio.addEventListener('timeupdate', onTimeUpdate)
   audio.addEventListener('loadedmetadata', onLoadedMetadata)
   audio.addEventListener('ended', onEnded)
   audio.addEventListener('play', onPlay)
   audio.addEventListener('pause', onPause)
+  audio.addEventListener('error', onError)
 
   return () => {
     audio.removeEventListener('timeupdate', onTimeUpdate)
@@ -390,5 +494,6 @@ export function bindAudioEvents(target?: HTMLAudioElement): () => void {
     audio.removeEventListener('ended', onEnded)
     audio.removeEventListener('play', onPlay)
     audio.removeEventListener('pause', onPause)
+    audio.removeEventListener('error', onError)
   }
 }

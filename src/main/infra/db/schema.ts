@@ -32,7 +32,8 @@ export const episodes = sqliteTable('episodes', {
   isDownloaded: integer('is_downloaded', { mode: 'boolean' }).notNull().default(false),
   localFilePath: text('local_file_path'),
   downloadStatus: text('download_status'),
-  downloadedAt: integer('downloaded_at')
+  downloadedAt: integer('downloaded_at'),
+  chaptersUrl: text('chapters_url')
 })
 
 export const downloadTasks = sqliteTable('download_tasks', {
@@ -73,4 +74,18 @@ export const notes = sqliteTable('notes', {
   timestampSec: integer('timestamp_sec').notNull(),
   content: text('content').notNull(),
   createdAt: integer('created_at').notNull()
+})
+
+/**
+ * Persisted playback queue — the "current playing sequence" survives app
+ * restarts (PRD §5.2「播放队列持久化」). Single row: id = 'current' always.
+ * episode_ids preserves the queue order; current_episode_id is the index of
+ * the currently-playing episode (may be null when only a queue exists).
+ */
+export const playbackQueue = sqliteTable('playback_queue', {
+  id: text('id').primaryKey(),
+  episodeIds: text('episode_ids').notNull(),
+  mode: text('mode').notNull(),
+  currentEpisodeId: text('current_episode_id'),
+  updatedAt: integer('updated_at').notNull()
 })

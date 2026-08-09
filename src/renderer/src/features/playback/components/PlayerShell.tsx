@@ -27,6 +27,7 @@ import { formatDuration } from '@/lib/format'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 import { bindAudioEvents, usePlaybackStore } from '../store'
+import { useDownloadStore } from '@/features/download/store'
 import { fetchRegisteredShortcuts, formatAccelerator } from '../lib/shortcut-hints'
 import type { RegisteredShortcuts } from '@shared/ipc-contract'
 
@@ -45,6 +46,9 @@ export function MiniPlayer(): React.JSX.Element | null {
   const playNext = usePlaybackStore((state) => state.playNext)
   const openFullPlayer = usePlaybackStore((state) => state.openFullPlayer)
   const clearPlaybackError = usePlaybackStore((state) => state.clearPlaybackError)
+  const retryPlayback = usePlaybackStore((state) => state.retryPlayback)
+  const playbackErrorAction = usePlaybackStore((state) => state.playbackErrorAction)
+  const enqueueDownload = useDownloadStore((state) => state.enqueue)
   const queueMode = usePlaybackStore((state) => state.queueMode)
   const setQueueMode = usePlaybackStore((state) => state.setQueueMode)
   const [shortcuts, setShortcuts] = useState<RegisteredShortcuts>({})
@@ -58,6 +62,11 @@ export function MiniPlayer(): React.JSX.Element | null {
     return (
       <div className="shrink-0 border-t border-line bg-danger/5 px-6 py-3 text-sm text-danger">
         {playbackError}
+        {playbackErrorAction === 'retry' ? (
+          <button type="button" className="ml-3 underline" onClick={() => void retryPlayback()}>
+            {t('playback.retry')}
+          </button>
+        ) : null}
         <button type="button" className="ml-3 underline" onClick={clearPlaybackError}>
           {t('common.close')}
         </button>
@@ -74,6 +83,19 @@ export function MiniPlayer(): React.JSX.Element | null {
       {playbackError ? (
         <div className="border-b border-danger/20 bg-danger/5 px-6 py-2 text-xs text-danger">
           {playbackError}
+          {playbackErrorAction === 'retry' ? (
+            <button type="button" className="ml-3 underline" onClick={() => void retryPlayback()}>
+              {t('playback.retry')}
+            </button>
+          ) : playbackErrorAction === 'redownload' && currentEpisode ? (
+            <button
+              type="button"
+              className="ml-3 underline"
+              onClick={() => void enqueueDownload(currentEpisode.id)}
+            >
+              {t('playback.redownload')}
+            </button>
+          ) : null}
           <button type="button" className="ml-3 underline" onClick={clearPlaybackError}>
             {t('common.close')}
           </button>

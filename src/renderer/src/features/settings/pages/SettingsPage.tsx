@@ -85,6 +85,7 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
   const [cleanupRetention, setCleanupRetention] = useState<string>('null')
   const [cleanupPreview, setCleanupPreview] = useState<CleanupPreview | null>(null)
   const [loggingEnabled, setLoggingEnabled] = useState(true)
+  const [freeSpaceThreshold, setFreeSpaceThreshold] = useState<string>('500')
   const [pendingImport, setPendingImport] = useState<{
     filePath: string
     preview: ImportPreview
@@ -105,6 +106,7 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
         settings.cleanupRetentionDays == null ? 'null' : String(settings.cleanupRetentionDays)
       )
       setLoggingEnabled(settings.loggingEnabled)
+      setFreeSpaceThreshold(String(settings.freeSpaceThresholdMB ?? 500))
     })
     // Resolve the actual download directory (default or custom).
     void window.api.download.getDir().then((r) => {
@@ -294,6 +296,16 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
     })
     // Refresh the preview for the new retention window.
     void refreshCleanupPreview()
+  }
+
+  const handleFreeSpaceThresholdChange = (value: string): void => {
+    setFreeSpaceThreshold(value)
+    const mb = Number(value)
+    if (Number.isFinite(mb) && mb >= 0) {
+      void settingsApi.setSetting('freeSpaceThresholdMB', mb).catch((e) => {
+        setError(e instanceof Error ? e.message : t('settings.saveFailed'))
+      })
+    }
   }
 
   const handleRunCleanup = async (): Promise<void> => {
@@ -697,6 +709,24 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
                 {t('settings.cleanupRun')}
               </Button>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">{t('settings.freeSpaceThreshold')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.freeSpaceThresholdHint')}</div>
+            </div>
+            <Select value={freeSpaceThreshold} onValueChange={handleFreeSpaceThresholdChange}>
+              <SelectTrigger className="w-32" aria-label={t('settings.freeSpaceThreshold')}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="200">200 MB</SelectItem>
+                <SelectItem value="500">500 MB</SelectItem>
+                <SelectItem value="1000">1 GB</SelectItem>
+                <SelectItem value="0">{t('settings.freeSpaceOff')}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

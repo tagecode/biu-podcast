@@ -18,6 +18,7 @@ export const IPC_CHANNELS = {
     markAllPlayed: 'episode:mark-all-played',
     markPlayed: 'episode:mark-played',
     getAdjacent: 'episode:get-adjacent',
+    getChapters: 'episode:get-chapters',
     changed: 'episode:changed'
   },
   playback: {
@@ -28,6 +29,12 @@ export const IPC_CHANNELS = {
     getRegisteredShortcuts: 'playback:get-registered-shortcuts',
     /** Main → renderer: deep link wants to play an episode. */
     deepLinkPlay: 'playback:deep-link-play'
+  },
+  queue: {
+    /** Renderer → main: persist the current playback queue. */
+    save: 'queue:save',
+    /** Renderer → main: load the persisted playback queue. */
+    load: 'queue:load'
   },
   mediaSession: {
     /** Renderer → main: current playback state/metadata for the OS media session. */
@@ -43,6 +50,7 @@ export const IPC_CHANNELS = {
   },
   download: {
     enqueue: 'download:enqueue',
+    enqueueMany: 'download:enqueue-many',
     list: 'download:list',
     history: 'download:history',
     getDir: 'download:get-dir',

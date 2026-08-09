@@ -12,7 +12,9 @@ module.exports = {
         pathNot:
           '^src/renderer/src/features/episode/pages/PodcastDetailPage\\.tsx$|' +
           '^src/renderer/src/features/settings/pages/SettingsPage\\.tsx$|' +
-          '^src/renderer/src/features/episode/components/EpisodeDetailPanel\\.tsx$'
+          '^src/renderer/src/features/episode/components/EpisodeDetailPanel\\.tsx$|' +
+          '^src/renderer/src/features/playlist/pages/PlaylistsPage\\.tsx$|' +
+          '^src/renderer/src/features/playback/components/PlayerShell\\.tsx$'
       },
       to: {
         path: '^src/renderer/src/features/',

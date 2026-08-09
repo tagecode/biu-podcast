@@ -1,6 +1,9 @@
 import { stat } from 'fs/promises'
 import { rm } from 'fs/promises'
+import { statfs } from 'fs/promises'
 import { existsSync } from 'fs'
+import { join } from 'path'
+import { app } from 'electron'
 import { and, desc, eq, lt } from 'drizzle-orm'
 
 import { getDb, type AppDatabase } from '../../infra/db/client'
@@ -52,6 +55,38 @@ export class StorageService {
   constructor(deps: StorageServiceDeps = {}) {
     this.db = deps.db ?? getDb()
     this.settings = deps.settings ?? settingsStore
+  }
+
+  /**
+   * Free disk space (bytes) on the download volume. Uses statfs on the
+   * download directory (or its nearest existing ancestor).
+   */
+  async freeDiskSpaceBytes(): Promise<number> {
+    let dir = this.settings.getAll().downloadPath ?? join(app.getPath('userData'), 'downloads')
+    try {
+      // statfs requires an existing path; walk up until one exists.
+      while (!existsSync(dir)) {
+        const parent = dir.slice(0, Math.max(dir.lastIndexOf('/'), dir.lastIndexOf('\\')))
+        if (!parent || parent === dir) break
+        dir = parent
+      }
+      const fs = await statfs(dir)
+      return Number(fs.bavail) * Number(fs.bsize)
+    } catch {
+      return Number.POSITIVE_INFINITY
+    }
+  }
+
+  /**
+   * Whether a new download should be refused for lack of disk space. Returns
+   * null when there's room, or a human-readable reason when free space is
+   * below the configured threshold.
+   */
+  async checkFreeSpace(): Promise<{ enough: boolean; freeBytes: number; thresholdBytes: number }> {
+    const thresholdMB = this.settings.getAll().freeSpaceThresholdMB ?? 500
+    const thresholdBytes = thresholdMB * 1024 * 1024
+    const freeBytes = await this.freeDiskSpaceBytes()
+    return { enough: freeBytes >= thresholdBytes, freeBytes, thresholdBytes }
   }
 
   /** Aggregate actual on-disk size per podcast for downloaded episodes. */

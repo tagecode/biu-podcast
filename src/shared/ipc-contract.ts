@@ -49,6 +49,12 @@ export const GetEpisodeInputSchema = z.object({
   episodeId: z.string().min(1)
 })
 
+/** No payload beyond the episode id — reuses EpisodeIdInputSchema shape. */
+export const GetChaptersInputSchema = z.object({
+  episodeId: z.string().min(1)
+})
+export type GetChaptersInput = z.infer<typeof GetChaptersInputSchema>
+
 export const UpdateProgressInputSchema = z.object({
   episodeId: z.string().min(1),
   positionSec: z.number().min(0)
@@ -57,6 +63,11 @@ export const UpdateProgressInputSchema = z.object({
 export const EnqueueDownloadInputSchema = z.object({
   episodeId: z.string().min(1)
 })
+
+export const EnqueueManyDownloadInputSchema = z.object({
+  episodeIds: z.array(z.string().min(1)).min(1).max(5000)
+})
+export type EnqueueManyDownloadInput = z.infer<typeof EnqueueManyDownloadInputSchema>
 
 export const VerifyLocalInputSchema = z.object({
   episodeId: z.string().min(1)
@@ -114,11 +125,20 @@ export const SetSettingInputSchema = z.object({
     'fontScale',
     'language',
     'cleanupRetentionDays',
-    'loggingEnabled'
+    'loggingEnabled',
+    'freeSpaceThresholdMB'
   ]),
   value: z.union([z.number().nullable(), z.string(), z.boolean()])
 })
 export type SetSettingInput = z.infer<typeof SetSettingInputSchema>
+
+/** Persist the current playback queue (order + mode + current episode). */
+export const SaveQueueInputSchema = z.object({
+  episodeIds: z.array(z.string()).max(2000),
+  mode: z.enum(['list', 'repeat-one', 'shuffle']),
+  currentEpisodeId: z.string().min(1).nullable()
+})
+export type SaveQueueInput = z.infer<typeof SaveQueueInputSchema>
 
 /** No payload — dialog-based directory picker. */
 export const ChooseDirectoryInputSchema = z.object({})

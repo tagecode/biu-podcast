@@ -10,8 +10,10 @@ import type {
   DownloadTaskIdInput,
   DownloadHistoryInput,
   EnqueueDownloadInput,
+  EnqueueManyDownloadInput,
   EpisodeIdInput,
   GetAdjacentInput,
+  GetChaptersInput,
   GetEpisodeInput,
   ImportBackupInput,
   ListEpisodesInput,
@@ -28,6 +30,7 @@ import type {
   RemoveSubscriptionInput,
   RenamePlaylistInput,
   ReorderPlaylistInput,
+  SaveQueueInput,
   SetPausedInput,
   SetSettingInput,
   ShortcutConfig,
@@ -40,11 +43,13 @@ import type { ImportPreview } from '@shared/backup'
 import type { EpisodeListPage } from '@shared/episode-list'
 import type {
   AppSettings,
+  Chapter,
   DownloadTask,
   DownloadTaskStatus,
   Episode,
   IpcResult,
   Note,
+  PlaybackQueue,
   PlaybackSession,
   Playlist,
   PlaylistItem,
@@ -84,6 +89,7 @@ declare global {
         getAdjacent: (
           input: GetAdjacentInput
         ) => Promise<IpcResult<{ previous: Episode | null; next: Episode | null }>>
+        getChapters: (input: GetChaptersInput) => Promise<IpcResult<Chapter[]>>
         onChanged: (callback: (payload: { podcastId: string }) => void) => () => void
       }
       playback: {
@@ -92,6 +98,10 @@ declare global {
         getRegisteredShortcuts: () => Promise<IpcResult<RegisteredShortcuts>>
         onCommand: (callback: (command: PlaybackCommand) => void) => () => void
         onDeepLinkPlay: (callback: (episodeId: string) => void) => () => void
+      }
+      queue: {
+        save: (input: SaveQueueInput) => Promise<IpcResult<PlaybackQueue>>
+        load: () => Promise<IpcResult<{ queue: PlaybackQueue; episodes: Episode[] } | null>>
       }
       mediaSession: {
         update: (input: MediaSessionUpdateInput) => Promise<IpcResult<void>>
@@ -105,6 +115,9 @@ declare global {
       }
       download: {
         enqueue: (input: EnqueueDownloadInput) => Promise<IpcResult<DownloadTask>>
+        enqueueMany: (
+          input: EnqueueManyDownloadInput
+        ) => Promise<IpcResult<{ enqueued: number; skipped: number }>>
         list: () => Promise<IpcResult<DownloadTask[]>>
         history: (
           input: DownloadHistoryInput

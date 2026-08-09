@@ -1,4 +1,4 @@
-import { app, BrowserWindow, protocol, net, shell } from 'electron'
+import { app, BrowserWindow, Notification, protocol, net, shell } from 'electron'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
@@ -124,8 +124,13 @@ if (
     })
 
     applyContentSecurityPolicy()
-    migrateDatabase()
+    const dbHealthMessage = migrateDatabase()
     getDb()
+    if (dbHealthMessage) {
+      if (Notification.isSupported()) {
+        new Notification({ title: '博播 BiuPodcast', body: dbHealthMessage }).show()
+      }
+    }
     registerAllHandlers()
     // Download-queue startup must never block window creation: a migration or
     // stale-task failure here would otherwise white-screen the whole app.

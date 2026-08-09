@@ -7,9 +7,11 @@ import {
   DownloadTaskIdInputSchema,
   DownloadHistoryInputSchema,
   EnqueueDownloadInputSchema,
+  EnqueueManyDownloadInputSchema,
   EpisodeIdInputSchema,
   GetAdjacentInputSchema,
   GetEpisodeInputSchema,
+  GetChaptersInputSchema,
   ImportBackupInputSchema,
   IPC_CHANNELS,
   ListEpisodesInputSchema,
@@ -27,6 +29,7 @@ import {
   SetPausedInputSchema,
   SetSettingInputSchema,
   ShortcutSetInputSchema,
+  SaveQueueInputSchema,
   StorageActionInputSchema,
   UpdateActionInputSchema,
   UpdateProgressInputSchema,
@@ -39,6 +42,7 @@ import { downloadService } from '../features/download/download.service'
 import { episodeService } from '../features/episode/episode.service'
 import { playbackService } from '../features/playback/playback.service'
 import { playlistService } from '../features/playlist/playlist.service'
+import { queueService } from '../features/queue/queue.service'
 import { settingsStore } from '../infra/settings/store'
 import { updateService } from '../infra/updater'
 import { getTrayInstance } from '../infra/tray'
@@ -146,6 +150,10 @@ export function registerEpisodeHandlers(): void {
   registerHandler(IPC_CHANNELS.episode.getAdjacent, GetAdjacentInputSchema, async (_event, input) =>
     playbackService.getAdjacent(input.episodeId)
   )
+
+  registerHandler(IPC_CHANNELS.episode.getChapters, GetChaptersInputSchema, async (_event, input) =>
+    episodeService.getChapters(input.episodeId)
+  )
 }
 
 export function registerPlaybackHandlers(): void {
@@ -189,6 +197,14 @@ export function registerDownloadHandlers(): void {
     async (_event, input) => {
       const task = downloadService.enqueue(input.episodeId)
       return task
+    }
+  )
+
+  registerHandler(
+    IPC_CHANNELS.download.enqueueMany,
+    EnqueueManyDownloadInputSchema,
+    async (_event, input) => {
+      return downloadService.enqueueMany(input.episodeIds)
     }
   )
 
@@ -398,6 +414,13 @@ export function registerShortcutHandlers(): void {
   )
 }
 
+export function registerQueueHandlers(): void {
+  registerHandler(IPC_CHANNELS.queue.save, SaveQueueInputSchema, (_event, input) =>
+    queueService.save(input.episodeIds, input.mode, input.currentEpisodeId)
+  )
+  registerNoInputHandler(IPC_CHANNELS.queue.load, () => queueService.load())
+}
+
 export function registerAllHandlers(): void {
   registerSubscriptionHandlers()
   registerEpisodeHandlers()
@@ -413,4 +436,5 @@ export function registerAllHandlers(): void {
   registerUpdateHandlers()
   registerStorageHandlers()
   registerShortcutHandlers()
+  registerQueueHandlers()
 }

@@ -7,7 +7,12 @@ import { htmlToPlainText } from '../../infra/sanitize/html'
 
 const parser = new Parser({
   customFields: {
-    item: ['itunes:duration', 'enclosure']
+    item: [
+      ['enclosure', 'enclosures', { keepArray: true }],
+      'itunes:duration',
+      ['podcast:chapters', 'podcastChapters'],
+      ['psc:chapters', 'pscChapters']
+    ]
   }
 })
 
@@ -24,14 +29,48 @@ function parseDuration(value: unknown): number | null {
   return null
 }
 
-function pickAudioUrl(item: Parser.Item): string | null {
-  if (item.enclosure?.url) return item.enclosure.url
-  const media = item as Parser.Item & { enclosure?: { url?: string } }
-  return media.enclosure?.url ?? null
+interface EnclosureLike {
+  url?: string
+  type?: string
+  length?: string | number
+}
+
+/**
+ * Pick the most suitable audio enclosure from an item's enclosures. The RSS
+ * spec allows one `<enclosure>`, but some feeds publish several (mirrors or
+ * alternate qualities). rss-parser wraps keepArray fields in `$`, so each
+ * entry here is `{ $: EnclosureLike }`.
+ */
+function pickEnclosure(item: Parser.Item): EnclosureLike | null {
+  const raw = item as Parser.Item & { enclosures?: Array<{ $: EnclosureLike }> }
+  const wrapped = raw.enclosures?.length ? raw.enclosures : []
+  const enclosures = wrapped.map((e) => e.$).filter((e): e is EnclosureLike => Boolean(e?.url))
+  if (enclosures.length === 0) {
+    // Fall back to the plain `enclosure` field (single-enclosure feeds).
+    const single = item.enclosure
+    return single?.url ? single : null
+  }
+
+  const score = (e: EnclosureLike): number => {
+    const type = (e.type ?? '').toLowerCase()
+    let s = 0
+    if (/audio\/mpe?g|audio\/mp3/.test(type)) s += 2
+    if (Number(e.length ?? 0) > 0) s += 1
+    return s
+  }
+  // Prefer higher score; break ties by larger byte length (usually higher
+  // quality) so mirrors / multiple audio enclosures resolve deterministically.
+  const sorted = [...enclosures].sort((a, b) => {
+    const scoreDiff = score(b) - score(a)
+    if (scoreDiff !== 0) return scoreDiff
+    return Number(b.length ?? 0) - Number(a.length ?? 0)
+  })
+  return sorted[0] ?? null
 }
 
 function toEpisode(item: Parser.Item): ParsedFeedEpisode | null {
-  const audioUrl = pickAudioUrl(item)
+  const enclosure = pickEnclosure(item)
+  const audioUrl = enclosure?.url ?? null
   if (!audioUrl) return null
 
   const publishedAt = item.isoDate ? Date.parse(item.isoDate) : Date.now()
@@ -39,11 +78,21 @@ function toEpisode(item: Parser.Item): ParsedFeedEpisode | null {
     (item as Parser.Item & { itunes?: { duration?: string } }).itunes?.duration ?? null
   )
   const fileSizeBytes =
-    typeof item.enclosure?.length === 'string'
-      ? Number.parseInt(item.enclosure.length, 10) || null
-      : typeof item.enclosure?.length === 'number'
-        ? item.enclosure.length
+    typeof enclosure?.length === 'string'
+      ? Number.parseInt(enclosure.length, 10) || null
+      : typeof enclosure?.length === 'number'
+        ? enclosure.length
         : null
+
+  // podcast:chapters / psc:chapters reference a JSON file with chapter list.
+  // The URL lives in the `url` attribute of the element (rss-parser exposes
+  // element attributes as `$`), or as raw text content in loose feeds.
+  const raw = item as Parser.Item & {
+    podcastChapters?: unknown
+    pscChapters?: unknown
+  }
+  const chaptersRef = raw.podcastChapters ?? raw.pscChapters
+  const chaptersUrl = extractChaptersUrl(chaptersRef)
 
   return {
     title: item.title?.trim() || '未命名集数',
@@ -52,8 +101,19 @@ function toEpisode(item: Parser.Item): ParsedFeedEpisode | null {
     audioUrl,
     durationSec,
     fileSizeBytes,
-    guid: item.guid ?? item.link ?? audioUrl
+    guid: item.guid ?? item.link ?? audioUrl,
+    chaptersUrl
   }
+}
+
+function extractChaptersUrl(ref: unknown): string | null {
+  if (typeof ref === 'string' && ref.trim()) return ref.trim()
+  if (ref && typeof ref === 'object') {
+    const obj = ref as { $?: { url?: unknown }; url?: unknown }
+    const attr = obj.$?.url ?? obj.url
+    if (typeof attr === 'string' && attr.trim()) return attr.trim()
+  }
+  return null
 }
 
 function truncateHtml(html: string | null, maxChars = 4000): string | null {

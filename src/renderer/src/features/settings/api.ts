@@ -19,7 +19,8 @@ export async function setSetting(
     | 'fontScale'
     | 'language'
     | 'cleanupRetentionDays'
-    | 'loggingEnabled',
+    | 'loggingEnabled'
+    | 'freeSpaceThresholdMB',
   value: number | boolean | string | null
 ): Promise<void> {
   const result = await window.api.settings.set({ key, value })

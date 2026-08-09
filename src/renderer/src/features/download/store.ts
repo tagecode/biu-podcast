@@ -15,6 +15,7 @@ interface DownloadState {
   load: () => Promise<void>
   loadHistory: (reset?: boolean) => Promise<void>
   enqueue: (episodeId: string) => Promise<void>
+  enqueueMany: (episodeIds: string[]) => Promise<{ enqueued: number; skipped: number }>
   pause: (taskId: string) => Promise<void>
   resume: (taskId: string) => Promise<void>
   cancel: (taskId: string) => Promise<void>
@@ -76,6 +77,12 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
     await downloadApi.enqueueDownload(episodeId)
     set({ panelOpen: true })
     await get().load()
+  },
+  enqueueMany: async (episodeIds) => {
+    const result = await downloadApi.enqueueManyDownloads(episodeIds)
+    set({ panelOpen: true })
+    await get().load()
+    return result
   },
   pause: async (taskId) => {
     await downloadApi.pauseDownload(taskId)
