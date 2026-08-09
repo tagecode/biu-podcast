@@ -4,14 +4,11 @@ import { launchApp } from '../helpers/launch-app'
 import { startTestServer } from '../helpers/test-server'
 
 test('下载全部 enqueues every undownloaded episode of a podcast', async () => {
-  const server = await startTestServer(
-    { title: '批量下载播客', author: 'T' },
-    [
-      { title: '第一集', audioBytes: 128 * 1024, publishedDaysAgo: 2, durationSec: 120 },
-      { title: '第二集', audioBytes: 256 * 1024, publishedDaysAgo: 1, durationSec: 240 },
-      { title: '第三集', audioBytes: 512 * 1024, publishedDaysAgo: 0, durationSec: 480 }
-    ]
-  )
+  const server = await startTestServer({ title: '批量下载播客', author: 'T' }, [
+    { title: '第一集', audioBytes: 128 * 1024, publishedDaysAgo: 2, durationSec: 120 },
+    { title: '第二集', audioBytes: 256 * 1024, publishedDaysAgo: 1, durationSec: 240 },
+    { title: '第三集', audioBytes: 512 * 1024, publishedDaysAgo: 0, durationSec: 480 }
+  ])
   const app = await launchApp()
   const window = await app.firstWindow()
   await window.waitForLoadState('domcontentloaded')
