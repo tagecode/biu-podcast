@@ -122,6 +122,19 @@ describe('parseFeedXml', () => {
     expect(feed.episodes[0]?.chaptersUrl).toBe('https://x.com/chapters.json')
     expect(feed.episodes[1]?.chaptersUrl).toBeNull()
   })
+
+  it('extracts a psc:chapters reference (podcast-namespace spec alias)', async () => {
+    const feed = await parseFeedXml(
+      `<rss version="2.0" xmlns:psc="https://podlove.org/simple-chapters" xmlns:podcast="https://podcastindex.org/namespace/1.0"><channel><title>T</title>
+        <item>
+          <title>PSC Chapters</title><guid>c3</guid>
+          <enclosure url="https://x.com/a.mp3" type="audio/mpeg" />
+          <psc:chapters url="https://x.com/psc.json" type="application/json" />
+        </item>
+      </channel></rss>`
+    )
+    expect(feed.episodes[0]?.chaptersUrl).toBe('https://x.com/psc.json')
+  })
 })
 
 describe('fetchAndParseFeed', () => {

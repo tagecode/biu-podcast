@@ -10,7 +10,7 @@ import { formatDate, formatDuration, formatFileSize } from '@/lib/format'
 import { usePlaybackStore } from '@/features/playback/store'
 import * as playlistApi from '@/features/playlist/api'
 
-import { linkifyTimestamps } from '../lib/timestamp-link'
+import { linkifyTimestamps, clampTimestamp } from '../lib/timestamp-link'
 import * as episodeApi from '../api'
 import type { Chapter } from '@shared/types'
 
@@ -85,13 +85,15 @@ export function EpisodeDetailPanel({
   }
 
   /** Jump to a timestamp in the description: seek if this episode is current,
-      otherwise play it from that position. */
+      otherwise play it from that position. Clamp to the episode duration so a
+      timestamp beyond the end can't seek past the track. */
   const jumpToTimestamp = (seconds: number): void => {
+    const target = clampTimestamp(seconds, episode.durationSec)
     const playback = usePlaybackStore.getState()
     if (playback.currentEpisode?.id === episode.id) {
-      playback.seek(seconds)
+      playback.seek(target)
     } else if (onPlayFrom) {
-      onPlayFrom(seconds)
+      onPlayFrom(target)
     } else {
       onPlay()
     }

@@ -7,15 +7,16 @@ import { checkDatabaseHealth } from './health'
 import { logInfo } from '../logger'
 
 function getMigrationsDir(): string {
-  const candidates = [
-    // Packaged: drizzle/ ships as extraResources alongside the app bundle.
-    join(process.resourcesPath, 'drizzle'),
-    // electron-vite dev / preview: repo root drizzle/ next to out/main.
-    join(__dirname, '..', '..', 'drizzle'),
-    // Fallback to app.getAppPath() when neither of the above is laid out
-    // conventionally (e.g. running from a custom entry dir).
-    join(app.getAppPath(), 'drizzle')
-  ]
+  const candidates: string[] = []
+  // Packaged: drizzle/ ships as extraResources alongside the app bundle.
+  if (process.resourcesPath) {
+    candidates.push(join(process.resourcesPath, 'drizzle'))
+  }
+  // electron-vite dev / preview: repo root drizzle/ next to out/main.
+  candidates.push(join(__dirname, '..', '..', 'drizzle'))
+  // Fallback to app.getAppPath() when neither of the above is laid out
+  // conventionally (e.g. running from a custom entry dir).
+  candidates.push(join(app.getAppPath(), 'drizzle'))
   for (const candidate of candidates) {
     if (existsSync(candidate)) return candidate
   }

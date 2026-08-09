@@ -49,3 +49,13 @@ export function parseTimestamp(text: string): number | null {
   const h = m[1] ? Number(m[1]) : 0
   return h * 3600 + Number(m[2]) * 60 + Number(m[3])
 }
+
+/**
+ * Clamp a target playback position to the episode duration (when known).
+ * Timestamps beyond the end of the episode are invalid; without a duration we
+ * let the audio element clamp naturally.
+ */
+export function clampTimestamp(seconds: number, durationSec: number | null | undefined): number {
+  if (!durationSec || durationSec <= 0 || !Number.isFinite(durationSec)) return seconds
+  return Math.min(Math.max(0, seconds), durationSec)
+}

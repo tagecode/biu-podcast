@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { linkifyTimestamps, parseTimestamp } from './timestamp-link'
+import { clampTimestamp, linkifyTimestamps, parseTimestamp } from './timestamp-link'
 
 describe('linkifyTimestamps', () => {
   it('wraps mm:ss timestamps in clickable buttons', () => {
@@ -50,5 +50,25 @@ describe('parseTimestamp', () => {
     expect(parseTimestamp('abc')).toBeNull()
     expect(parseTimestamp('12:345')).toBeNull()
     expect(parseTimestamp('')).toBeNull()
+  })
+})
+
+describe('clampTimestamp', () => {
+  it('clamps above the duration to the duration', () => {
+    expect(clampTimestamp(900, 600)).toBe(600)
+  })
+
+  it('keeps in-range timestamps unchanged', () => {
+    expect(clampTimestamp(300, 600)).toBe(300)
+  })
+
+  it('clamps negatives to zero', () => {
+    expect(clampTimestamp(-5, 600)).toBe(0)
+  })
+
+  it('passes through when the duration is unknown', () => {
+    expect(clampTimestamp(900, null)).toBe(900)
+    expect(clampTimestamp(900, undefined)).toBe(900)
+    expect(clampTimestamp(900, 0)).toBe(900)
   })
 })

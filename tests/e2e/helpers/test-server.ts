@@ -34,13 +34,31 @@ export interface TestServer {
 }
 
 /**
- * Minimal MP3 bytes: an ID3 tag header + padding. Enough for Electron's audio
- * element to fire loadedmetadata (duration) without decoding real audio.
+ * Minimal valid WAV: a 44-byte PCM header followed by silence. Real playable
+ * audio (unlike the old ID3-only stub) so Electron's audio element fires
+ * loadedmetadata and playback state transitions work in E2E.
  */
-function makeMp3(bytes: number): Buffer {
-  const header = Buffer.from('ID3\x04\x00\x00\x00\x00\x00\x00', 'latin1')
-  const body = Buffer.alloc(Math.max(bytes - header.length, 0), 0x00)
-  return Buffer.concat([header, body])
+function makeWav(bytes: number): Buffer {
+  const sampleRate = 8000
+  const channels = 1
+  const bitsPerSample = 16
+  const dataBytes = Math.max(bytes - 44, 0)
+  const buffer = Buffer.alloc(44 + dataBytes)
+  buffer.write('RIFF', 0)
+  buffer.writeUInt32LE(36 + dataBytes, 4)
+  buffer.write('WAVE', 8)
+  buffer.write('fmt ', 12)
+  buffer.writeUInt32LE(16, 16) // fmt chunk size
+  buffer.writeUInt16LE(1, 20) // PCM format
+  buffer.writeUInt16LE(channels, 22)
+  buffer.writeUInt32LE(sampleRate, 24)
+  buffer.writeUInt32LE((sampleRate * channels * bitsPerSample) / 8, 28) // byte rate
+  buffer.writeUInt16LE((channels * bitsPerSample) / 8, 32) // block align
+  buffer.writeUInt16LE(bitsPerSample, 34)
+  buffer.write('data', 36)
+  buffer.writeUInt32LE(dataBytes, 40)
+  // Remainder is silence (zeroed buffer).
+  return buffer
 }
 
 function parseRange(
@@ -67,7 +85,7 @@ export async function startTestServer(
   episodes: TestEpisodeFixture[],
   options: TestServerOptions = {}
 ): Promise<TestServer> {
-  const audioBuffers = episodes.map((ep) => makeMp3(ep.audioBytes))
+  const audioBuffers = episodes.map((ep) => makeWav(ep.audioBytes))
   const slowIdx = options.slowEpisodeIndex ?? -1
   const slowDelay = options.slowChunkDelayMs ?? 150
   const slowChunk = options.slowChunkSize ?? 16 * 1024
@@ -90,7 +108,7 @@ export async function startTestServer(
       res.end(Buffer.from([0xff, 0xd8, 0xff, 0xe0]))
       return
     }
-    const audioMatch = /^\/audio\/ep(\d+)\.mp3$/.exec(path)
+    const audioMatch = /^\/audio\/ep(\d+)\.wav$/.exec(path)
     if (audioMatch) {
       const idx = Number(audioMatch[1])
       if (idx < audioBuffers.length) {
@@ -117,13 +135,13 @@ export async function startTestServer(
     if (range) {
       rangeRequests += 1
       res.writeHead(206, {
-        'Content-Type': 'audio/mpeg',
+        'Content-Type': 'audio/wav',
         'Content-Length': String(slice.length),
         'Content-Range': `bytes ${start}-${end}/${total}`
       })
     } else {
       res.writeHead(200, {
-        'Content-Type': 'audio/mpeg',
+        'Content-Type': 'audio/wav',
         'Content-Length': String(total)
       })
     }
@@ -150,7 +168,7 @@ export async function startTestServer(
   return {
     url,
     feedUrl: `${url}/feed.xml`,
-    audioUrl: (index) => `${url}/audio/ep${index}.mp3`,
+    audioUrl: (index) => `${url}/audio/ep${index}.wav`,
     rangeRequestCount: () => rangeRequests,
     close: () =>
       new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())))
@@ -172,7 +190,7 @@ function buildFeedXml(
       <title>${ep.title}</title>
       <guid>ep-${i}</guid>
       <pubDate>${date.toUTCString()}</pubDate>
-      <enclosure url="${url}/audio/ep${i}.mp3" length="${ep.audioBytes}" type="audio/mpeg" />
+      <enclosure url="${url}/audio/ep${i}.wav" length="${ep.audioBytes}" type="audio/wav" />
       <itunes:duration>${minutes}:${seconds.toString().padStart(2, '0')}</itunes:duration>
       <description><![CDATA[<p>Episode ${i} description with <b>bold</b> text.</p>]]></description>
     </item>`
