@@ -179,14 +179,9 @@ export function PlaylistsPage({ onBack }: PlaylistsPageProps): React.JSX.Element
                     variant="secondary"
                     size="sm"
                     onClick={() => {
-                      void enqueueMany(items.map((i) => i.episodeId)).then((r) =>
-                        window.alert(
-                          t('playlist.downloadAllDone', {
-                            enqueued: r.enqueued,
-                            skipped: r.skipped
-                          })
-                        )
-                      )
+                      // enqueueMany opens the download panel — the queue count
+                      // there is the result feedback (no modal needed).
+                      void enqueueMany(items.map((i) => i.episodeId))
                     }}
                   >
                     <Download className="size-3.5" />

@@ -104,9 +104,10 @@ export function PodcastDetailPage({
       offset += page.items.length
     }
     if (ids.length === 0) return
-    const r = await enqueueMany(ids.slice(0, MAX_SWEEP))
-    window.alert(t('episode.downloadAllDone', { enqueued: r.enqueued, skipped: r.skipped }))
-  }, [enqueueMany, podcastId, t])
+    // enqueueMany opens the download panel — the queue count there is the
+    // result feedback (no modal needed for a bulk action).
+    await enqueueMany(ids.slice(0, MAX_SWEEP))
+  }, [enqueueMany, podcastId])
 
   const openEpisodeDetail = useCallback(
     async (episodeId: string): Promise<void> => {

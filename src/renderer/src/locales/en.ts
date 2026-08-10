@@ -112,7 +112,6 @@ export const en: TranslationSchema = {
     loadDetailFailed: 'Failed to load episode details',
     playLatest: 'Play latest episode',
     downloadAll: 'Download all',
-    downloadAllDone: 'Queued {{enqueued}}, skipped {{skipped}}',
     listTitle: 'Episodes',
     loadedProgress: '{{count}} / {{total}} loaded',
     loadingDetail: 'Loading details…',
@@ -138,8 +137,7 @@ export const en: TranslationSchema = {
     removeItem: 'Remove',
     selectPrompt: 'Select a playlist to view its contents',
     loadFailed: 'Failed to load playlists',
-    downloadAll: 'Download all',
-    downloadAllDone: 'Queued {{enqueued}}, skipped {{skipped}}'
+    downloadAll: 'Download all'
   },
   note: {
     title: 'Notes',

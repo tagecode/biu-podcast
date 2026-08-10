@@ -20,17 +20,9 @@ test('下载全部 enqueues every undownloaded episode of a podcast', async () =
   await window.getByRole('button', { name: /批量下载播客/ }).click()
   await expect(window.getByText('集数列表')).toBeVisible()
 
-  // "下载全部" enqueues all 3 episodes → download panel shows 3 tasks.
-  // The batch result is surfaced via window.alert — dismiss it so the click
-  // doesn't hang.
-  let alertMessage = ''
-  window.once('dialog', (dialog) => {
-    alertMessage = dialog.message()
-    void dialog.dismiss()
-  })
+  // "下载全部" enqueues all 3 episodes and opens the download panel → 3 tasks.
   await window.getByRole('button', { name: '下载全部' }).click()
   await expect(window.getByText('下载队列 · 3 项')).toBeVisible({ timeout: 8000 })
-  await expect.poll(() => alertMessage).toContain('跳过 0')
 
   // Each of the three episode rows' download buttons are gone (all enqueued).
   const rows = window.locator('div.rounded-md.border')

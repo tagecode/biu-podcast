@@ -106,7 +106,6 @@ export const zh = {
     loadDetailFailed: '加载集数详情失败',
     playLatest: '播放最新一集',
     downloadAll: '下载全部',
-    downloadAllDone: '已加入下载队列：{{enqueued}} 个，跳过 {{skipped}} 个',
     listTitle: '集数列表',
     loadedProgress: '已加载 {{count}} / {{total}}',
     loadingDetail: '加载详情…',
@@ -132,8 +131,7 @@ export const zh = {
     removeItem: '移除',
     selectPrompt: '选择一个播放列表查看内容',
     loadFailed: '加载播放列表失败',
-    downloadAll: '下载全部',
-    downloadAllDone: '已加入下载队列：{{enqueued}} 个，跳过 {{skipped}} 个'
+    downloadAll: '下载全部'
   },
   note: {
     title: '笔记',
