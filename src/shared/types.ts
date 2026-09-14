@@ -165,6 +165,8 @@ export interface AppSettings {
    * Commands absent from this map fall back to their default accelerator.
    */
   shortcutBindings: Partial<Record<'toggle' | 'next' | 'previous', string>>
+  /** Launch the app automatically at OS login. */
+  autoLaunchEnabled: boolean
 }
 
 export interface PlaybackSession {

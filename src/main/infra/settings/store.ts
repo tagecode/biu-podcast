@@ -19,7 +19,8 @@ const defaults: AppSettings = {
   cleanupRetentionDays: null,
   loggingEnabled: true,
   freeSpaceThresholdMB: 500,
-  shortcutBindings: {}
+  shortcutBindings: {},
+  autoLaunchEnabled: false
 }
 
 // electron-store v9+ is ESM-only. electron-vite externalizes it into CJS
@@ -61,7 +62,8 @@ export class SettingsStore {
       cleanupRetentionDays: this.store.get('cleanupRetentionDays'),
       loggingEnabled: this.store.get('loggingEnabled'),
       freeSpaceThresholdMB: this.store.get('freeSpaceThresholdMB'),
-      shortcutBindings: this.store.get('shortcutBindings')
+      shortcutBindings: this.store.get('shortcutBindings'),
+      autoLaunchEnabled: this.store.get('autoLaunchEnabled')
     }
   }
 

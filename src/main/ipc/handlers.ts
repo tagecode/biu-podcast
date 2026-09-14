@@ -45,6 +45,7 @@ import { playbackService } from '../features/playback/playback.service'
 import { playlistService } from '../features/playlist/playlist.service'
 import { queueService } from '../features/queue/queue.service'
 import { settingsStore } from '../infra/settings/store'
+import { autoLaunch } from '../infra/auto-launch'
 import { updateService } from '../infra/updater'
 import { getTrayInstance } from '../infra/tray'
 import { installApplicationMenu } from '../infra/menu'
@@ -309,7 +310,10 @@ export function registerWindowHandlers(): void {
 export function registerSettingsHandlers(): void {
   registerNoInputHandler(IPC_CHANNELS.settings.get, () => settingsStore.getAll())
 
-  registerVoidHandler(IPC_CHANNELS.settings.set, SetSettingInputSchema, (_event, input) => {
+  registerVoidHandler(IPC_CHANNELS.settings.set, SetSettingInputSchema, async (_event, input) => {
+    if (input.key === 'autoLaunchEnabled') {
+      await autoLaunch.setEnabled(input.value === true)
+    }
     settingsStore.set(input.key, input.value as never)
     if (input.key === 'autoRefreshMinutes') {
       autoRefreshScheduler.restart()

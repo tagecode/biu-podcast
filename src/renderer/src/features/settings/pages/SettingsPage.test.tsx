@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { AppSettings } from '@shared/types'
@@ -23,6 +24,7 @@ function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
     loggingEnabled: true,
     freeSpaceThresholdMB: 500,
     shortcutBindings: {},
+    autoLaunchEnabled: false,
     ...overrides
   }
 }
@@ -89,5 +91,25 @@ describe('SettingsPage free-space threshold', () => {
     await waitFor(() => {
       expect(settingsApi.set).toHaveBeenCalledWith({ key: 'freeSpaceThresholdMB', value: 1000 })
     })
+  })
+
+  it('saves and rolls back the auto-launch toggle on failure', async () => {
+    const user = userEvent.setup()
+    window.api.settings.get = vi.fn(async () => ({
+      ok: true as const,
+      data: makeSettings({ autoLaunchEnabled: false })
+    }))
+    window.api.settings.set = vi.fn(async () => ({
+      ok: false as const,
+      error: { code: 'NOT_SUPPORTED', message: '当前系统不支持开机自启' }
+    }))
+    render(<SettingsPage onBack={() => {}} onOpenAbout={() => {}} />)
+
+    const toggle = await screen.findByRole('checkbox', { name: '登录时自动启动' })
+    await user.click(toggle)
+
+    expect(window.api.settings.set).toHaveBeenCalledWith({ key: 'autoLaunchEnabled', value: true })
+    expect(await screen.findByText('当前系统不支持开机自启')).toBeInTheDocument()
+    expect(toggle).not.toBeChecked()
   })
 })

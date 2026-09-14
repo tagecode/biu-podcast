@@ -133,7 +133,8 @@ export const SetSettingInputSchema = z.object({
     'language',
     'cleanupRetentionDays',
     'loggingEnabled',
-    'freeSpaceThresholdMB'
+    'freeSpaceThresholdMB',
+    'autoLaunchEnabled'
   ]),
   value: z.union([z.number().nullable(), z.string(), z.boolean()])
 })

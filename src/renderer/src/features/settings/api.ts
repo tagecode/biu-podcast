@@ -20,7 +20,8 @@ export async function setSetting(
     | 'language'
     | 'cleanupRetentionDays'
     | 'loggingEnabled'
-    | 'freeSpaceThresholdMB',
+    | 'freeSpaceThresholdMB'
+    | 'autoLaunchEnabled',
   value: number | boolean | string | null
 ): Promise<void> {
   const result = await window.api.settings.set({ key, value })

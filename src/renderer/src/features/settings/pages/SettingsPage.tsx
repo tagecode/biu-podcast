@@ -86,6 +86,7 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
   const [cleanupPreview, setCleanupPreview] = useState<CleanupPreview | null>(null)
   const [loggingEnabled, setLoggingEnabled] = useState(true)
   const [freeSpaceThreshold, setFreeSpaceThreshold] = useState<string>('500')
+  const [autoLaunchEnabled, setAutoLaunchEnabled] = useState(false)
   const [pendingImport, setPendingImport] = useState<{
     filePath: string
     preview: ImportPreview
@@ -107,6 +108,7 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
       )
       setLoggingEnabled(settings.loggingEnabled)
       setFreeSpaceThreshold(String(settings.freeSpaceThresholdMB ?? 500))
+      setAutoLaunchEnabled(settings.autoLaunchEnabled)
     })
     // Resolve the actual download directory (default or custom).
     void window.api.download.getDir().then((r) => {
@@ -528,6 +530,35 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold text-ink">{t('settings.desktopSection')}</h2>
+          </div>
+          <div className="flex items-center justify-between gap-4 border-b border-line py-4">
+            <div>
+              <div className="text-sm font-medium text-ink">{t('settings.autoLaunch')}</div>
+              <div className="mt-1 text-xs text-muted">{t('settings.autoLaunchHint')}</div>
+            </div>
+            <label className="flex cursor-pointer items-center">
+              <input
+                type="checkbox"
+                aria-label={t('settings.autoLaunch')}
+                className="accent-amber-600"
+                checked={autoLaunchEnabled}
+                onChange={(e) => {
+                  const next = e.target.checked
+                  setAutoLaunchEnabled(next)
+                  void settingsApi.setSetting('autoLaunchEnabled', next).catch((err) => {
+                    setAutoLaunchEnabled(!next)
+                    setError(err instanceof Error ? err.message : t('settings.saveFailed'))
+                  })
+                }}
+              />
+              <span className="ml-2 text-sm text-muted">
+                {autoLaunchEnabled ? t('common.on') : t('common.off')}
+              </span>
+            </label>
           </div>
 
           <div>
