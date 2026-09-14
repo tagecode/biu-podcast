@@ -4,7 +4,7 @@ import { getDb, type AppDatabase } from '../../infra/db/client'
 import { sanitizeRichHtml } from '../../infra/sanitize/html'
 import { AppError } from '@shared/errors'
 import type { EpisodeListPage } from '@shared/episode-list'
-import type { Chapter, Episode } from '@shared/types'
+import type { Chapter, Episode, EpisodeSearchHit } from '@shared/types'
 
 export interface EpisodeServiceDeps {
   db?: AppDatabase
@@ -65,6 +65,13 @@ export class EpisodeService {
 
   getLatest(podcastId: string): Episode | null {
     return this.episodes.findLatest(podcastId)
+  }
+
+  search(
+    query: string,
+    options: { downloadedOnly?: boolean; limit?: number } = {}
+  ): EpisodeSearchHit[] {
+    return this.episodes.search(query, options)
   }
 
   /**

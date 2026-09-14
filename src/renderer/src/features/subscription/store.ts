@@ -12,9 +12,12 @@ interface SubscriptionState {
   error: string | null
   query: string
   sortKey: SortKey
+  refreshingAll: boolean
+  lastRefreshAdded: number | null
   load: () => Promise<void>
   add: (feedUrl: string) => Promise<void>
   refresh: (podcastId: string) => Promise<void>
+  refreshAll: () => Promise<void>
   setPaused: (podcastId: string, paused: boolean) => Promise<void>
   remove: (podcastId: string, deleteData?: boolean) => Promise<void>
   setQuery: (query: string) => void
@@ -42,6 +45,8 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   error: null,
   query: '',
   sortKey: 'recent',
+  refreshingAll: false,
+  lastRefreshAdded: null,
   load: async () => {
     set({ loading: true, error: null })
     try {
@@ -66,6 +71,20 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     } catch (error) {
       const mapped = mapRefreshError(error)
       set({ error: mapped })
+      throw new Error(mapped)
+    }
+  },
+  refreshAll: async () => {
+    if (get().refreshingAll) return
+    set({ refreshingAll: true, error: null, lastRefreshAdded: null })
+    try {
+      const results = await subscriptionApi.refreshAllSubscriptions()
+      await get().load()
+      const addedCount = results.reduce((sum, item) => sum + item.addedCount, 0)
+      set({ refreshingAll: false, lastRefreshAdded: addedCount, error: null })
+    } catch (error) {
+      const mapped = mapRefreshError(error)
+      set({ refreshingAll: false, error: mapped })
       throw new Error(mapped)
     }
   },

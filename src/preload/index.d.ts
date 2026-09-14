@@ -14,6 +14,7 @@ import type {
   EpisodeIdInput,
   GetAdjacentInput,
   GetChaptersInput,
+  SearchEpisodesInput,
   GetEpisodeInput,
   ImportBackupInput,
   ListEpisodesInput,
@@ -47,6 +48,7 @@ import type {
   DownloadTask,
   DownloadTaskStatus,
   Episode,
+  EpisodeSearchHit,
   IpcResult,
   Note,
   PlaybackQueue,
@@ -90,6 +92,7 @@ declare global {
           input: GetAdjacentInput
         ) => Promise<IpcResult<{ previous: Episode | null; next: Episode | null }>>
         getChapters: (input: GetChaptersInput) => Promise<IpcResult<Chapter[]>>
+        search: (input: SearchEpisodesInput) => Promise<IpcResult<EpisodeSearchHit[]>>
         onChanged: (callback: (payload: { podcastId: string }) => void) => () => void
       }
       playback: {

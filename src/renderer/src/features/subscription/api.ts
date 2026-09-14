@@ -21,6 +21,18 @@ export async function refreshSubscription(podcastId: string): Promise<void> {
   }
 }
 
+export async function refreshAllSubscriptions(): Promise<
+  Array<{ podcastId: string; addedCount: number }>
+> {
+  const result = await window.api.subscription.refreshAll()
+  if (!result.ok) {
+    const error = new Error(result.error.message) as Error & { code: string }
+    error.code = result.error.code
+    throw error
+  }
+  return result.data
+}
+
 export async function setSubscriptionPaused(podcastId: string, paused: boolean): Promise<void> {
   const result = await window.api.subscription.setPaused({ podcastId, paused })
   if (!result.ok) throw new Error(result.error.message)

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { mkdtempSync } from 'fs'
+import { mkdtempSync, existsSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { readFile, writeFile } from 'fs/promises'
@@ -25,6 +25,7 @@ vi.mock('electron', () => ({
 import { createMemoryDb } from '../../infra/db/client'
 import { SettingsStore } from '../../infra/settings/store'
 import { SubscriptionService } from './subscription.service'
+import { CoverCache } from './cover-cache'
 import { AppError } from '@shared/errors'
 
 const TMP = mkdtempSync(join(tmpdir(), 'biu-svc-'))
@@ -424,5 +425,43 @@ describe('SubscriptionService', () => {
     expect(p2Result?.addedCount).toBe(0)
     expect(results).toHaveLength(2)
     sqlite.close()
+  })
+
+  it('add caches the cover and list() exposes the local path', async () => {
+    const { db, settings } = setup()
+    const coverDir = mkdtempSync(join(tmpdir(), 'biu-covers-svc-'))
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+    const covers = new CoverCache({
+      dir: coverDir,
+      fetchFn: vi.fn(async () => ({
+        ok: true,
+        headers: { get: () => 'image/png' },
+        arrayBuffer: async () => png.buffer.slice(png.byteOffset, png.byteOffset + png.byteLength)
+      })) as unknown as typeof fetch
+    })
+    mockFetch.mockResolvedValue(makeFeed({ coverUrl: 'https://example.com/cover.png' }))
+    const service = new SubscriptionService({ db, settings, covers })
+
+    const podcast = await service.add('https://example.com/feed.xml')
+    expect(podcast.coverLocalPath).toBe(join(coverDir, `${podcast.id}.png`))
+    expect(existsSync(podcast.coverLocalPath!)).toBe(true)
+    expect(service.list()[0]?.coverLocalPath).toBe(podcast.coverLocalPath)
+  })
+
+  it('add still succeeds when cover download fails', async () => {
+    const { db, settings } = setup()
+    const covers = new CoverCache({
+      dir: mkdtempSync(join(tmpdir(), 'biu-covers-fail-')),
+      fetchFn: vi.fn(async () => {
+        throw new Error('offline')
+      }) as unknown as typeof fetch
+    })
+    mockFetch.mockResolvedValue(makeFeed({ coverUrl: 'https://example.com/cover.png' }))
+    const service = new SubscriptionService({ db, settings, covers })
+
+    const podcast = await service.add('https://example.com/feed.xml')
+    expect(podcast.id).toBeTruthy()
+    expect(podcast.coverUrl).toBe('https://example.com/cover.png')
+    expect(podcast.coverLocalPath).toBeNull()
   })
 })

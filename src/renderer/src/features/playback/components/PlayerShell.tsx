@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { formatDuration } from '@/lib/format'
+import { resolveCoverUrl } from '@/lib/cover-url'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 import { bindAudioEvents, usePlaybackStore } from '../store'
@@ -77,6 +78,7 @@ export function MiniPlayer(): React.JSX.Element | null {
   if (!currentEpisode || !currentPodcast) return null
 
   const progress = durationSec > 0 ? (currentTimeSec / durationSec) * 100 : 0
+  const coverSrc = resolveCoverUrl(currentPodcast)
 
   return (
     <div className="relative shrink-0 border-t border-line bg-surface">
@@ -106,12 +108,8 @@ export function MiniPlayer(): React.JSX.Element | null {
       </div>
       <div className="flex h-[72px] items-center gap-4 px-6">
         <div className="size-12 shrink-0 overflow-hidden rounded-md bg-line">
-          {currentPodcast.coverUrl ? (
-            <img
-              src={currentPodcast.coverUrl}
-              alt={currentPodcast.title}
-              className="size-full object-cover"
-            />
+          {coverSrc ? (
+            <img src={coverSrc} alt={currentPodcast.title} className="size-full object-cover" />
           ) : (
             <div className="flex size-full items-center justify-center bg-amber-100 text-lg font-semibold text-muted">
               {currentPodcast.title.charAt(0)}
@@ -296,6 +294,8 @@ export function FullScreenPlayer(): React.JSX.Element | null {
 
   if (!currentEpisode || !currentPodcast || view !== 'full') return null
 
+  const coverSrc = resolveCoverUrl(currentPodcast)
+
   return (
     <div className="absolute inset-0 z-40 flex flex-col bg-paper">
       <div className="flex items-center px-6 py-4">
@@ -317,12 +317,8 @@ export function FullScreenPlayer(): React.JSX.Element | null {
       </div>
       <div className="flex flex-1 flex-col items-center justify-center px-6 pb-12">
         <div className="mb-8 size-[280px] overflow-hidden rounded-lg bg-line shadow-md">
-          {currentPodcast.coverUrl ? (
-            <img
-              src={currentPodcast.coverUrl}
-              alt={currentPodcast.title}
-              className="size-full object-cover"
-            />
+          {coverSrc ? (
+            <img src={coverSrc} alt={currentPodcast.title} className="size-full object-cover" />
           ) : (
             <div className="flex size-full items-center justify-center bg-gradient-to-br from-amber-100 to-line text-7xl font-semibold text-muted">
               {currentPodcast.title.charAt(0)}

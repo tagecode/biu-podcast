@@ -1,5 +1,6 @@
 import { EpisodeRepository } from '../episode/episode.repository'
 import { SubscriptionRepository } from '../subscription/subscription.repository'
+import { CoverCache } from '../subscription/cover-cache'
 import { getDb, type AppDatabase } from '../../infra/db/client'
 import { settingsStore, SettingsStore } from '../../infra/settings/store'
 import { AppError } from '@shared/errors'
@@ -8,18 +9,21 @@ import type { Episode, PlaybackSession } from '@shared/types'
 export interface PlaybackServiceDeps {
   db?: AppDatabase
   settings?: SettingsStore
+  covers?: CoverCache
 }
 
 export class PlaybackService {
   private readonly episodes: EpisodeRepository
   private readonly subscriptions: SubscriptionRepository
   private readonly settings: SettingsStore
+  private readonly covers: CoverCache
 
   constructor(deps: PlaybackServiceDeps = {}) {
     const db = deps.db ?? getDb()
     this.episodes = new EpisodeRepository(db)
     this.subscriptions = new SubscriptionRepository(db)
     this.settings = deps.settings ?? settingsStore
+    this.covers = deps.covers ?? new CoverCache()
   }
 
   updateProgress(episodeId: string, positionSec: number): void {
@@ -44,7 +48,7 @@ export class PlaybackService {
     if (!episode || !podcast) return null
     return {
       episode: { ...episode, playbackPositionSec: settings.lastPositionSec },
-      podcast,
+      podcast: { ...podcast, coverLocalPath: this.covers.localPath(podcast.id) },
       positionSec: settings.lastPositionSec
     }
   }

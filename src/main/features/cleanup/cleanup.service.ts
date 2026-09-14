@@ -6,6 +6,7 @@ import { app, session } from 'electron'
 import { closeDb, getDatabasePath } from '../../infra/db/client'
 import { settingsStore } from '../../infra/settings/store'
 import { getDownloadDir } from '../download/download.service'
+import { CoverCache } from '../subscription/cover-cache'
 import { clearLogFiles } from '../../infra/logger'
 
 const CACHE_DIR_NAMES = [
@@ -41,6 +42,9 @@ export class CleanupService {
     for (const name of CACHE_DIR_NAMES) {
       await rm(join(userData, name), { recursive: true, force: true })
     }
+
+    // Cached podcast covers are reconstructable from the remote coverUrl.
+    await new CoverCache().clear()
 
     // Diagnostic logs are also disposable temp data.
     await clearLogFiles()

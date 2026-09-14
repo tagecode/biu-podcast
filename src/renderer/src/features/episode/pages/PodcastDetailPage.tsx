@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Episode, Podcast } from '@shared/types'
 import { EPISODE_PAGE_SIZE } from '@shared/episode-list'
+import { resolveCoverUrl } from '@/lib/cover-url'
 
 import * as episodeApi from '../api'
 import { EpisodeDetailPanel } from '../components/EpisodeDetailPanel'
@@ -18,11 +19,13 @@ import { useSubscriptionStore } from '@/features/subscription/store'
 
 interface PodcastDetailPageProps {
   podcastId: string
+  focusEpisodeId?: string
   onBack: () => void
 }
 
 export function PodcastDetailPage({
   podcastId,
+  focusEpisodeId,
   onBack
 }: PodcastDetailPageProps): React.JSX.Element {
   const { t } = useTranslation()
@@ -134,6 +137,12 @@ export function PodcastDetailPage({
   }, [podcastId, loadFirstPage])
 
   useEffect(() => {
+    if (!focusEpisodeId) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- open the searched episode once the detail route mounts
+    void openEpisodeDetail(focusEpisodeId)
+  }, [focusEpisodeId, openEpisodeDetail])
+
+  useEffect(() => {
     const el = listRef.current
     if (!el) return
 
@@ -153,6 +162,8 @@ export function PodcastDetailPage({
       </div>
     )
   }
+
+  const coverSrc = resolveCoverUrl(podcast)
 
   return (
     <div className="flex min-h-0 flex-1">
@@ -186,12 +197,8 @@ export function PodcastDetailPage({
         <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
           <div className="mb-6 flex gap-6">
             <div className="size-40 shrink-0 overflow-hidden rounded-lg bg-line">
-              {podcast.coverUrl ? (
-                <img
-                  src={podcast.coverUrl}
-                  alt={podcast.title}
-                  className="size-full object-cover"
-                />
+              {coverSrc ? (
+                <img src={coverSrc} alt={podcast.title} className="size-full object-cover" />
               ) : (
                 <div className="flex size-full items-center justify-center bg-gradient-to-br from-amber-100 to-line text-5xl font-semibold text-muted">
                   {podcast.title.charAt(0)}

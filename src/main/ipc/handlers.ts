@@ -12,6 +12,7 @@ import {
   GetAdjacentInputSchema,
   GetEpisodeInputSchema,
   GetChaptersInputSchema,
+  SearchEpisodesInputSchema,
   ImportBackupInputSchema,
   IPC_CHANNELS,
   ListEpisodesInputSchema,
@@ -98,9 +99,11 @@ export function registerSubscriptionHandlers(): void {
     }
   )
 
-  registerNoInputHandler(IPC_CHANNELS.subscription.refreshAll, () =>
-    subscriptionService.refreshAll()
-  )
+  registerNoInputHandler(IPC_CHANNELS.subscription.refreshAll, async () => {
+    const results = await subscriptionService.refreshAll()
+    broadcast(IPC_CHANNELS.subscription.changed, subscriptionService.list())
+    return results
+  })
 
   registerHandler(IPC_CHANNELS.subscription.importOpml, OpmlActionInputSchema, async () =>
     subscriptionService.importOpmlFromFile()
@@ -153,6 +156,13 @@ export function registerEpisodeHandlers(): void {
 
   registerHandler(IPC_CHANNELS.episode.getChapters, GetChaptersInputSchema, async (_event, input) =>
     episodeService.getChapters(input.episodeId)
+  )
+
+  registerHandler(IPC_CHANNELS.episode.search, SearchEpisodesInputSchema, async (_event, input) =>
+    episodeService.search(input.query, {
+      downloadedOnly: input.downloadedOnly,
+      limit: input.limit
+    })
   )
 }
 

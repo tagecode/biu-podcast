@@ -68,7 +68,12 @@ export const en: TranslationSchema = {
     subscriptionCount: 'My subscriptions · {{count}} podcasts',
     offlineBanner:
       'You are offline, so new subscriptions cannot be added. Downloaded content still plays.',
-    searchPlaceholder: 'Search podcasts…',
+    searchPlaceholder: 'Search podcasts or episodes…',
+    episodeHits: 'Matching episodes',
+    episodeHitsEmpty: 'No matching episodes',
+    noMatchingPodcasts: 'No matching podcasts',
+    downloadedOnly: 'Downloaded only',
+    noNewEpisodes: 'No new episodes',
     newEpisodes: 'New content found',
     newEpisodeCount: '{{count}} new episodes found',
     feedErrorNotFound: 'This feed is gone (404) — please check the URL',

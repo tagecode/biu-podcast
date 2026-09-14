@@ -19,6 +19,7 @@ export const IPC_CHANNELS = {
     markPlayed: 'episode:mark-played',
     getAdjacent: 'episode:get-adjacent',
     getChapters: 'episode:get-chapters',
+    search: 'episode:search',
     changed: 'episode:changed'
   },
   playback: {

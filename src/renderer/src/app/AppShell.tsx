@@ -30,7 +30,7 @@ const noDragRegion: CSSProperties = { WebkitAppRegion: 'no-drag' }
 
 type Route =
   | { name: 'subscriptions' }
-  | { name: 'detail'; podcastId: string }
+  | { name: 'detail'; podcastId: string; episodeId?: string }
   | { name: 'playlists' }
   | { name: 'notes' }
   | { name: 'settings' }
@@ -179,10 +179,14 @@ export function AppShell(): React.JSX.Element {
           {route.name === 'subscriptions' ? (
             <SubscriptionListView
               onOpenPodcast={(podcastId) => setRoute({ name: 'detail', podcastId })}
+              onOpenEpisode={(podcastId, episodeId) =>
+                setRoute({ name: 'detail', podcastId, episodeId })
+              }
             />
           ) : route.name === 'detail' ? (
             <PodcastDetailPage
               podcastId={route.podcastId}
+              focusEpisodeId={route.episodeId}
               onBack={() => setRoute({ name: 'subscriptions' })}
             />
           ) : route.name === 'playlists' ? (

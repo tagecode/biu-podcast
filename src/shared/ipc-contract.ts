@@ -55,6 +55,13 @@ export const GetChaptersInputSchema = z.object({
 })
 export type GetChaptersInput = z.infer<typeof GetChaptersInputSchema>
 
+export const SearchEpisodesInputSchema = z.object({
+  query: z.string().trim().min(1).max(200),
+  downloadedOnly: z.boolean().optional().default(false),
+  limit: z.number().int().min(1).max(50).optional().default(50)
+})
+export type SearchEpisodesInput = z.input<typeof SearchEpisodesInputSchema>
+
 export const UpdateProgressInputSchema = z.object({
   episodeId: z.string().min(1),
   positionSec: z.number().min(0)

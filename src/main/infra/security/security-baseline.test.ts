@@ -39,6 +39,8 @@ describe('security baseline (Arch.md §15 / T9.2)', () => {
       expect(PRODUCTION_CSP).toContain("default-src 'self'")
       expect(PRODUCTION_CSP).toContain("script-src 'self'")
       expect(PRODUCTION_CSP).not.toContain("script-src 'self' 'unsafe-inline'")
+      expect(PRODUCTION_CSP).toContain('img-src')
+      expect(PRODUCTION_CSP).toContain('biu-media:')
       expect(getContentSecurityPolicy(false)).toBe(PRODUCTION_CSP)
     })
 

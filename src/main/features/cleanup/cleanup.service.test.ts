@@ -62,10 +62,15 @@ describe('CleanupService', () => {
   })
 
   it('clearCache keeps the database and settings', async () => {
+    const coversDir = join(state.userData, 'covers')
+    mkdirSync(coversDir, { recursive: true })
+    writeFileSync(join(coversDir, 'pod-1.png'), 'img')
+
     await cleanupService.clearCache()
 
     expect(existsSync(dbPath)).toBe(true)
     expect(existsSync(settingsPath)).toBe(true)
+    expect(existsSync(coversDir)).toBe(false)
     // No relaunch for a mere cache clear.
     expect(state.calls).not.toContain('relaunch')
   })

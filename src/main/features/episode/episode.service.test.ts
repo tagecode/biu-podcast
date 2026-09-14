@@ -130,4 +130,14 @@ describe('EpisodeService', () => {
     const latest = service.getLatest('pod-1')
     expect(latest?.title).toBe('EP2')
   })
+
+  it('search returns title matches with podcast titles', () => {
+    const { db } = createTestDb()
+    seedOne(db)
+    const service = new EpisodeService({ db })
+    const hits = service.search('EP1')
+    expect(hits).toHaveLength(1)
+    expect(hits[0]?.episode.title).toBe('EP1')
+    expect(hits[0]?.podcastTitle).toBe('Test')
+  })
 })

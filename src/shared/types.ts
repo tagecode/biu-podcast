@@ -18,9 +18,17 @@ export interface Podcast {
   subscribedAt: number
   lastFetchedAt: number | null
   lastFetchStatus: FetchStatus | null
+  /** Absolute path of a cached cover file, if one exists on disk. */
+  coverLocalPath?: string | null
   unreadCount?: number
   /** Number of episodes marked as played (dynamically computed with unreadCount). */
   playedCount?: number
+}
+
+/** Local episode search hit (title/description, no remote catalog). */
+export interface EpisodeSearchHit {
+  episode: Episode
+  podcastTitle: string
 }
 
 export interface Episode {

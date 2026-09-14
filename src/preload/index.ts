@@ -17,6 +17,7 @@ import type {
   EpisodeIdInput,
   GetAdjacentInput,
   GetChaptersInput,
+  SearchEpisodesInput,
   GetEpisodeInput,
   ImportBackupInput,
   ListEpisodesInput,
@@ -49,6 +50,7 @@ import type {
   DownloadTask,
   DownloadTaskStatus,
   Episode,
+  EpisodeSearchHit,
   IpcResult,
   Note,
   PlaybackQueue,
@@ -114,6 +116,8 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.episode.getAdjacent, input),
     getChapters: (input: GetChaptersInput): Promise<IpcResult<Chapter[]>> =>
       ipcRenderer.invoke(IPC_CHANNELS.episode.getChapters, input),
+    search: (input: SearchEpisodesInput): Promise<IpcResult<EpisodeSearchHit[]>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.episode.search, input),
     onChanged: (callback: (payload: { podcastId: string }) => void): (() => void) => {
       const listener = (_event: Electron.IpcRendererEvent, payload: { podcastId: string }): void =>
         callback(payload)

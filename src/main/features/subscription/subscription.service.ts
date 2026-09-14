@@ -13,10 +13,12 @@ import type { FetchStatus, Podcast } from '@shared/types'
 import { fetchAndParseFeed } from './feed-parser'
 import { normalizeFeedUrl, SubscriptionRepository } from './subscription.repository'
 import { buildOpml, parseOpml } from './opml'
+import { CoverCache } from './cover-cache'
 
 export interface SubscriptionServiceDeps {
   db?: AppDatabase
   settings?: SettingsStore
+  covers?: CoverCache
 }
 
 function getDownloadDir(settings: SettingsStore): string {
@@ -30,12 +32,18 @@ export class SubscriptionService {
   private readonly settings: SettingsStore
   private readonly subscriptions: SubscriptionRepository
   private readonly episodes: EpisodeRepository
+  private readonly covers: CoverCache
 
   constructor(deps: SubscriptionServiceDeps = {}) {
     this.db = deps.db ?? getDb()
     this.settings = deps.settings ?? settingsStore
     this.subscriptions = new SubscriptionRepository(this.db)
     this.episodes = new EpisodeRepository(this.db)
+    this.covers = deps.covers ?? new CoverCache()
+  }
+
+  private withCover(podcast: Podcast): Podcast {
+    return { ...podcast, coverLocalPath: this.covers.localPath(podcast.id) }
   }
 
   async add(feedUrl: string): Promise<Podcast> {
@@ -62,6 +70,7 @@ export class SubscriptionService {
         lastFetchStatus: 'ok'
       })
       this.episodes.insertMany(softDeleted.id, parsed.episodes)
+      const coverLocalPath = await this.covers.cache(softDeleted.id, parsed.coverUrl)
       return {
         ...softDeleted,
         title: parsed.title,
@@ -74,7 +83,8 @@ export class SubscriptionService {
         lastFetchedAt: now,
         lastFetchStatus: 'ok',
         unreadCount: this.episodes.countUnread(softDeleted.id),
-        playedCount: this.episodes.countPlayed(softDeleted.id)
+        playedCount: this.episodes.countPlayed(softDeleted.id),
+        coverLocalPath
       }
     }
 
@@ -105,12 +115,13 @@ export class SubscriptionService {
       lastFetchStatus: 'ok'
     })
     this.episodes.insertMany(podcast.id, parsed.episodes)
+    const coverLocalPath = await this.covers.cache(podcast.id, parsed.coverUrl)
 
-    return { ...podcast, unreadCount: parsed.episodes.length, playedCount: 0 }
+    return { ...podcast, unreadCount: parsed.episodes.length, playedCount: 0, coverLocalPath }
   }
 
   list(): Podcast[] {
-    return this.subscriptions.listWithUnreadCount()
+    return this.subscriptions.listWithUnreadCount().map((podcast) => this.withCover(podcast))
   }
 
   async refresh(podcastId: string): Promise<{ addedCount: number; podcast: Podcast }> {
@@ -132,12 +143,13 @@ export class SubscriptionService {
         lastFetchStatus: 'ok'
       })
       const addedCount = this.episodes.insertMany(podcastId, parsed.episodes)
+      await this.covers.cache(podcastId, parsed.coverUrl)
       const updated = this.subscriptions.findById(podcastId)
       if (!updated) throw new AppError('NOT_FOUND', '播客不存在')
       return {
         addedCount,
         podcast: {
-          ...updated,
+          ...this.withCover(updated),
           unreadCount: this.episodes.countUnread(podcastId),
           playedCount: this.episodes.countPlayed(podcastId)
         }
@@ -183,6 +195,7 @@ export class SubscriptionService {
         await rm(`${filePath}.part`, { force: true })
       }
       await rm(join(getDownloadDir(this.settings), podcastId), { recursive: true, force: true })
+      await this.covers.remove(podcastId)
     } else {
       this.subscriptions.softUnsubscribe(podcastId)
     }

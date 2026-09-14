@@ -1,10 +1,16 @@
-import { and, count, desc, eq } from 'drizzle-orm'
+import { and, count, desc, eq, isNull, or, sql } from 'drizzle-orm'
 import { ulid } from 'ulid'
 
 import type { AppDatabase } from '../../infra/db/client'
-import { episodes } from '../../infra/db/schema'
+import { episodes, podcasts } from '../../infra/db/schema'
 import type { EpisodeListPage } from '@shared/episode-list'
-import type { Episode, ParsedFeedEpisode } from '@shared/types'
+import type { Episode, EpisodeSearchHit, ParsedFeedEpisode } from '@shared/types'
+
+const SEARCH_LIMIT_MAX = 50
+
+function escapeLike(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_')
+}
 
 const INSERT_CHUNK_SIZE = 200
 const DESCRIPTION_MAX_CHARS = 4000
@@ -278,6 +284,42 @@ export class EpisodeRepository {
       })
       .where(eq(episodes.id, episodeId))
       .run()
+  }
+
+  search(
+    query: string,
+    options: { downloadedOnly?: boolean; limit?: number } = {}
+  ): EpisodeSearchHit[] {
+    const keyword = query.trim()
+    if (!keyword) return []
+
+    const safeLimit = Math.min(Math.max(options.limit ?? SEARCH_LIMIT_MAX, 1), SEARCH_LIMIT_MAX)
+    const pattern = `%${escapeLike(keyword)}%`
+    const matchTitle = sql`${episodes.title} LIKE ${pattern} ESCAPE ${'\\'}`
+    const matchDescription = sql`${episodes.descriptionHtml} LIKE ${pattern} ESCAPE ${'\\'}`
+
+    const rows = this.db
+      .select({
+        episode: episodes,
+        podcastTitle: podcasts.title
+      })
+      .from(episodes)
+      .innerJoin(podcasts, eq(episodes.podcastId, podcasts.id))
+      .where(
+        and(
+          isNull(podcasts.unsubscribedAt),
+          or(matchTitle, matchDescription),
+          options.downloadedOnly ? eq(episodes.isDownloaded, true) : undefined
+        )
+      )
+      .orderBy(desc(episodes.publishedAt), desc(episodes.id))
+      .limit(safeLimit)
+      .all()
+
+    return rows.map((row) => ({
+      episode: { ...this.toEpisode(row.episode), descriptionHtml: null },
+      podcastTitle: row.podcastTitle
+    }))
   }
 
   listLocalFilePaths(podcastId: string): string[] {

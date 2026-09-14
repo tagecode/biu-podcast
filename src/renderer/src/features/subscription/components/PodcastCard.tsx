@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { Podcast } from '@shared/types'
+import { resolveCoverUrl } from '@/lib/cover-url'
 
 import { Badge } from '@/components/ui/badge'
 import { formatRelativeTime } from '../lib/sort-filter'
@@ -21,6 +22,7 @@ function CoverPlaceholder({ title }: { title: string }): React.JSX.Element {
 
 export function PodcastCard({ podcast, onClick }: PodcastCardProps): React.JSX.Element {
   const { t } = useTranslation()
+  const coverSrc = resolveCoverUrl(podcast)
   return (
     <button
       type="button"
@@ -28,8 +30,8 @@ export function PodcastCard({ podcast, onClick }: PodcastCardProps): React.JSX.E
       className="overflow-hidden rounded-lg border border-line bg-surface text-left shadow-sm transition-shadow hover:shadow-md"
     >
       <div className="relative aspect-square overflow-hidden bg-line">
-        {podcast.coverUrl ? (
-          <img src={podcast.coverUrl} alt={podcast.title} className="size-full object-cover" />
+        {coverSrc ? (
+          <img src={coverSrc} alt={podcast.title} className="size-full object-cover" />
         ) : (
           <CoverPlaceholder title={podcast.title} />
         )}

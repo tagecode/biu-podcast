@@ -3,8 +3,33 @@ import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { describe, expect, it } from 'vitest'
 
 import * as schema from '../../infra/db/schema'
+import { createTestDb } from '../../test-utils/db'
 import { EpisodeRepository } from './episode.repository'
 import type { ParsedFeedEpisode } from '@shared/types'
+
+function insertPodcast(
+  db: ReturnType<typeof createTestDb>['db'],
+  id: string,
+  title: string,
+  unsubscribedAt: number | null = null
+): void {
+  db.insert(schema.podcasts)
+    .values({
+      id,
+      feedUrl: `https://example.com/${id}.xml`,
+      title,
+      description: null,
+      coverUrl: null,
+      author: null,
+      language: null,
+      isPaused: false,
+      unsubscribedAt,
+      subscribedAt: 1700000000000,
+      lastFetchedAt: 1700000000000,
+      lastFetchStatus: 'ok'
+    })
+    .run()
+}
 
 function makeEpisodes(count: number): ParsedFeedEpisode[] {
   return Array.from({ length: count }, (_, index) => ({
@@ -93,5 +118,160 @@ describe('EpisodeRepository.insertMany', () => {
     expect(again).toBe(0)
 
     sqlite.close()
+  })
+})
+
+describe('EpisodeRepository.search', () => {
+  it('matches title and description across subscribed podcasts', () => {
+    const { db } = createTestDb()
+    insertPodcast(db, 'pod-a', '科技早知道')
+    insertPodcast(db, 'pod-b', '故事 FM')
+    const repo = new EpisodeRepository(db)
+    repo.insertMany('pod-a', [
+      {
+        title: 'AI 周报',
+        descriptionHtml: '<p>大模型进展</p>',
+        publishedAt: 1700002000000,
+        audioUrl: 'https://example.com/a1.mp3',
+        durationSec: 600,
+        fileSizeBytes: 1024,
+        guid: 'a1'
+      },
+      {
+        title: '硬件评测',
+        descriptionHtml: '<p>无关内容</p>',
+        publishedAt: 1700001000000,
+        audioUrl: 'https://example.com/a2.mp3',
+        durationSec: 300,
+        fileSizeBytes: 512,
+        guid: 'a2'
+      }
+    ])
+    repo.insertMany('pod-b', [
+      {
+        title: '口述历史',
+        descriptionHtml: '<p>关于 AI 伦理的访谈</p>',
+        publishedAt: 1700003000000,
+        audioUrl: 'https://example.com/b1.mp3',
+        durationSec: 900,
+        fileSizeBytes: 2048,
+        guid: 'b1'
+      }
+    ])
+
+    const hits = repo.search('AI')
+    expect(hits.map((h) => h.episode.title)).toEqual(['口述历史', 'AI 周报'])
+    expect(hits[0]?.podcastTitle).toBe('故事 FM')
+    expect(hits[1]?.podcastTitle).toBe('科技早知道')
+    expect(hits.every((h) => h.episode.descriptionHtml === null)).toBe(true)
+  })
+
+  it('skips episodes from unsubscribed podcasts', () => {
+    const { db } = createTestDb()
+    insertPodcast(db, 'pod-a', 'Active')
+    insertPodcast(db, 'pod-b', 'Gone', Date.now())
+    const repo = new EpisodeRepository(db)
+    repo.insertMany('pod-a', [
+      {
+        title: 'Keep me',
+        descriptionHtml: null,
+        publishedAt: 1,
+        audioUrl: 'https://example.com/keep.mp3',
+        durationSec: 1,
+        fileSizeBytes: 1,
+        guid: 'keep'
+      }
+    ])
+    repo.insertMany('pod-b', [
+      {
+        title: 'Keep me too',
+        descriptionHtml: null,
+        publishedAt: 2,
+        audioUrl: 'https://example.com/gone.mp3',
+        durationSec: 1,
+        fileSizeBytes: 1,
+        guid: 'gone'
+      }
+    ])
+
+    const hits = repo.search('Keep')
+    expect(hits).toHaveLength(1)
+    expect(hits[0]?.episode.title).toBe('Keep me')
+  })
+
+  it('filters to downloaded episodes when requested', () => {
+    const { db } = createTestDb()
+    insertPodcast(db, 'pod-a', 'Pod')
+    const repo = new EpisodeRepository(db)
+    repo.insertMany('pod-a', [
+      {
+        title: 'Offline talk',
+        descriptionHtml: null,
+        publishedAt: 2,
+        audioUrl: 'https://example.com/off.mp3',
+        durationSec: 1,
+        fileSizeBytes: 1,
+        guid: 'off'
+      },
+      {
+        title: 'Online talk',
+        descriptionHtml: null,
+        publishedAt: 1,
+        audioUrl: 'https://example.com/on.mp3',
+        durationSec: 1,
+        fileSizeBytes: 1,
+        guid: 'on'
+      }
+    ])
+    const downloaded = repo
+      .listByPodcastPage('pod-a', 0, 10)
+      .items.find((e) => e.title === 'Offline talk')
+    expect(downloaded).toBeTruthy()
+    repo.markDownloaded(downloaded!.id, '/tmp/off.mp3')
+
+    const hits = repo.search('talk', { downloadedOnly: true })
+    expect(hits).toHaveLength(1)
+    expect(hits[0]?.episode.title).toBe('Offline talk')
+    expect(hits[0]?.episode.isDownloaded).toBe(true)
+  })
+
+  it('returns an empty list for blank queries and treats % as a literal', () => {
+    const { db } = createTestDb()
+    insertPodcast(db, 'pod-a', 'Pod')
+    const repo = new EpisodeRepository(db)
+    repo.insertMany('pod-a', [
+      {
+        title: 'Anything',
+        descriptionHtml: null,
+        publishedAt: 1,
+        audioUrl: 'https://example.com/any.mp3',
+        durationSec: 1,
+        fileSizeBytes: 1,
+        guid: 'any'
+      }
+    ])
+
+    expect(repo.search('   ')).toEqual([])
+    expect(repo.search('%')).toEqual([])
+  })
+
+  it('honors the result limit', () => {
+    const { db } = createTestDb()
+    insertPodcast(db, 'pod-a', 'Pod')
+    const repo = new EpisodeRepository(db)
+    repo.insertMany(
+      'pod-a',
+      Array.from({ length: 5 }, (_, i) => ({
+        title: `Topic ${i}`,
+        descriptionHtml: null,
+        publishedAt: i,
+        audioUrl: `https://example.com/${i}.mp3`,
+        durationSec: 1,
+        fileSizeBytes: 1,
+        guid: `g-${i}`
+      }))
+    )
+
+    expect(repo.search('Topic', { limit: 2 })).toHaveLength(2)
   })
 })
