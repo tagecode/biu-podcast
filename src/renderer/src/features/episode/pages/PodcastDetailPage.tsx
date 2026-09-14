@@ -1,4 +1,4 @@
-import { ArrowLeft, Link2, RefreshCw } from 'lucide-react'
+import { ArrowLeft, RefreshCw } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -9,8 +9,9 @@ import type { Episode, Podcast } from '@shared/types'
 import { EPISODE_PAGE_SIZE } from '@shared/episode-list'
 import { resolveCoverUrl } from '@/lib/cover-url'
 
-import { copyShareUrl, podcastShareUrl } from '../lib/share-link'
+import { podcastShareUrl } from '../lib/share-link'
 import * as episodeApi from '../api'
+import { CopyLinkButton } from '../components/CopyLinkButton'
 import { EpisodeDetailPanel } from '../components/EpisodeDetailPanel'
 import { EpisodeListItem } from '../components/EpisodeListItem'
 import { useDownloadStore } from '@/features/download/store'
@@ -179,14 +180,7 @@ export function PodcastDetailPage({
             {t('subscription.backToList')}
           </button>
           <div className="flex-1" />
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={t('subscription.copyLink')}
-            onClick={() => void copyShareUrl(podcastShareUrl(podcast))}
-          >
-            <Link2 className="size-4" />
-          </Button>
+          <CopyLinkButton url={podcastShareUrl(podcast)} label={t('subscription.copyLink')} />
           <Button
             variant="ghost"
             size="icon"

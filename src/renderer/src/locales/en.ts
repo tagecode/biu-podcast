@@ -9,7 +9,8 @@ export const en: TranslationSchema = {
     confirm: 'Confirm',
     close: 'Close',
     save: 'Save',
-    loading: 'Loading…'
+    loading: 'Loading…',
+    copied: 'Copied'
   },
   app: {
     title: 'Biu',

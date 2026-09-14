@@ -117,6 +117,7 @@ describe('EpisodeDetailPanel chapters', () => {
     await waitFor(() => {
       expect(window.api.clipboard.writeText).toHaveBeenCalledWith('https://example.com/ep1')
     })
+    expect(await screen.findByRole('status')).toHaveTextContent('已复制')
   })
 
   it('falls back to the audio URL when guid matches the enclosure', async () => {

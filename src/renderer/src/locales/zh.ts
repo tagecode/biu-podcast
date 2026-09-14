@@ -7,7 +7,8 @@ export const zh = {
     confirm: '确定',
     close: '关闭',
     save: '保存',
-    loading: '加载中…'
+    loading: '加载中…',
+    copied: '已复制'
   },
   app: {
     title: '博播',

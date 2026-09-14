@@ -55,5 +55,6 @@ describe('PodcastDetailPage copy link', () => {
     await waitFor(() => {
       expect(window.api.clipboard.writeText).toHaveBeenCalledWith('https://example.com/feed.xml')
     })
+    expect(await screen.findByRole('status')).toHaveTextContent('已复制')
   })
 })
