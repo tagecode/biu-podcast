@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
 
 import { IPC_CHANNELS } from '@shared/ipc-channels'
 import type {
@@ -20,6 +20,7 @@ import type {
   SearchEpisodesInput,
   GetEpisodeInput,
   ImportBackupInput,
+  ImportOpmlPathInput,
   ListEpisodesInput,
   MarkAllPlayedInput,
   MarkPlayedInput,
@@ -86,6 +87,8 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.subscription.setPaused, input),
     importOpml: (): Promise<IpcResult<OpmlImportResult | null>> =>
       ipcRenderer.invoke(IPC_CHANNELS.subscription.importOpml),
+    importOpmlPath: (input: ImportOpmlPathInput): Promise<IpcResult<OpmlImportResult>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.subscription.importOpmlPath, input),
     exportOpml: (): Promise<IpcResult<{ filePath: string } | null>> =>
       ipcRenderer.invoke(IPC_CHANNELS.subscription.exportOpml),
     onChanged: (callback: (podcasts: Podcast[]) => void): (() => void) => {
@@ -287,6 +290,9 @@ const api = {
   diagnostics: {
     export: (): Promise<IpcResult<{ filePath: string } | null>> =>
       ipcRenderer.invoke(IPC_CHANNELS.diagnostics.export, {})
+  },
+  files: {
+    getPathForFile: (file: File): string => webUtils.getPathForFile(file)
   }
 }
 

@@ -89,7 +89,9 @@ export const zh = {
     authorUnknown: '作者未知',
     totalEpisodes: '共 {{count}} 集',
     episodes: '{{count}} 集',
-    fallbackInitial: '播'
+    fallbackInitial: '播',
+    dragImportInvalid: '请拖入 .opml 或 .xml 订阅文件',
+    dragImportDone: '导入完成：新增 {{added}} 个，跳过 {{skipped}} 个，失败 {{failed}} 个'
   },
   episode: {
     play: '播放',

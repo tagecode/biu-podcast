@@ -15,6 +15,7 @@ import {
   SearchEpisodesInputSchema,
   ImportBackupInputSchema,
   IPC_CHANNELS,
+  ImportOpmlPathInputSchema,
   ListEpisodesInputSchema,
   MarkAllPlayedInputSchema,
   MarkPlayedInputSchema,
@@ -108,6 +109,16 @@ export function registerSubscriptionHandlers(): void {
 
   registerHandler(IPC_CHANNELS.subscription.importOpml, OpmlActionInputSchema, async () =>
     subscriptionService.importOpmlFromFile()
+  )
+
+  registerHandler(
+    IPC_CHANNELS.subscription.importOpmlPath,
+    ImportOpmlPathInputSchema,
+    async (_event, input) => {
+      const result = await subscriptionService.importOpmlFromPath(input.filePath)
+      broadcast(IPC_CHANNELS.subscription.changed, subscriptionService.list())
+      return result
+    }
   )
 
   registerHandler(IPC_CHANNELS.subscription.exportOpml, OpmlActionInputSchema, async () =>

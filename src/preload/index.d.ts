@@ -17,6 +17,7 @@ import type {
   SearchEpisodesInput,
   GetEpisodeInput,
   ImportBackupInput,
+  ImportOpmlPathInput,
   ListEpisodesInput,
   MarkAllPlayedInput,
   MarkPlayedInput,
@@ -79,6 +80,7 @@ declare global {
         refreshAll: () => Promise<IpcResult<Array<{ podcastId: string; addedCount: number }>>>
         setPaused: (input: SetPausedInput) => Promise<IpcResult<void>>
         importOpml: () => Promise<IpcResult<OpmlImportResult | null>>
+        importOpmlPath: (input: ImportOpmlPathInput) => Promise<IpcResult<OpmlImportResult>>
         exportOpml: () => Promise<IpcResult<{ filePath: string } | null>>
         onChanged: (callback: (podcasts: Podcast[]) => void) => () => void
         onDeepLinkSubscribe: (callback: (feedUrl: string) => void) => () => void
@@ -189,6 +191,9 @@ declare global {
       }
       diagnostics: {
         export: () => Promise<IpcResult<{ filePath: string } | null>>
+      }
+      files: {
+        getPathForFile: (file: File) => string
       }
     }
   }

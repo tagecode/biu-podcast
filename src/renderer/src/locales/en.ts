@@ -95,7 +95,9 @@ export const en: TranslationSchema = {
     authorUnknown: 'Unknown author',
     totalEpisodes: '{{count}} episodes total',
     episodes: '{{count}} episodes',
-    fallbackInitial: 'B'
+    fallbackInitial: 'B',
+    dragImportInvalid: 'Drop a .opml or .xml subscription file',
+    dragImportDone: 'Import done: {{added}} added, {{skipped}} skipped, {{failed}} failed'
   },
   episode: {
     play: 'Play',

@@ -39,6 +39,8 @@ type Route =
 export function AppShell(): React.JSX.Element {
   const { t } = useTranslation()
   const [route, setRoute] = useState<Route>({ name: 'subscriptions' })
+  const [dropMessage, setDropMessage] = useState<string | null>(null)
+  const loadSubscriptions = useSubscriptionStore((state) => state.load)
   const playbackView = usePlaybackStore((state) => state.view)
   const panelOpen = useDownloadStore((state) => state.panelOpen)
   const tasks = useDownloadStore((state) => state.tasks)
@@ -114,8 +116,38 @@ export function AppShell(): React.JSX.Element {
     }
   }, [])
 
+  const handleDrop = async (event: React.DragEvent<HTMLDivElement>): Promise<void> => {
+    event.preventDefault()
+    const files = Array.from(event.dataTransfer.files)
+    if (files.length === 0) return
+    const file = files.find((item) => /\.(opml|xml)$/i.test(item.name))
+    if (!file) {
+      setDropMessage(t('subscription.dragImportInvalid'))
+      return
+    }
+    const filePath = window.api.files.getPathForFile(file)
+    const result = await window.api.subscription.importOpmlPath({ filePath })
+    if (!result.ok) {
+      setDropMessage(result.error.message)
+      return
+    }
+    await loadSubscriptions()
+    setDropMessage(
+      t('subscription.dragImportDone', {
+        added: result.data.added,
+        skipped: result.data.skipped,
+        failed: result.data.failed.length
+      })
+    )
+  }
+
   return (
-    <div className="flex h-screen flex-col bg-paper text-ink">
+    <div
+      className="flex h-screen flex-col bg-paper text-ink"
+      data-testid="app-shell"
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={(event) => void handleDrop(event)}
+    >
       <header
         className="flex h-12 shrink-0 select-none items-center gap-3 border-b border-line bg-surface px-3"
         style={dragRegion}
@@ -173,6 +205,15 @@ export function AppShell(): React.JSX.Element {
           <WindowControls />
         </div>
       </header>
+
+      {dropMessage ? (
+        <div
+          className="border-b border-line bg-amber-100/50 px-4 py-2 text-sm text-ink"
+          data-testid="drop-message"
+        >
+          {dropMessage}
+        </div>
+      ) : null}
 
       <div className="flex min-h-0 flex-1">
         <main className="relative flex min-h-0 min-w-0 flex-1 flex-col">

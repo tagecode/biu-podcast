@@ -1,6 +1,6 @@
 import { ulid } from 'ulid'
 import { join } from 'path'
-import { rm, readFile, writeFile } from 'fs/promises'
+import { rm, readFile, writeFile, stat as fsStat } from 'fs/promises'
 import { app, dialog } from 'electron'
 
 import { EpisodeRepository } from '../episode/episode.repository'
@@ -210,10 +210,53 @@ export class SubscriptionService {
   }
 
   /**
-   * Import subscriptions from an OPML file (dialog-based). Each entry is
-   * added via add(); per-entry failures don't block the rest. Returns counts
-   * of added / skipped (already subscribed) / failed.
+   * Import subscriptions from an OPML file. Each entry is added via add();
+   * per-entry failures don't block the rest. Returns counts of added /
+   * skipped (already subscribed) / failed.
    */
+  private async importOpmlOutlines(filePath: string): Promise<{
+    filePath: string
+    added: number
+    skipped: number
+    failed: Array<{ title: string; error: string }>
+  }> {
+    const xml = await readFile(filePath, 'utf8')
+    const outlines = parseOpml(xml)
+    let added = 0
+    let skipped = 0
+    const failed: Array<{ title: string; error: string }> = []
+    for (const outline of outlines) {
+      try {
+        await this.add(outline.feedUrl)
+        added += 1
+      } catch (error) {
+        if (error instanceof AppError && error.code === 'ALREADY_SUBSCRIBED') skipped += 1
+        else
+          failed.push({
+            title: outline.title || outline.feedUrl,
+            error: error instanceof Error ? error.message : '未知错误'
+          })
+      }
+    }
+    return { filePath, added, skipped, failed }
+  }
+
+  async importOpmlFromPath(filePath: string): Promise<{
+    filePath: string
+    added: number
+    skipped: number
+    failed: Array<{ title: string; error: string }>
+  }> {
+    if (!/\.(opml|xml)$/i.test(filePath)) {
+      throw new AppError('INVALID_INPUT', '仅支持导入 .opml 或 .xml 文件')
+    }
+    const fileStat = await fsStat(filePath)
+    if (fileStat.size > 5 * 1024 * 1024) {
+      throw new AppError('INVALID_INPUT', 'OPML 文件过大（最大 5MB）')
+    }
+    return this.importOpmlOutlines(filePath)
+  }
+
   async importOpmlFromFile(): Promise<{
     filePath: string
     added: number
@@ -226,30 +269,7 @@ export class SubscriptionService {
       filters: [{ name: 'OPML', extensions: ['opml', 'xml'] }]
     })
     if (result.canceled || !result.filePaths[0]) return null
-
-    const filePath = result.filePaths[0]
-    const xml = await readFile(filePath, 'utf8')
-    const outlines = parseOpml(xml)
-
-    let added = 0
-    let skipped = 0
-    const failed: Array<{ title: string; error: string }> = []
-    for (const outline of outlines) {
-      try {
-        await this.add(outline.feedUrl)
-        added += 1
-      } catch (error) {
-        if (error instanceof AppError && error.code === 'ALREADY_SUBSCRIBED') {
-          skipped += 1
-        } else {
-          failed.push({
-            title: outline.title || outline.feedUrl,
-            error: error instanceof Error ? error.message : '未知错误'
-          })
-        }
-      }
-    }
-    return { filePath, added, skipped, failed }
+    return this.importOpmlFromPath(result.filePaths[0])
   }
 
   /** Export all active subscriptions to an OPML file (dialog-based). */

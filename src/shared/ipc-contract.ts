@@ -23,6 +23,12 @@ export const SetPausedInputSchema = z.object({
 /** No payload — dialog-based OPML import/export. */
 export const OpmlActionInputSchema = z.object({})
 
+/** Import OPML from a known file path (drag-and-drop). */
+export const ImportOpmlPathInputSchema = z.object({
+  filePath: z.string().min(1).max(4096)
+})
+export type ImportOpmlPathInput = z.infer<typeof ImportOpmlPathInputSchema>
+
 /** Result of an OPML import. */
 export interface OpmlImportResult {
   filePath: string
