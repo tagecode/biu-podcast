@@ -130,5 +130,8 @@ export const IPC_CHANNELS = {
   diagnostics: {
     /** Export a diagnostic report (logs + environment) via save dialog. */
     export: 'diagnostics:export'
+  },
+  clipboard: {
+    writeText: 'clipboard:write-text'
   }
 } as const

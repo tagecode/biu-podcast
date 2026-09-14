@@ -40,7 +40,8 @@ describe('EpisodeDetailPanel chapters', () => {
     window.api = {
       episode: { getChapters },
       playlist: { list: listPlaylists },
-      note: { listByEpisode: listNotes }
+      note: { listByEpisode: listNotes },
+      clipboard: { writeText: vi.fn(async () => ({ ok: true as const, data: undefined })) }
     } as unknown as Window['api']
   })
 
@@ -97,6 +98,43 @@ describe('EpisodeDetailPanel chapters', () => {
     // Section is hidden (empty list) — wait a tick for the async load.
     await waitFor(() => {
       expect(screen.queryByText('章节')).not.toBeInTheDocument()
+    })
+  })
+
+  it('copies the episode permalink', async () => {
+    render(
+      <EpisodeDetailPanel
+        episode={makeEpisode({
+          link: 'https://example.com/ep1',
+          audioUrl: 'https://cdn.example.com/1.mp3'
+        })}
+        onClose={() => {}}
+        onPlay={() => {}}
+      />
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: '复制链接' }))
+    await waitFor(() => {
+      expect(window.api.clipboard.writeText).toHaveBeenCalledWith('https://example.com/ep1')
+    })
+  })
+
+  it('falls back to the audio URL when guid matches the enclosure', async () => {
+    render(
+      <EpisodeDetailPanel
+        episode={makeEpisode({
+          link: null,
+          guid: 'https://cdn.example.com/1.mp3',
+          audioUrl: 'https://cdn.example.com/1.mp3'
+        })}
+        onClose={() => {}}
+        onPlay={() => {}}
+      />
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: '复制链接' }))
+    await waitFor(() => {
+      expect(window.api.clipboard.writeText).toHaveBeenCalledWith('https://cdn.example.com/1.mp3')
     })
   })
 })

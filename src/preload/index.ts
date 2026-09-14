@@ -293,6 +293,10 @@ const api = {
   },
   files: {
     getPathForFile: (file: File): string => webUtils.getPathForFile(file)
+  },
+  clipboard: {
+    writeText: (text: string): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.clipboard.writeText, { text })
   }
 }
 

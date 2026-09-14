@@ -1,6 +1,7 @@
-import { app, BrowserWindow, dialog, shell } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, shell } from 'electron'
 import {
   AddSubscriptionInputSchema,
+  ClipboardWriteInputSchema,
   ChooseDirectoryInputSchema,
   CreateNoteInputSchema,
   CreatePlaylistInputSchema,
@@ -446,6 +447,16 @@ export function registerQueueHandlers(): void {
   registerNoInputHandler(IPC_CHANNELS.queue.load, () => queueService.load())
 }
 
+export function registerClipboardHandlers(): void {
+  registerVoidHandler(
+    IPC_CHANNELS.clipboard.writeText,
+    ClipboardWriteInputSchema,
+    (_event, input) => {
+      clipboard.writeText(input.text)
+    }
+  )
+}
+
 export function registerAllHandlers(): void {
   registerSubscriptionHandlers()
   registerEpisodeHandlers()
@@ -462,4 +473,5 @@ export function registerAllHandlers(): void {
   registerStorageHandlers()
   registerShortcutHandlers()
   registerQueueHandlers()
+  registerClipboardHandlers()
 }

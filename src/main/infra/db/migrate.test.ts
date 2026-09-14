@@ -35,6 +35,7 @@ describe('migrateDatabase', () => {
       .all() as Array<{ hash: string }>
     expect(applied.map((r) => r.hash)).toContain('0004_playback_queue.sql')
     expect(applied.map((r) => r.hash)).toContain('0005_episode_chapters_url.sql')
+    expect(applied.map((r) => r.hash)).toContain('0006_episode_link.sql')
 
     // New tables/columns exist.
     const playbackQueue = sqlite
@@ -45,6 +46,7 @@ describe('migrateDatabase', () => {
       name: string
     }>
     expect(chaptersCol.some((c) => c.name === 'chapters_url')).toBe(true)
+    expect(chaptersCol.some((c) => c.name === 'link')).toBe(true)
   })
 
   it('is idempotent — re-running applies no duplicate migrations', () => {
@@ -60,7 +62,8 @@ describe('migrateDatabase', () => {
       '0002_unsubscribe_soft.sql',
       '0003_playlist_note.sql',
       '0004_playback_queue.sql',
-      '0005_episode_chapters_url.sql'
+      '0005_episode_chapters_url.sql',
+      '0006_episode_link.sql'
     ]
     expect(count.n).toBe(files.length)
   })

@@ -29,6 +29,11 @@ export const ImportOpmlPathInputSchema = z.object({
 })
 export type ImportOpmlPathInput = z.infer<typeof ImportOpmlPathInputSchema>
 
+export const ClipboardWriteInputSchema = z.object({
+  text: z.string().min(1).max(100_000)
+})
+export type ClipboardWriteInput = z.infer<typeof ClipboardWriteInputSchema>
+
 /** Result of an OPML import. */
 export interface OpmlImportResult {
   filePath: string

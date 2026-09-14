@@ -33,7 +33,8 @@ export const episodes = sqliteTable('episodes', {
   localFilePath: text('local_file_path'),
   downloadStatus: text('download_status'),
   downloadedAt: integer('downloaded_at'),
-  chaptersUrl: text('chapters_url')
+  chaptersUrl: text('chapters_url'),
+  link: text('link')
 })
 
 export const downloadTasks = sqliteTable('download_tasks', {

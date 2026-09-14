@@ -102,6 +102,7 @@ function toEpisode(item: Parser.Item): ParsedFeedEpisode | null {
     durationSec,
     fileSizeBytes,
     guid: item.guid ?? item.link ?? audioUrl,
+    link: typeof item.link === 'string' && item.link.trim() ? item.link.trim() : null,
     chaptersUrl
   }
 }

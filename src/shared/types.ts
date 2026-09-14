@@ -49,6 +49,8 @@ export interface Episode {
   guid?: string | null
   /** URL of the chapters JSON (podcast:chapters / psc:chapters), if any. */
   chaptersUrl?: string | null
+  /** Permalink to the episode page (RSS item <link>), if provided. */
+  link?: string | null
   /** Parsed chapters for this episode, if the feed provided them. */
   chapters?: Chapter[] | null
 }
@@ -102,6 +104,8 @@ export interface ParsedFeedEpisode {
   guid: string | null
   /** URL of a chapters JSON file (podcast:chapters / psc:chapters), if any. */
   chaptersUrl?: string | null
+  /** Permalink to the episode page (RSS item <link>), if provided. */
+  link?: string | null
 }
 
 /** A chapter from a podcast:chapters JSON file (startTime in seconds). */

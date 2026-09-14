@@ -135,6 +135,26 @@ describe('parseFeedXml', () => {
     )
     expect(feed.episodes[0]?.chaptersUrl).toBe('https://x.com/psc.json')
   })
+
+  it('extracts the episode permalink from item link', async () => {
+    const feed = await parseFeedXml(
+      `<rss version="2.0"><channel><title>T</title>
+        <item>
+          <title>Has Link</title>
+          <guid>g1</guid>
+          <link>https://example.com/ep1</link>
+          <enclosure url="https://cdn.example.com/1.mp3" type="audio/mpeg" />
+        </item>
+        <item>
+          <title>No Link</title>
+          <guid>g2</guid>
+          <enclosure url="https://cdn.example.com/2.mp3" type="audio/mpeg" />
+        </item>
+      </channel></rss>`
+    )
+    expect(feed.episodes[0]?.link).toBe('https://example.com/ep1')
+    expect(feed.episodes[1]?.link).toBeNull()
+  })
 })
 
 describe('fetchAndParseFeed', () => {

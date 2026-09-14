@@ -195,6 +195,9 @@ declare global {
       files: {
         getPathForFile: (file: File) => string
       }
+      clipboard: {
+        writeText: (text: string) => Promise<IpcResult<void>>
+      }
     }
   }
 }

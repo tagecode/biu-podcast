@@ -1,4 +1,4 @@
-import { Download, ListPlus, ListVideo, Pause, Play, X } from 'lucide-react'
+import { Download, Link2, ListPlus, ListVideo, Pause, Play, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -10,6 +10,7 @@ import { formatDate, formatDuration, formatFileSize } from '@/lib/format'
 import { usePlaybackStore } from '@/features/playback/store'
 import * as playlistApi from '@/features/playlist/api'
 
+import { copyShareUrl, episodeShareUrl } from '../lib/share-link'
 import { linkifyTimestamps, clampTimestamp } from '../lib/timestamp-link'
 import * as episodeApi from '../api'
 import type { Chapter } from '@shared/types'
@@ -140,6 +141,14 @@ export function EpisodeDetailPanel({
           onClick={() => addToQueue()}
         >
           <ListVideo className="size-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={t('episode.copyLink')}
+          onClick={() => void copyShareUrl(episodeShareUrl(episode))}
+        >
+          <Link2 className="size-4" />
         </Button>
       </div>
 
