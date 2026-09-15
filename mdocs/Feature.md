@@ -281,7 +281,7 @@
 
 > 项目基于 Electron + Vite + React + TypeScript（见 `package.json`），以下为对应桌面端技术选型，替代早期误写的 Flutter 生态依赖。
 
-- [x] 音频播放：HTML5 `<audio>` / `howler.js`（渲染进程播放）+ 主进程绑定系统媒体控制（Windows SMTC / macOS Now Playing / Linux MPRIS，可能需原生模块或第三方封装）（HTML5 audio 已交付；系统媒体控件未接）
+- [x] 音频播放：HTML5 `<audio>` / `howler.js`（渲染进程播放）+ 主进程绑定系统媒体控制（Windows SMTC / Linux MPRIS 已交付；macOS Now Playing 在 P2 Spike 后仍为 noop，见 `mdocs/P2-6-NowPlaying-Spike.md`）
 - [x] `better-sqlite3` 或 `drizzle-orm`（基于 SQLite）— 本地数据库
 - [x] `electron-store` — 轻量本地配置/缓存
 - [x] `axios` / 原生 `fetch`（Node 18+/undici）— HTTP 请求

@@ -68,6 +68,15 @@ describe('AppShell OPML drag import', () => {
     )
     expect(load).toHaveBeenCalled()
   })
+
+  it('rejects a dropped non-OPML file without importing', async () => {
+    render(<AppShell />)
+    const file = new File(['notes'], 'notes.txt', { type: 'text/plain' })
+    fireEvent.drop(screen.getByTestId('app-shell'), { dataTransfer: { files: [file] } })
+
+    expect(await screen.findByText('请拖入 .opml 或 .xml 订阅文件')).toBeInTheDocument()
+    expect(window.api.subscription.importOpmlPath).not.toHaveBeenCalled()
+  })
 })
 
 describe('AppShell editable context menu', () => {

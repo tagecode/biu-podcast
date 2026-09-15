@@ -25,13 +25,28 @@ export function buildLinuxDesktopEntry(input: { appName: string; execPath: strin
   ].join('\n')
 }
 
+export function resolveAutoLaunchKind(
+  platform: NodeJS.Platform
+): 'login-items' | 'linux-desktop' | 'noop' {
+  if (platform === 'darwin' || platform === 'win32') return 'login-items'
+  if (platform === 'linux') return 'linux-desktop'
+  return 'noop'
+}
+
+export function buildLoginItemSettings(enabled: boolean): {
+  openAtLogin: boolean
+  openAsHidden: boolean
+} {
+  return { openAtLogin: enabled, openAsHidden: false }
+}
+
 class LoginItemsAutoLaunch implements AutoLaunchAdapter {
   isSupported(): boolean {
     return process.platform === 'darwin' || process.platform === 'win32'
   }
 
   async setEnabled(enabled: boolean): Promise<void> {
-    app.setLoginItemSettings({ openAtLogin: enabled, openAsHidden: false })
+    app.setLoginItemSettings(buildLoginItemSettings(enabled))
   }
 }
 
@@ -68,10 +83,9 @@ class NoopAutoLaunch implements AutoLaunchAdapter {
 }
 
 export function createAutoLaunch(): AutoLaunchAdapter {
-  if (process.platform === 'darwin' || process.platform === 'win32') {
-    return new LoginItemsAutoLaunch()
-  }
-  if (process.platform === 'linux') return new LinuxAutoLaunch()
+  const kind = resolveAutoLaunchKind(process.platform)
+  if (kind === 'login-items') return new LoginItemsAutoLaunch()
+  if (kind === 'linux-desktop') return new LinuxAutoLaunch()
   return new NoopAutoLaunch()
 }
 

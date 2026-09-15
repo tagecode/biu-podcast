@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildLinuxDesktopEntry, resolveLinuxAutostartPath } from './index'
+import {
+  buildLinuxDesktopEntry,
+  buildLoginItemSettings,
+  resolveAutoLaunchKind,
+  resolveLinuxAutostartPath
+} from './index'
 
 describe('auto-launch linux desktop entry', () => {
   it('builds an autostart desktop file pointing at the current executable', () => {
@@ -18,5 +23,19 @@ describe('auto-launch linux desktop entry', () => {
     expect(resolveLinuxAutostartPath('/home/alice', 'biu-podcast')).toBe(
       '/home/alice/.config/autostart/biu-podcast.desktop'
     )
+  })
+})
+
+describe('auto-launch platform routing', () => {
+  it('uses OS login items on Windows and macOS', () => {
+    expect(resolveAutoLaunchKind('win32')).toBe('login-items')
+    expect(resolveAutoLaunchKind('darwin')).toBe('login-items')
+    expect(buildLoginItemSettings(true)).toEqual({ openAtLogin: true, openAsHidden: false })
+    expect(buildLoginItemSettings(false)).toEqual({ openAtLogin: false, openAsHidden: false })
+  })
+
+  it('uses a desktop file on Linux and no-ops elsewhere', () => {
+    expect(resolveAutoLaunchKind('linux')).toBe('linux-desktop')
+    expect(resolveAutoLaunchKind('freebsd')).toBe('noop')
   })
 })

@@ -20,4 +20,12 @@ describe('buildDockMenuTemplate', () => {
     expect(itemIds(template)).toEqual(['nowPlaying', 'toggle', 'previous', 'next', 'show'])
     expect(template.find((item) => item.id === 'toggle')?.label).toBe('暂停')
   })
+
+  it('labels toggle as play when media is paused', () => {
+    const template = buildDockMenuTemplate(
+      { title: 'Ep', artist: 'Pod', positionSec: 1, playing: false },
+      'zh'
+    )
+    expect(template.find((item) => item.id === 'toggle')?.label).toBe('播放')
+  })
 })
