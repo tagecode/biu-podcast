@@ -8,6 +8,7 @@ import { formatRelativeTime } from '../lib/sort-filter'
 interface PodcastCardProps {
   podcast: Podcast
   onClick: () => void
+  onContextMenu?: (event: React.MouseEvent<HTMLButtonElement>) => void
 }
 
 function CoverPlaceholder({ title }: { title: string }): React.JSX.Element {
@@ -20,13 +21,18 @@ function CoverPlaceholder({ title }: { title: string }): React.JSX.Element {
   )
 }
 
-export function PodcastCard({ podcast, onClick }: PodcastCardProps): React.JSX.Element {
+export function PodcastCard({
+  podcast,
+  onClick,
+  onContextMenu
+}: PodcastCardProps): React.JSX.Element {
   const { t } = useTranslation()
   const coverSrc = resolveCoverUrl(podcast)
   return (
     <button
       type="button"
       onClick={onClick}
+      onContextMenu={onContextMenu}
       className="overflow-hidden rounded-lg border border-line bg-surface text-left shadow-sm transition-shadow hover:shadow-md"
     >
       <div className="relative aspect-square overflow-hidden bg-line">

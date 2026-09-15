@@ -36,6 +36,9 @@ function stubApi(): Window['api'] {
     },
     window: {
       isMaximized: vi.fn(async () => ({ ok: true as const, data: false }))
+    },
+    contextMenu: {
+      show: vi.fn(async () => ({ ok: true as const, data: null }))
     }
   } as unknown as Window['api']
 }

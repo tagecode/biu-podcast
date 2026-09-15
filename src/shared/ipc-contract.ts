@@ -34,6 +34,20 @@ export const ClipboardWriteInputSchema = z.object({
 })
 export type ClipboardWriteInput = z.infer<typeof ClipboardWriteInputSchema>
 
+export const ContextMenuItemSchema = z.object({
+  id: z.string().min(1).max(80),
+  label: z.string().min(1).max(80),
+  enabled: z.boolean().optional().default(true),
+  danger: z.boolean().optional().default(false)
+})
+export const ShowContextMenuInputSchema = z.object({
+  items: z.array(ContextMenuItemSchema).min(1).max(24),
+  x: z.number().int().optional(),
+  y: z.number().int().optional()
+})
+export type ContextMenuItem = z.input<typeof ContextMenuItemSchema>
+export type ShowContextMenuInput = z.input<typeof ShowContextMenuInputSchema>
+
 /** Result of an OPML import. */
 export interface OpmlImportResult {
   filePath: string

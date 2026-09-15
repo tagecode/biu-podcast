@@ -16,6 +16,7 @@ import { SettingsPage } from '@/features/settings/pages/SettingsPage'
 import { AboutPage } from '@/features/settings/pages/AboutPage'
 import { SubscriptionListView } from '@/features/subscription/components/SubscriptionListView'
 import { useSubscriptionStore } from '@/features/subscription/store'
+import { isEditableContextTarget, showContextMenu } from '@/lib/context-menu'
 
 declare module 'react' {
   interface CSSProperties {
@@ -147,6 +148,20 @@ export function AppShell(): React.JSX.Element {
       data-testid="app-shell"
       onDragOver={(event) => event.preventDefault()}
       onDrop={(event) => void handleDrop(event)}
+      onContextMenuCapture={(event) => {
+        if (!isEditableContextTarget(event.target)) return
+        event.preventDefault()
+        event.stopPropagation()
+        void showContextMenu(
+          [
+            { id: 'cut', label: t('menu.cut') },
+            { id: 'copy', label: t('menu.copy') },
+            { id: 'paste', label: t('menu.paste') },
+            { id: 'selectAll', label: t('menu.selectAll') }
+          ],
+          event
+        )
+      }}
     >
       <header
         className="flex h-12 shrink-0 select-none items-center gap-3 border-b border-line bg-surface px-3"

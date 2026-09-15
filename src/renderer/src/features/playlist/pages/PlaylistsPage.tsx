@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { showContextMenu } from '@/lib/context-menu'
 import { cn } from '@/lib/utils'
 import type { PlaylistItem } from '@shared/types'
 
@@ -79,6 +80,37 @@ export function PlaylistsPage({ onBack }: PlaylistsPageProps): React.JSX.Element
     [selectedId, items]
   )
 
+  const showPlaylistMenu = async (playlistId: string, event: React.MouseEvent): Promise<void> => {
+    const id = await showContextMenu(
+      [
+        { id: 'rename', label: t('playlist.rename') },
+        { id: 'delete', label: t('playlist.delete'), danger: true }
+      ],
+      event
+    )
+    if (id === 'rename') await handleRename(playlistId)
+    if (id === 'delete') await handleRemove(playlistId)
+  }
+
+  const showPlaylistItemMenu = async (
+    item: PlaylistItem,
+    event: React.MouseEvent
+  ): Promise<void> => {
+    if (!selectedId) return
+    const id = await showContextMenu(
+      [
+        { id: 'removeFromPlaylist', label: t('playlist.removeItem') },
+        { id: 'download', label: t('episode.download') }
+      ],
+      event
+    )
+    if (id === 'removeFromPlaylist') {
+      await playlistApi.removeFromPlaylist(selectedId, item.episodeId)
+      setItems((prev) => prev.filter((row) => row.id !== item.id))
+    }
+    if (id === 'download') await enqueueMany([item.episodeId])
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-3 border-b border-line px-6 py-4">
@@ -132,6 +164,11 @@ export function PlaylistsPage({ onBack }: PlaylistsPageProps): React.JSX.Element
                       : 'text-muted-700 hover:bg-amber-100/50'
                   )}
                   onClick={() => setSelectedId(playlist.id)}
+                  onContextMenu={(event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    void showPlaylistMenu(playlist.id, event)
+                  }}
                 >
                   <ListMusic className="size-4 shrink-0" />
                   <span className="min-w-0 flex-1 truncate">{playlist.name}</span>
@@ -202,6 +239,10 @@ export function PlaylistsPage({ onBack }: PlaylistsPageProps): React.JSX.Element
                       onDrop={() => {
                         if (dragIndex !== null) void handleReorder(dragIndex, index)
                         setDragIndex(null)
+                      }}
+                      onContextMenu={(event) => {
+                        event.preventDefault()
+                        void showPlaylistItemMenu(item, event)
                       }}
                       className={cn(
                         'flex cursor-grab items-center gap-3 rounded-md border border-line bg-surface px-4 py-2.5',

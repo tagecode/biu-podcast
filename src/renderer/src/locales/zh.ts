@@ -25,6 +25,12 @@ export const zh = {
     restore: '还原',
     close: '关闭'
   },
+  menu: {
+    cut: '剪切',
+    copy: '复制',
+    paste: '粘贴',
+    selectAll: '全选'
+  },
   subscription: {
     emptyTitle: '还没有订阅任何播客',
     emptyHint: '粘贴 RSS Feed 地址即可开始收听。所有数据保存在本机，无需注册账号。',
@@ -87,6 +93,7 @@ export const zh = {
     podcastNotFound: '播客不存在或已被删除',
     backToList: '返回订阅列表',
     copyLink: '复制链接',
+    openDetail: '打开详情',
     authorByline: '主播：{{author}}',
     authorUnknown: '作者未知',
     totalEpisodes: '共 {{count}} 集',

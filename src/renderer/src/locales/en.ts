@@ -27,6 +27,12 @@ export const en: TranslationSchema = {
     restore: 'Restore',
     close: 'Close'
   },
+  menu: {
+    cut: 'Cut',
+    copy: 'Copy',
+    paste: 'Paste',
+    selectAll: 'Select all'
+  },
   subscription: {
     emptyTitle: 'No subscriptions yet',
     emptyHint:
@@ -93,6 +99,7 @@ export const en: TranslationSchema = {
     podcastNotFound: 'Podcast not found or has been deleted',
     backToList: 'Back to subscriptions',
     copyLink: 'Copy link',
+    openDetail: 'Open details',
     authorByline: 'Host: {{author}}',
     authorUnknown: 'Unknown author',
     totalEpisodes: '{{count}} episodes total',

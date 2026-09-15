@@ -41,6 +41,7 @@ import type {
   ShortcutConfig,
   ShortcutSetInput,
   ShortcutSetResult,
+  ShowContextMenuInput,
   UpdateProgressInput,
   VerifyLocalInput
 } from '@shared/ipc-contract'
@@ -297,6 +298,10 @@ const api = {
   clipboard: {
     writeText: (text: string): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC_CHANNELS.clipboard.writeText, { text })
+  },
+  contextMenu: {
+    show: (input: ShowContextMenuInput): Promise<IpcResult<string | null>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.contextMenu.show, input)
   }
 }
 

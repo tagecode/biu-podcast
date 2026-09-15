@@ -133,5 +133,8 @@ export const IPC_CHANNELS = {
   },
   clipboard: {
     writeText: 'clipboard:write-text'
+  },
+  contextMenu: {
+    show: 'context-menu:show'
   }
 } as const

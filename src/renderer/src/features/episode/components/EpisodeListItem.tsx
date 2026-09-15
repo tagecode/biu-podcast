@@ -16,6 +16,7 @@ interface EpisodeListItemProps {
   onPlay: () => void
   onDownload?: () => void
   onOpenDetail?: () => void
+  onContextMenu?: (event: React.MouseEvent<HTMLDivElement>) => void
 }
 
 export function EpisodeListItem({
@@ -25,7 +26,8 @@ export function EpisodeListItem({
   isCurrentPlaying,
   onPlay,
   onDownload,
-  onOpenDetail
+  onOpenDetail,
+  onContextMenu
 }: EpisodeListItemProps): React.JSX.Element {
   const { t } = useTranslation()
   return (
@@ -36,6 +38,7 @@ export function EpisodeListItem({
           ? 'border-amber-600 bg-amber-100'
           : 'border-transparent bg-surface hover:border-line hover:shadow-sm'
       )}
+      onContextMenu={onContextMenu}
     >
       {!episode.isPlayed ? (
         <span className="size-2 shrink-0 rounded-full bg-amber-600" />

@@ -32,6 +32,7 @@ import {
   SetPausedInputSchema,
   SetSettingInputSchema,
   ShortcutSetInputSchema,
+  ShowContextMenuInputSchema,
   SaveQueueInputSchema,
   StorageActionInputSchema,
   UpdateActionInputSchema,
@@ -48,6 +49,7 @@ import { playlistService } from '../features/playlist/playlist.service'
 import { queueService } from '../features/queue/queue.service'
 import { settingsStore } from '../infra/settings/store'
 import { autoLaunch } from '../infra/auto-launch'
+import { showNativeContextMenu } from '../infra/context-menu'
 import { updateService } from '../infra/updater'
 import { getTrayInstance } from '../infra/tray'
 import { installApplicationMenu } from '../infra/menu'
@@ -457,6 +459,13 @@ export function registerClipboardHandlers(): void {
   )
 }
 
+export function registerContextMenuHandlers(): void {
+  registerHandler(IPC_CHANNELS.contextMenu.show, ShowContextMenuInputSchema, (event, input) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    return showNativeContextMenu(win, input.items, input)
+  })
+}
+
 export function registerAllHandlers(): void {
   registerSubscriptionHandlers()
   registerEpisodeHandlers()
@@ -474,4 +483,5 @@ export function registerAllHandlers(): void {
   registerShortcutHandlers()
   registerQueueHandlers()
   registerClipboardHandlers()
+  registerContextMenuHandlers()
 }

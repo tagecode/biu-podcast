@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Episode, Podcast } from '@shared/types'
 import { EPISODE_PAGE_SIZE } from '@shared/episode-list'
+import { showContextMenu } from '@/lib/context-menu'
 import { resolveCoverUrl } from '@/lib/cover-url'
 
-import { podcastShareUrl } from '../lib/share-link'
+import { copyShareUrl, episodeShareUrl, podcastShareUrl } from '../lib/share-link'
 import * as episodeApi from '../api'
 import { CopyLinkButton } from '../components/CopyLinkButton'
 import { EpisodeDetailPanel } from '../components/EpisodeDetailPanel'
@@ -128,6 +129,39 @@ export function PodcastDetailPage({
     },
     [t]
   )
+
+  const showEpisodeMenu = async (episode: Episode, event: React.MouseEvent): Promise<void> => {
+    if (!podcast) return
+    const downloadReady =
+      !episode.isDownloaded &&
+      episode.downloadStatus !== 'queued' &&
+      episode.downloadStatus !== 'downloading'
+    const isCurrentPlaying = currentEpisodeId === episode.id && isPlaying
+    const id = await showContextMenu(
+      [
+        {
+          id: isCurrentPlaying ? 'pause' : 'play',
+          label: isCurrentPlaying ? t('episode.pause') : t('episode.play')
+        },
+        { id: 'download', label: t('episode.download'), enabled: downloadReady },
+        { id: 'addToQueue', label: t('episode.addToQueue') },
+        { id: 'copyLink', label: t('episode.copyLink') },
+        { id: 'openDetail', label: t('subscription.openDetail') }
+      ],
+      event
+    )
+    if (id === 'play' || id === 'pause') {
+      if (currentEpisodeId === episode.id) {
+        togglePlay()
+      } else {
+        void playEpisode(episode, podcast)
+      }
+    }
+    if (id === 'download' && downloadReady) void enqueueDownload(episode.id)
+    if (id === 'addToQueue') usePlaybackStore.getState().addToQueue(episode)
+    if (id === 'copyLink') await copyShareUrl(episodeShareUrl(episode))
+    if (id === 'openDetail') void openEpisodeDetail(episode.id)
+  }
 
   useEffect(() => {
     const unsubscribe = window.api.episode.onChanged((payload) => {
@@ -294,6 +328,10 @@ export function PodcastDetailPage({
                   }}
                   onDownload={() => void enqueueDownload(episode.id)}
                   onOpenDetail={() => void openEpisodeDetail(episode.id)}
+                  onContextMenu={(event) => {
+                    event.preventDefault()
+                    void showEpisodeMenu(episode, event)
+                  }}
                 />
               ))}
               {loadingMore ? (

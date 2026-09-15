@@ -38,6 +38,7 @@ import type {
   ShortcutConfig,
   ShortcutSetInput,
   ShortcutSetResult,
+  ShowContextMenuInput,
   UpdateProgressInput,
   VerifyLocalInput
 } from '@shared/ipc-contract'
@@ -197,6 +198,9 @@ declare global {
       }
       clipboard: {
         writeText: (text: string) => Promise<IpcResult<void>>
+      }
+      contextMenu: {
+        show: (input: ShowContextMenuInput) => Promise<IpcResult<string | null>>
       }
     }
   }

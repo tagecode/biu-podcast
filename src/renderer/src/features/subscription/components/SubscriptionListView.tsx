@@ -12,13 +12,15 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { showContextMenu } from '@/lib/context-menu'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import type { EpisodeSearchHit } from '@shared/types'
+import type { EpisodeSearchHit, Podcast } from '@shared/types'
 
 import { AddSubscriptionDialog } from './AddSubscriptionDialog'
 import { EmptyState } from './EmptyState'
 import { PodcastCard } from './PodcastCard'
+import { UnsubscribeDialog } from './UnsubscribeDialog'
 import { useSubscriptionStore } from '../store'
 
 interface SubscriptionListViewProps {
@@ -33,6 +35,7 @@ export function SubscriptionListView({
   onOpenEpisode
 }: SubscriptionListViewProps): React.JSX.Element {
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [unsubscribeTarget, setUnsubscribeTarget] = useState<Podcast | null>(null)
   const [downloadedOnly, setDownloadedOnly] = useState(false)
   const [episodeHits, setEpisodeHits] = useState<EpisodeSearchHit[]>([])
   const { t } = useTranslation()
@@ -84,6 +87,32 @@ export function SubscriptionListView({
   const podcasts = visiblePodcasts()
   const offline = typeof navigator !== 'undefined' && !navigator.onLine
   const searching = query.trim().length > 0
+
+  const showPodcastMenu = async (podcast: Podcast, event: React.MouseEvent): Promise<void> => {
+    const id = await showContextMenu(
+      [
+        { id: 'open', label: t('subscription.openDetail') },
+        { id: 'refresh', label: t('subscription.refresh') },
+        { id: 'copyLink', label: t('subscription.copyLink') },
+        {
+          id: podcast.isPaused ? 'resume' : 'pause',
+          label: podcast.isPaused ? t('subscription.resume') : t('subscription.pause')
+        },
+        { id: 'remove', label: t('subscription.remove'), danger: true }
+      ],
+      event
+    )
+    if (id === 'open') onOpenPodcast(podcast.id)
+    if (id === 'refresh') await useSubscriptionStore.getState().refresh(podcast.id)
+    if (id === 'copyLink') {
+      const result = await window.api.clipboard.writeText(podcast.feedUrl)
+      if (!result.ok) throw new Error(result.error.message)
+    }
+    if (id === 'pause' || id === 'resume') {
+      await useSubscriptionStore.getState().setPaused(podcast.id, id === 'pause')
+    }
+    if (id === 'remove') setUnsubscribeTarget(podcast)
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -191,6 +220,10 @@ export function SubscriptionListView({
                       key={podcast.id}
                       podcast={podcast}
                       onClick={() => onOpenPodcast(podcast.id)}
+                      onContextMenu={(event) => {
+                        event.preventDefault()
+                        void showPodcastMenu(podcast, event)
+                      }}
                     />
                   ))}
                 </div>
@@ -240,6 +273,17 @@ export function SubscriptionListView({
       </div>
 
       <AddSubscriptionDialog open={dialogOpen} onOpenChange={setDialogOpen} onSubmit={add} />
+      <UnsubscribeDialog
+        open={unsubscribeTarget !== null}
+        podcastTitle={unsubscribeTarget?.title ?? ''}
+        onOpenChange={(open) => {
+          if (!open) setUnsubscribeTarget(null)
+        }}
+        onConfirm={async (deleteData) => {
+          if (!unsubscribeTarget) return
+          await useSubscriptionStore.getState().remove(unsubscribeTarget.id, deleteData)
+        }}
+      />
     </div>
   )
 }
