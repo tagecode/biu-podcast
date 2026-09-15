@@ -71,6 +71,15 @@ describe('SubscriptionListView', () => {
     })
   })
 
+  it('lets the user dismiss the refresh result banner', () => {
+    useSubscriptionStore.setState({ lastRefreshAdded: 3 })
+    render(<SubscriptionListView onOpenPodcast={() => undefined} />)
+
+    expect(screen.getByText('发现 3 集新内容')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '关闭' }))
+    expect(screen.queryByText('发现 3 集新内容')).not.toBeInTheDocument()
+  })
+
   it('searches local episodes when the query changes', async () => {
     search.mockResolvedValueOnce({ ok: true as const, data: [makeHit('AI 周报')] })
     render(<SubscriptionListView onOpenPodcast={() => undefined} onOpenEpisode={() => undefined} />)

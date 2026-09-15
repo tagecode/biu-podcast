@@ -1,4 +1,4 @@
-import { Plus, RefreshCw, Search } from 'lucide-react'
+import { Plus, RefreshCw, Search, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -48,6 +48,7 @@ export function SubscriptionListView({
     lastRefreshAdded,
     setQuery,
     setSortKey,
+    dismissRefreshResult,
     visiblePodcasts
   } = useSubscriptionStore()
 
@@ -93,10 +94,24 @@ export function SubscriptionListView({
       ) : null}
 
       {lastRefreshAdded != null ? (
-        <div className="flex h-10 items-center bg-amber-100 px-4 text-sm text-ink">
-          {lastRefreshAdded > 0
-            ? t('subscription.newEpisodeCount', { count: lastRefreshAdded })
-            : t('subscription.noNewEpisodes')}
+        <div
+          role="status"
+          className="flex h-10 items-center gap-2 bg-amber-100 px-4 text-sm text-ink"
+        >
+          <span className="min-w-0 flex-1 truncate">
+            {lastRefreshAdded > 0
+              ? t('subscription.newEpisodeCount', { count: lastRefreshAdded })
+              : t('subscription.noNewEpisodes')}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7 text-muted hover:bg-amber-200 hover:text-ink"
+            aria-label={t('common.close')}
+            onClick={dismissRefreshResult}
+          >
+            <X className="size-3.5" />
+          </Button>
         </div>
       ) : null}
 

@@ -22,6 +22,7 @@ interface SubscriptionState {
   remove: (podcastId: string, deleteData?: boolean) => Promise<void>
   setQuery: (query: string) => void
   setSortKey: (sortKey: SortKey) => void
+  dismissRefreshResult: () => void
   visiblePodcasts: () => Podcast[]
 }
 
@@ -98,6 +99,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   },
   setQuery: (query) => set({ query }),
   setSortKey: (sortKey) => set({ sortKey }),
+  dismissRefreshResult: () => set({ lastRefreshAdded: null }),
   visiblePodcasts: () => {
     const { podcasts, query, sortKey } = get()
     return sortPodcasts(filterPodcasts(podcasts, query), sortKey)
