@@ -48,6 +48,11 @@ const messages = {
     'tray.next': '下一集',
     'tray.quit': '退出',
     'tray.tooltip': '博播 BiuPodcast',
+    'dock.showWindow': '显示博播',
+    'dock.play': '播放',
+    'dock.pause': '暂停',
+    'dock.previous': '上一集',
+    'dock.next': '下一集',
     'notification.appName': '博播',
     'notification.newEpisodes': '发现 {{count}} 集新内容',
     'notification.downloadDone': '下载完成'
@@ -88,6 +93,11 @@ const messages = {
     'tray.next': 'Next',
     'tray.quit': 'Quit',
     'tray.tooltip': 'BiuPodcast',
+    'dock.showWindow': 'Show BiuPodcast',
+    'dock.play': 'Play',
+    'dock.pause': 'Pause',
+    'dock.previous': 'Previous',
+    'dock.next': 'Next',
     'notification.appName': 'BiuPodcast',
     'notification.newEpisodes': '{{count}} new episodes found',
     'notification.downloadDone': 'Download complete'

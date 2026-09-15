@@ -7,6 +7,7 @@ vi.mock('./index', () => ({ createMediaSession: factory }))
 
 import {
   disposeMediaSession,
+  getMediaSessionSnapshot,
   initMediaSession,
   onMediaSessionCommand,
   updateMediaSession
@@ -42,6 +43,11 @@ describe('media session singleton', () => {
       positionSec: 0,
       playing: false
     })
+  })
+
+  it('forwards a snapshot to the dock menu', () => {
+    updateMediaSession({ title: 'Ep', artist: 'Pod', positionSec: 12, playing: true })
+    expect(getMediaSessionSnapshot()).toMatchObject({ title: 'Ep', playing: true })
   })
 
   it('onMediaSessionCommand wires the adapter callback', () => {

@@ -12,6 +12,7 @@ import { AppTray, setTrayInstance } from './infra/tray'
 import { settingsStore } from './infra/settings/store'
 import { updateService } from './infra/updater'
 import { initMediaSession, disposeMediaSession } from './infra/media-session/session'
+import { installDockMenu } from './infra/dock'
 import { registerAllHandlers } from './ipc/handlers'
 import { setMainWindow } from './ipc/register'
 import { closeDb, getDb } from './infra/db/client'
@@ -154,6 +155,7 @@ if (
     tray = new AppTray(() => mainWindowRef, icon)
     setTrayInstance(tray)
     tray.create()
+    installDockMenu(() => mainWindowRef)
 
     // Check for updates silently after the window is up (packaged builds only).
     updateService.init(() => mainWindowRef)

@@ -59,7 +59,12 @@ import { exportDiagnostics } from '../infra/logger'
 import { autoRefreshScheduler } from '../features/subscription/auto-refresh'
 import { subscriptionService } from '../features/subscription/subscription.service'
 import { applyShortcutBinding, getRegisteredShortcuts, getShortcutConfig } from '../infra/shortcuts'
-import { onMediaSessionCommand, updateMediaSession } from '../infra/media-session/session'
+import { setDockMenuState } from '../infra/dock'
+import {
+  getMediaSessionSnapshot,
+  onMediaSessionCommand,
+  updateMediaSession
+} from '../infra/media-session/session'
 import { broadcast, registerHandler, registerNoInputHandler, registerVoidHandler } from './register'
 
 export function registerSubscriptionHandlers(): void {
@@ -332,10 +337,11 @@ export function registerSettingsHandlers(): void {
     if (input.key === 'autoRefreshMinutes') {
       autoRefreshScheduler.restart()
     }
-    // Language change affects main-process UI (menu / tray) — rebuild them.
+    // Language change affects main-process UI (menu / tray / dock) — rebuild them.
     if (input.key === 'language') {
       installApplicationMenu()
       getTrayInstance()?.rebuild()
+      setDockMenuState(getMediaSessionSnapshot())
     }
   })
 

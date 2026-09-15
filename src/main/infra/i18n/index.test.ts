@@ -7,12 +7,16 @@ describe('main-process i18n', () => {
     expect(translate('zh', 'menu.file')).toBe('文件')
     expect(translate('zh', 'menu.edit')).toBe('编辑')
     expect(translate('zh', 'tray.showWindow')).toBe('显示博播')
+    expect(translate('zh', 'dock.pause')).toBe('暂停')
+    expect(translate('zh', 'dock.showWindow')).toBe('显示博播')
   })
 
   it('translates menu keys in en', () => {
     expect(translate('en', 'menu.file')).toBe('File')
     expect(translate('en', 'menu.help')).toBe('Help')
     expect(translate('en', 'tray.quit')).toBe('Quit')
+    expect(translate('en', 'dock.pause')).toBe('Pause')
+    expect(translate('en', 'dock.showWindow')).toBe('Show BiuPodcast')
   })
 
   it('interpolates notification count', () => {
@@ -32,6 +36,11 @@ describe('main-process i18n', () => {
       'tray.showWindow',
       'tray.playPause',
       'tray.quit',
+      'dock.showWindow',
+      'dock.play',
+      'dock.pause',
+      'dock.previous',
+      'dock.next',
       'notification.appName',
       'notification.newEpisodes',
       'notification.downloadDone'
