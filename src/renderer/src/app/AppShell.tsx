@@ -117,6 +117,27 @@ export function AppShell(): React.JSX.Element {
     }
   }, [])
 
+  useEffect(() => {
+    const onContextMenu = (event: MouseEvent): void => {
+      if (!isEditableContextTarget(event.target)) return
+      event.preventDefault()
+      event.stopPropagation()
+      void showContextMenu(
+        [
+          { id: 'cut', label: t('menu.cut') },
+          { id: 'copy', label: t('menu.copy') },
+          { id: 'paste', label: t('menu.paste') },
+          { id: 'selectAll', label: t('menu.selectAll') }
+        ],
+        event
+      )
+    }
+    document.addEventListener('contextmenu', onContextMenu, true)
+    return () => {
+      document.removeEventListener('contextmenu', onContextMenu, true)
+    }
+  }, [t])
+
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>): Promise<void> => {
     event.preventDefault()
     const files = Array.from(event.dataTransfer.files)
@@ -148,20 +169,6 @@ export function AppShell(): React.JSX.Element {
       data-testid="app-shell"
       onDragOver={(event) => event.preventDefault()}
       onDrop={(event) => void handleDrop(event)}
-      onContextMenuCapture={(event) => {
-        if (!isEditableContextTarget(event.target)) return
-        event.preventDefault()
-        event.stopPropagation()
-        void showContextMenu(
-          [
-            { id: 'cut', label: t('menu.cut') },
-            { id: 'copy', label: t('menu.copy') },
-            { id: 'paste', label: t('menu.paste') },
-            { id: 'selectAll', label: t('menu.selectAll') }
-          ],
-          event
-        )
-      }}
     >
       <header
         className="flex h-12 shrink-0 select-none items-center gap-3 border-b border-line bg-surface px-3"

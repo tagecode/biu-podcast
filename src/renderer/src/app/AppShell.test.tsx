@@ -69,3 +69,33 @@ describe('AppShell OPML drag import', () => {
     expect(load).toHaveBeenCalled()
   })
 })
+
+describe('AppShell editable context menu', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    window.api = stubApi()
+  })
+
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('shows cut/copy/paste/selectAll for an input portaled outside the shell', () => {
+    render(<AppShell />)
+
+    const input = document.createElement('input')
+    document.body.appendChild(input)
+
+    expect(screen.getByTestId('app-shell').contains(input)).toBe(false)
+
+    try {
+      fireEvent.contextMenu(input)
+
+      expect(window.api.contextMenu.show).toHaveBeenCalled()
+      const payload = vi.mocked(window.api.contextMenu.show).mock.calls[0][0]
+      expect(payload.items.map((item) => item.id)).toEqual(['cut', 'copy', 'paste', 'selectAll'])
+    } finally {
+      input.remove()
+    }
+  })
+})

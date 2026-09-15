@@ -2,7 +2,7 @@ import type { ContextMenuItem } from '@shared/ipc-contract'
 
 export async function showContextMenu(
   items: ContextMenuItem[],
-  event?: React.MouseEvent
+  event?: { clientX: number; clientY: number }
 ): Promise<string | null> {
   const result = await window.api.contextMenu.show({
     items,
