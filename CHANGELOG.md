@@ -2,6 +2,22 @@
 
 本项目的所有显著变更都会记录在此文件。格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.2.0] - 2026-09-15
+
+### 新增
+
+**桌面平台补齐（P2）**
+- 登录时自动启动：设置页开关（默认关闭）；Windows / macOS Login Items，Linux `~/.config/autostart`
+- 拖拽 `.opml` / `.xml` 到窗口导入订阅；非法文件提示且不写库
+- 复制分享链接：播客复制 Feed URL；集数优先原文链接，缺失时回退 guid / 音频 URL；复制成功显示「已复制」
+- 原生右键菜单：输入框剪切/复制/粘贴/全选（含对话框）；订阅 / 集数 / 播放列表高频操作
+- macOS Dock 菜单：空闲仅显示窗口；播放中可暂停/上一集/下一集
+
+### 说明
+
+- macOS Now Playing / 控制中心：P2 Spike 结论为继续 noop 降级（见 `mdocs/P2-6-NowPlaying-Spike.md`），不纳入本版本实现
+- 刷新全部后的「发现 x 集新内容」提示可手动关闭
+
 ## [2.1.0] - 2026-08-10
 
 ### 新增
