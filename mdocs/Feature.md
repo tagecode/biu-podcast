@@ -64,7 +64,7 @@
 - [x] 完整描述（支持富文本/HTML）
 - [x] 章节时间轴（if present in feed）
 - [ ] 相关链接
-- [ ] 分享集数
+- [x] 分享集数（复制链接降级已交付，非原生分享面板）
 - [x] 添加到播放列表
 
 ---
@@ -79,9 +79,9 @@
 - [x] 上一集/下一集
 - [x] 进度拖拽
 - [x] 实时显示当前播放时间
-- [x] 后台播放与系统媒体控件集成（Linux MPRIS + Windows SMTC 已实现；macOS 未接，待 P2）
+- [x] 后台播放与系统媒体控件集成（Linux MPRIS + Windows SMTC 已实现；macOS 在 P2 Spike 后仍为 noop，见 `mdocs/P2-6-NowPlaying-Spike.md`）
   - [x] Windows：SMTC（System Media Transport Controls）
-  - [ ] macOS：Now Playing / MPRemoteCommandCenter
+  - [ ] macOS：Now Playing / MPRemoteCommandCenter（P2 Spike 后仍降级，见 `mdocs/P2-6-NowPlaying-Spike.md`）
   - [x] Linux：MPRIS（org.mpris.MediaPlayer2）
 - [x] 系统托盘 / 任务栏媒体控制
 - [x] 蓝牙设备/耳机媒体键控制（播放/暂停/上一首/下一首）
@@ -214,14 +214,14 @@
 - [x] 单实例锁定（阻止重复启动多个实例；二次启动或协议唤起时聚焦已有窗口）
 - [x] 窗口状态记忆（尺寸、位置、最大化状态，重启后还原；多显示器变化时越界保护，回退到主屏可见区域）
 - [x] 原生应用菜单（File/Edit/View/Window/Help；macOS 尤其必要，否则系统级复制粘贴、退出快捷键等行为异常）
-- [ ] 右键上下文菜单（输入框复制粘贴、播放列表项操作等）
-- [ ] macOS Dock 菜单（右键 Dock 图标显示播放/暂停等快捷操作）
+- [x] 右键上下文菜单（输入框复制粘贴、播放列表项操作等）
+- [x] macOS Dock 菜单（右键 Dock 图标显示播放/暂停等快捷操作）
 
 ### 8.4 系统集成
 
-- [ ] 登录时自动启动（开机自启，设置中可开关）
-- [ ] 文件拖拽导入（拖拽 `.opml` 或 RSS 相关文件到窗口直接导入）
-- [ ] 剪贴板集成（复制播客/集数链接）
+- [x] 登录时自动启动（开机自启，设置中可开关）
+- [x] 文件拖拽导入（拖拽 `.opml` 或 RSS 相关文件到窗口直接导入）
+- [x] 剪贴板集成（复制播客/集数链接）
 
 ### 8.5 国际化与本地化
 
@@ -286,7 +286,7 @@
 - [x] `electron-store` — 轻量本地配置/缓存
 - [x] `axios` / 原生 `fetch`（Node 18+/undici）— HTTP 请求
 - [x] `rss-parser` — RSS Feed 解析
-- [ ] 分享：Electron 无跨平台原生分享 API，需自行实现（复制链接 / macOS `NSSharingService` 桥接 / 系统分享面板降级方案）
+- [x] 分享：Electron 无跨平台原生分享 API，需自行实现（复制链接 / macOS `NSSharingService` 桥接 / 系统分享面板降级方案）（复制链接降级已交付，非 NSSharingService / 原生分享面板）
 - [x] `app.getPath()`（Electron 内置）— 文件路径管理，替代 `path_provider`
 - [x] Electron 内置 `BrowserWindow` / `Tray` — 窗口与系统托盘管理
 - [x] Electron 内置 `globalShortcut` — 全局快捷键
