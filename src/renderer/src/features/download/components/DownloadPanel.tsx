@@ -33,7 +33,7 @@ function progressPercent(task: DownloadTask): number {
 }
 
 export function DownloadPanel(): React.JSX.Element | null {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const panelOpen = useDownloadStore((state) => state.panelOpen)
   const tasks = useDownloadStore((state) => state.tasks)
   const history = useDownloadStore((state) => state.history)
@@ -116,7 +116,7 @@ export function DownloadPanel(): React.JSX.Element | null {
               </div>
               <div className="mt-0.5 text-xs text-muted">
                 {task.podcastTitle ?? t('download.unknownPodcast')} ·{' '}
-                {formatFileSize(task.totalBytes)} · {statusLabel(task)}
+                {formatFileSize(task.totalBytes, i18n.language)} · {statusLabel(task)}
               </div>
               {tab === 'active' ? (
                 <>

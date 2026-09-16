@@ -46,7 +46,7 @@ export function EpisodeDetailPanel({
   isCurrentPlaying,
   currentPositionSec
 }: EpisodeDetailPanelProps): React.JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [playlists, setPlaylists] = useState<Playlist[]>([])
   const [noteText, setNoteText] = useState('')
   const [notes, setNotes] = useState<Note[]>([])
@@ -115,8 +115,8 @@ export function EpisodeDetailPanel({
         <div className="min-w-0 flex-1">
           <h2 className="text-base font-semibold text-ink">{episode.title}</h2>
           <p className="mt-1 font-mono text-xs text-muted">
-            {formatDate(episode.publishedAt)} · {formatDuration(episode.durationSec)} ·{' '}
-            {formatFileSize(episode.fileSizeBytes)}
+            {formatDate(episode.publishedAt, i18n.language)} · {formatDuration(episode.durationSec)}{' '}
+            · {formatFileSize(episode.fileSizeBytes, i18n.language)}
           </p>
         </div>
         <Button variant="ghost" size="icon" aria-label={t('episode.closeDetail')} onClick={onClose}>

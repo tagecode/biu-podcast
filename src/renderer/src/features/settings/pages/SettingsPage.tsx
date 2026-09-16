@@ -9,7 +9,7 @@ import { formatFileSize } from '@/lib/format'
 
 import * as settingsApi from '../api'
 import { applyFontScale, applyTheme } from '@/lib/appearance'
-import i18n, { resolveLanguage } from '@/lib/i18n'
+import { resolveLanguage } from '@/lib/i18n'
 import { ShortcutSettings } from '../components/ShortcutSettings'
 import {
   Select,
@@ -42,7 +42,7 @@ const REFRESH_OPTIONS = [
 ]
 
 export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const loadSubscriptions = useSubscriptionStore((state) => state.load)
 
   const formatPreview = (preview: ImportPreview): string =>
@@ -320,7 +320,7 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
         setMessage(
           t('settings.cleanupDone', {
             count: result.data.removedCount,
-            size: formatFileSize(result.data.freedBytes)
+            size: formatFileSize(result.data.freedBytes, i18n.language)
           })
         )
       }
@@ -685,7 +685,9 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
             ) : (
               <>
                 <div className="mt-2 text-sm font-medium text-ink">
-                  {t('settings.storageTotal', { size: formatFileSize(storageUsage.totalBytes) })}
+                  {t('settings.storageTotal', {
+                    size: formatFileSize(storageUsage.totalBytes, i18n.language)
+                  })}
                 </div>
                 <ul className="mt-2 space-y-1">
                   {storageUsage.podcasts.map((podcast) => (
@@ -695,7 +697,7 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
                     >
                       <span className="min-w-0 truncate text-ink">{podcast.podcastTitle}</span>
                       <span className="ml-3 shrink-0 font-mono text-xs text-muted">
-                        {formatFileSize(podcast.bytes)} ·{' '}
+                        {formatFileSize(podcast.bytes, i18n.language)} ·{' '}
                         {t('episode.episodes', { count: podcast.downloadedCount })}
                       </span>
                     </li>
@@ -713,7 +715,7 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
                 <div className="mt-1 text-xs text-amber-700">
                   {t('settings.cleanupPreviewTitle', {
                     count: cleanupPreview.items.length,
-                    size: formatFileSize(cleanupPreview.totalBytes)
+                    size: formatFileSize(cleanupPreview.totalBytes, i18n.language)
                   })}
                 </div>
               ) : cleanupPreview ? (

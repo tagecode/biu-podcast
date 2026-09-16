@@ -1,4 +1,5 @@
 import i18n from '@/lib/i18n'
+import { dateLocaleFromLang } from '@/lib/format'
 import type { Podcast } from '@shared/types'
 
 export type SortKey = 'recent' | 'title' | 'unread'
@@ -13,7 +14,7 @@ export function sortPodcasts(podcasts: Podcast[], sortKey: SortKey): Podcast[] {
   const copy = [...podcasts]
   switch (sortKey) {
     case 'title':
-      return copy.sort((a, b) => a.title.localeCompare(b.title, 'zh-CN'))
+      return copy.sort((a, b) => a.title.localeCompare(b.title, dateLocaleFromLang(i18n.language)))
     case 'unread':
       return copy.sort((a, b) => (b.unreadCount ?? 0) - (a.unreadCount ?? 0))
     case 'recent':

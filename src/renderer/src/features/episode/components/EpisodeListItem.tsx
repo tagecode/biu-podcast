@@ -29,7 +29,7 @@ export function EpisodeListItem({
   onOpenDetail,
   onContextMenu
 }: EpisodeListItemProps): React.JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   return (
     <div
       className={cn(
@@ -60,8 +60,8 @@ export function EpisodeListItem({
           {episode.title}
         </div>
         <div className="mt-0.5 font-mono text-xs text-muted">
-          {formatDate(episode.publishedAt)} · {formatDuration(episode.durationSec)} ·{' '}
-          {formatFileSize(episode.fileSizeBytes)}
+          {formatDate(episode.publishedAt, i18n.language)} · {formatDuration(episode.durationSec)} ·{' '}
+          {formatFileSize(episode.fileSizeBytes, i18n.language)}
         </div>
       </button>
       <div className="flex items-center gap-2">

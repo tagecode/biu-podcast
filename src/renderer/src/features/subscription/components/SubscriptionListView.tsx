@@ -38,7 +38,7 @@ export function SubscriptionListView({
   const [unsubscribeTarget, setUnsubscribeTarget] = useState<Podcast | null>(null)
   const [downloadedOnly, setDownloadedOnly] = useState(false)
   const [episodeHits, setEpisodeHits] = useState<EpisodeSearchHit[]>([])
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const {
     loading,
     error,
@@ -253,7 +253,8 @@ export function SubscriptionListView({
                               {hit.episode.title}
                             </span>
                             <span className="mt-0.5 block truncate text-xs text-muted">
-                              {hit.podcastTitle} · {formatDate(hit.episode.publishedAt)}
+                              {hit.podcastTitle} ·{' '}
+                              {formatDate(hit.episode.publishedAt, i18n.language)}
                             </span>
                           </span>
                           {hit.episode.isDownloaded ? (
