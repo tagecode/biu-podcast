@@ -186,6 +186,8 @@ export const zh = {
     exportFailed: '导出失败'
   },
   playback: {
+    play: '播放',
+    pause: '暂停',
     playPause: '播放/暂停',
     previous: '上一集',
     next: '下一集',

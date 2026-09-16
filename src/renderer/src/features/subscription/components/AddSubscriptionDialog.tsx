@@ -78,6 +78,12 @@ export function AddSubscriptionDialog({
               setFeedUrl(event.target.value)
               if (error) setError(null)
             }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                void handleSubmit()
+              }
+            }}
           />
           {error ? (
             <p className="flex items-center gap-1 text-xs text-danger">

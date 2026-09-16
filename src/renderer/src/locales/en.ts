@@ -193,6 +193,8 @@ export const en: TranslationSchema = {
     exportFailed: 'Export failed'
   },
   playback: {
+    play: 'Play',
+    pause: 'Pause',
     playPause: 'Play/Pause',
     previous: 'Previous',
     next: 'Next',

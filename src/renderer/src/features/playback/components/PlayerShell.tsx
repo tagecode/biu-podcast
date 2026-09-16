@@ -147,6 +147,7 @@ export function MiniPlayer(): React.JSX.Element | null {
                   variant="ghost"
                   size="icon"
                   className="rounded-full bg-amber-600 hover:bg-amber-500"
+                  aria-label={isPlaying ? t('playback.pause') : t('playback.play')}
                   onClick={togglePlay}
                 >
                   {isPlaying ? (
@@ -367,7 +368,12 @@ export function FullScreenPlayer(): React.JSX.Element | null {
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="lg" className={cn('size-16 rounded-full p-0')} onClick={togglePlay}>
+                <Button
+                  size="lg"
+                  className={cn('size-16 rounded-full p-0')}
+                  aria-label={isPlaying ? t('playback.pause') : t('playback.play')}
+                  onClick={togglePlay}
+                >
                   {isPlaying ? <Pause className="size-6" /> : <Play className="size-6" />}
                 </Button>
               </TooltipTrigger>
