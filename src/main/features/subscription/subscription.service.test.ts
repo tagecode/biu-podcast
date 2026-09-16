@@ -23,6 +23,7 @@ vi.mock('electron', () => ({
 }))
 
 import { createMemoryDb } from '../../infra/db/client'
+import { CREATE_TABLES_SQL } from '../../test-utils/db'
 import { SettingsStore } from '../../infra/settings/store'
 import { SubscriptionService } from './subscription.service'
 import { CoverCache } from './cover-cache'
@@ -69,52 +70,7 @@ function setup(): {
   settings: SettingsStore
 } {
   const { db, sqlite } = createMemoryDb()
-  sqlite.exec(`
-    CREATE TABLE podcasts (
-      id text PRIMARY KEY NOT NULL,
-      feed_url text NOT NULL UNIQUE,
-      title text NOT NULL,
-      description text,
-      cover_url text,
-      author text,
-      language text,
-      is_paused integer DEFAULT false NOT NULL,
-      unsubscribed_at integer,
-      subscribed_at integer NOT NULL,
-      last_fetched_at integer,
-      last_fetch_status text
-    );
-    CREATE TABLE episodes (
-      id text PRIMARY KEY NOT NULL,
-      podcast_id text NOT NULL,
-      guid text,
-      title text NOT NULL,
-      description_html text,
-      published_at integer NOT NULL,
-      audio_url text NOT NULL,
-      duration_sec integer,
-      file_size_bytes integer,
-      is_played integer DEFAULT false NOT NULL,
-      playback_position_sec real DEFAULT 0 NOT NULL,
-      is_downloaded integer DEFAULT false NOT NULL,
-      local_file_path text,
-      download_status text,
-      downloaded_at integer,
-      chapters_url text,
-      link text,
-      FOREIGN KEY (podcast_id) REFERENCES podcasts(id) ON DELETE cascade
-    );
-    CREATE TABLE download_tasks (
-      id text PRIMARY KEY NOT NULL,
-      episode_id text NOT NULL,
-      status text NOT NULL,
-      progress_bytes integer DEFAULT 0 NOT NULL,
-      total_bytes integer,
-      retry_count integer DEFAULT 0 NOT NULL,
-      updated_at integer NOT NULL,
-      FOREIGN KEY (episode_id) REFERENCES episodes(id) ON DELETE cascade
-    );
-  `)
+  sqlite.exec(CREATE_TABLES_SQL)
   return { db, sqlite, settings: new SettingsStore({ cwd: TMP }) }
 }
 
@@ -376,6 +332,28 @@ describe('SubscriptionService', () => {
     dialogState.openResult = { canceled: true, filePaths: [] }
     const service = new SubscriptionService({ db, settings })
     expect(await service.importOpmlFromFile()).toBeNull()
+    sqlite.close()
+  })
+
+  it('importOpmlItems assigns folder on new adds only', async () => {
+    const { db, sqlite, settings } = setup()
+    const service = new SubscriptionService({ db, settings })
+    mockFetch.mockResolvedValue(makeFeed({ title: 'Existing' }))
+    const existing = await service.add('https://example.com/old.xml')
+    const organized = service.createFolder('已整理')
+    service.setPodcastFolder(existing.id, organized.id)
+
+    mockFetch.mockResolvedValue(makeFeed({ title: 'New Show' }))
+    const result = await service.importOpmlItems([
+      { title: 'Existing', feedUrl: 'https://example.com/old.xml', folderName: '技术' },
+      { title: 'New Show', feedUrl: 'https://example.com/new.xml', folderName: '技术' }
+    ])
+
+    expect(result.added).toBe(1)
+    expect(result.skipped).toBe(1)
+    const listed = service.list()
+    expect(listed.find((p) => p.id === existing.id)?.folderName).toBe('已整理')
+    expect(listed.find((p) => p.feedUrl === 'https://example.com/new.xml')?.folderName).toBe('技术')
     sqlite.close()
   })
 

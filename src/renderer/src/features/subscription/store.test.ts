@@ -4,6 +4,7 @@ import { useSubscriptionStore } from './store'
 import type { Podcast } from '@shared/types'
 
 const list = vi.fn()
+const listFolders = vi.fn()
 const refreshAll = vi.fn()
 
 function makePodcast(id: string): Podcast {
@@ -27,6 +28,7 @@ describe('useSubscriptionStore.refreshAll', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     list.mockResolvedValue({ ok: true as const, data: [makePodcast('pod-1')] })
+    listFolders.mockResolvedValue({ ok: true as const, data: [] })
     refreshAll.mockResolvedValue({
       ok: true as const,
       data: [
@@ -35,10 +37,11 @@ describe('useSubscriptionStore.refreshAll', () => {
       ]
     })
     window.api = {
-      subscription: { list, refreshAll }
+      subscription: { list, listFolders, refreshAll }
     } as unknown as Window['api']
     useSubscriptionStore.setState({
       podcasts: [],
+      folders: [],
       loading: false,
       error: null,
       query: '',

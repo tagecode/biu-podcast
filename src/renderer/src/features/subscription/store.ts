@@ -1,5 +1,5 @@
 import i18n from '@/lib/i18n'
-import type { Podcast } from '@shared/types'
+import type { Folder, Podcast } from '@shared/types'
 import { create } from 'zustand'
 
 import * as subscriptionApi from './api'
@@ -8,6 +8,7 @@ import { filterPodcasts, sortPodcasts, type SortKey } from './lib/sort-filter'
 
 interface SubscriptionState {
   podcasts: Podcast[]
+  folders: Folder[]
   loading: boolean
   error: string | null
   query: string
@@ -15,11 +16,16 @@ interface SubscriptionState {
   refreshingAll: boolean
   lastRefreshAdded: number | null
   load: () => Promise<void>
+  loadFolders: () => Promise<void>
   add: (feedUrl: string) => Promise<void>
   refresh: (podcastId: string) => Promise<void>
   refreshAll: () => Promise<void>
   setPaused: (podcastId: string, paused: boolean) => Promise<void>
   remove: (podcastId: string, deleteData?: boolean) => Promise<void>
+  createFolder: (name: string) => Promise<Folder>
+  renameFolder: (folderId: string, name: string) => Promise<void>
+  deleteFolder: (folderId: string) => Promise<void>
+  setPodcastFolder: (podcastId: string, folderId: string | null) => Promise<void>
   setQuery: (query: string) => void
   setSortKey: (sortKey: SortKey) => void
   dismissRefreshResult: () => void
@@ -42,6 +48,7 @@ function mapRefreshError(error: unknown): string {
 
 export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   podcasts: [],
+  folders: [],
   loading: true,
   error: null,
   query: '',
@@ -51,14 +58,21 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   load: async () => {
     set({ loading: true, error: null })
     try {
-      const podcasts = await subscriptionApi.listSubscriptions()
-      set({ podcasts, loading: false })
+      const [podcasts, folders] = await Promise.all([
+        subscriptionApi.listSubscriptions(),
+        subscriptionApi.listFolders()
+      ])
+      set({ podcasts, folders, loading: false })
     } catch (error) {
       set({
         loading: false,
         error: error instanceof Error ? error.message : i18n.t('subscription.loadFailed')
       })
     }
+  },
+  loadFolders: async () => {
+    const folders = await subscriptionApi.listFolders()
+    set({ folders })
   },
   add: async (feedUrl) => {
     await subscriptionApi.addSubscription(feedUrl)
@@ -95,6 +109,23 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   },
   remove: async (podcastId, deleteData = false) => {
     await subscriptionApi.removeSubscription(podcastId, deleteData)
+    await get().load()
+  },
+  createFolder: async (name) => {
+    const folder = await subscriptionApi.createFolder(name)
+    await get().load()
+    return folder
+  },
+  renameFolder: async (folderId, name) => {
+    await subscriptionApi.renameFolder(folderId, name)
+    await get().load()
+  },
+  deleteFolder: async (folderId) => {
+    await subscriptionApi.deleteFolder(folderId)
+    await get().load()
+  },
+  setPodcastFolder: async (podcastId, folderId) => {
+    await subscriptionApi.setPodcastFolder(podcastId, folderId)
     await get().load()
   },
   setQuery: (query) => set({ query }),

@@ -5,8 +5,10 @@ import type {
   StorageUsage,
   UpdateStatus,
   AddSubscriptionInput,
+  CreateFolderInput,
   CreateNoteInput,
   CreatePlaylistInput,
+  DeleteFolderInput,
   DownloadTaskIdInput,
   DownloadHistoryInput,
   EnqueueDownloadInput,
@@ -32,10 +34,12 @@ import type {
   RefreshSubscriptionInput,
   RegisteredShortcuts,
   RemoveSubscriptionInput,
+  RenameFolderInput,
   RenamePlaylistInput,
   ReorderPlaylistInput,
   SaveQueueInput,
   SetPausedInput,
+  SetPodcastFolderInput,
   SetSettingInput,
   ShortcutConfig,
   ShortcutSetInput,
@@ -53,6 +57,7 @@ import type {
   DownloadTaskStatus,
   Episode,
   EpisodeSearchHit,
+  Folder,
   IpcResult,
   Note,
   PlaybackQueue,
@@ -86,6 +91,11 @@ declare global {
         previewOpmlPath: (input: ImportOpmlPathInput) => Promise<IpcResult<OpmlPreviewResult>>
         importOpmlItems: (input: ImportOpmlItemsInput) => Promise<IpcResult<OpmlImportResult>>
         exportOpml: () => Promise<IpcResult<{ filePath: string } | null>>
+        listFolders: () => Promise<IpcResult<Folder[]>>
+        createFolder: (input: CreateFolderInput) => Promise<IpcResult<Folder>>
+        renameFolder: (input: RenameFolderInput) => Promise<IpcResult<Folder>>
+        deleteFolder: (input: DeleteFolderInput) => Promise<IpcResult<void>>
+        setPodcastFolder: (input: SetPodcastFolderInput) => Promise<IpcResult<void>>
         onChanged: (callback: (podcasts: Podcast[]) => void) => () => void
         onDeepLinkSubscribe: (callback: (feedUrl: string) => void) => () => void
       }

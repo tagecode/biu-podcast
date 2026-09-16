@@ -73,13 +73,33 @@ function collectOutlines(nodes: unknown, categories: string[], result: OpmlOutli
  * Flat list; categories are kept when provided (outline nesting is not
  * reconstructed — group info is preserved in the title/path only).
  */
-export function buildOpml(feeds: Array<{ title: string; feedUrl: string }>): string {
-  const outlines = feeds
-    .map(
-      (feed) =>
-        `    <outline text="${escapeXml(feed.title)}" title="${escapeXml(feed.title)}" type="rss" xmlUrl="${escapeXml(feed.feedUrl)}" />`
-    )
-    .join('\n')
+export function buildOpml(
+  feeds: Array<{ title: string; feedUrl: string; folderName?: string | null }>
+): string {
+  const uncategorized: typeof feeds = []
+  const grouped = new Map<string, typeof feeds>()
+  for (const feed of feeds) {
+    const folderName = feed.folderName?.trim()
+    if (!folderName) {
+      uncategorized.push(feed)
+      continue
+    }
+    const list = grouped.get(folderName) ?? []
+    list.push(feed)
+    grouped.set(folderName, list)
+  }
+
+  const rssOutline = (feed: { title: string; feedUrl: string }): string =>
+    `<outline text="${escapeXml(feed.title)}" title="${escapeXml(feed.title)}" type="rss" xmlUrl="${escapeXml(feed.feedUrl)}" />`
+
+  const parts: string[] = []
+  for (const [folderName, folderFeeds] of grouped) {
+    const children = folderFeeds.map((feed) => `      ${rssOutline(feed)}`).join('\n')
+    parts.push(`    <outline text="${escapeXml(folderName)}">\n${children}\n    </outline>`)
+  }
+  for (const feed of uncategorized) {
+    parts.push(`    ${rssOutline(feed)}`)
+  }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <opml version="2.0">
@@ -87,7 +107,7 @@ export function buildOpml(feeds: Array<{ title: string; feedUrl: string }>): str
     <title>博播 BiuPodcast 订阅</title>
   </head>
   <body>
-${outlines}
+${parts.join('\n')}
   </body>
 </opml>
 `

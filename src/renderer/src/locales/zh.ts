@@ -106,7 +106,21 @@ export const zh = {
     opmlPreviewFolder: '分类：{{name}}',
     opmlPreviewConfirm: '导入选中项',
     opmlPreviewEmpty: '没有可导入的订阅',
-    opmlPreviewSelectAll: '全选'
+    opmlPreviewSelectAll: '全选',
+    newFolder: '新建分类',
+    folderNameLabel: '分类名称',
+    folderNamePlaceholder: '例如：技术',
+    folderAll: '全部分类',
+    uncategorized: '未分类',
+    filterFolder: '筛选分类',
+    moveToFolder: '移动到…',
+    pickFolder: '选择分类…',
+    folderActions: '分类操作',
+    renameFolder: '重命名分类',
+    deleteFolder: '删除分类',
+    deleteFolderConfirm: '删除分类「{{name}}」？播客会回到未分类，不会取消订阅。',
+    folderNameInvalid: '请输入分类名称',
+    createFolderFailed: '创建分类失败'
   },
   episode: {
     play: '播放',

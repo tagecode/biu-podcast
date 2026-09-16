@@ -1,4 +1,4 @@
-export const BACKUP_SCHEMA_VERSION = 3
+export const BACKUP_SCHEMA_VERSION = 4
 export const BACKUP_APP_ID = 'biu-podcast'
 export interface BackupManifest {
   app: string
@@ -20,6 +20,13 @@ export interface BackupPodcast {
   subscribedAt: number
   lastFetchedAt: number | null
   lastFetchStatus: string | null
+  folderId?: string | null
+}
+
+export interface BackupFolder {
+  id: string
+  name: string
+  createdAt: number
 }
 
 export interface BackupEpisode {
@@ -65,6 +72,8 @@ export interface BackupData {
   settings: BackupSettings
   /** Persisted playback queue (added in schema 3; optional for old backups). */
   queue?: BackupPlaybackQueue | null
+  /** Local folders (added in schema 4; optional for old backups). */
+  folders?: BackupFolder[]
 }
 
 /** Serialized playback queue for a backup. */

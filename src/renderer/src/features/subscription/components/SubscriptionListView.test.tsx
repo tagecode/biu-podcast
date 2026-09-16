@@ -50,6 +50,7 @@ function makeHit(title: string): EpisodeSearchHit {
 describe('SubscriptionListView', () => {
   const refreshAll = vi.fn()
   const list = vi.fn()
+  const listFolders = vi.fn()
   const search = vi.fn()
   const refresh = vi.fn()
   const setPaused = vi.fn()
@@ -59,6 +60,7 @@ describe('SubscriptionListView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     list.mockResolvedValue({ ok: true as const, data: [] })
+    listFolders.mockResolvedValue({ ok: true as const, data: [] })
     refreshAll.mockResolvedValue({ ok: true as const, data: [] })
     search.mockResolvedValue({ ok: true as const, data: [] })
     refresh.mockResolvedValue({
@@ -71,6 +73,7 @@ describe('SubscriptionListView', () => {
     window.api = {
       subscription: {
         list,
+        listFolders,
         refreshAll,
         refresh,
         setPaused,
@@ -83,6 +86,7 @@ describe('SubscriptionListView', () => {
     } as unknown as Window['api']
     useSubscriptionStore.setState({
       podcasts: [],
+      folders: [],
       loading: false,
       error: null,
       query: '',
@@ -163,5 +167,51 @@ describe('SubscriptionListView', () => {
       )
     ).toBeInTheDocument()
     expect(remove).not.toHaveBeenCalled()
+  })
+
+  it('groups podcasts under folder headers', async () => {
+    list.mockResolvedValue({
+      ok: true as const,
+      data: [
+        makePodcast({ id: 'pod-1', title: '科技早知道', folderId: 'f-tech', folderName: '技术' }),
+        makePodcast({ id: 'pod-2', title: '新闻早餐', folderId: 'f-news', folderName: '新闻' })
+      ]
+    })
+    listFolders.mockResolvedValue({
+      ok: true as const,
+      data: [
+        { id: 'f-tech', name: '技术', createdAt: 1 },
+        { id: 'f-news', name: '新闻', createdAt: 2 }
+      ]
+    })
+    render(<SubscriptionListView onOpenPodcast={() => undefined} />)
+
+    expect(await screen.findByRole('heading', { name: '技术' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '新闻' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /科技早知道/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /新闻早餐/ })).toBeInTheDocument()
+  })
+
+  it('filters the list to one folder', async () => {
+    list.mockResolvedValue({
+      ok: true as const,
+      data: [
+        makePodcast({ id: 'pod-1', title: '科技早知道', folderId: 'f-tech', folderName: '技术' }),
+        makePodcast({ id: 'pod-2', title: '新闻早餐', folderId: 'f-news', folderName: '新闻' })
+      ]
+    })
+    listFolders.mockResolvedValue({
+      ok: true as const,
+      data: [
+        { id: 'f-tech', name: '技术', createdAt: 1 },
+        { id: 'f-news', name: '新闻', createdAt: 2 }
+      ]
+    })
+    render(<SubscriptionListView onOpenPodcast={() => undefined} />)
+
+    expect(await screen.findByRole('button', { name: /新闻早餐/ })).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('筛选分类'), { target: { value: 'f-tech' } })
+    expect(screen.getByRole('button', { name: /科技早知道/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /新闻早餐/ })).not.toBeInTheDocument()
   })
 })

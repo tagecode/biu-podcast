@@ -1,4 +1,4 @@
-import { Plus, RefreshCw, Search, X } from 'lucide-react'
+import { MoreHorizontal, Plus, RefreshCw, Search, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -16,12 +16,16 @@ import { showContextMenu } from '@/lib/context-menu'
 import { formatDate } from '@/lib/format'
 import { notifyCopied } from '@/lib/copied-feedback'
 import { cn } from '@/lib/utils'
-import type { EpisodeSearchHit, Podcast } from '@shared/types'
+import type { EpisodeSearchHit, Folder, Podcast } from '@shared/types'
 
 import { AddSubscriptionDialog } from './AddSubscriptionDialog'
+import { DeleteFolderDialog } from './DeleteFolderDialog'
 import { EmptyState } from './EmptyState'
+import { FolderNameDialog } from './FolderNameDialog'
+import { PickFolderDialog } from './PickFolderDialog'
 import { PodcastCard } from './PodcastCard'
 import { UnsubscribeDialog } from './UnsubscribeDialog'
+import { folderMoveMenuItems, groupPodcastsByFolder, type FolderFilter } from '../lib/folder-groups'
 import { useSubscriptionStore } from '../store'
 
 interface SubscriptionListViewProps {
@@ -31,6 +35,11 @@ interface SubscriptionListViewProps {
 
 const SEARCH_DEBOUNCE_MS = 250
 
+type FolderNameDialogState =
+  | { mode: 'create' }
+  | { mode: 'rename'; folderId: string; name: string }
+  | { mode: 'create-and-assign'; podcastId: string }
+
 export function SubscriptionListView({
   onOpenPodcast,
   onOpenEpisode
@@ -39,8 +48,13 @@ export function SubscriptionListView({
   const [unsubscribeTarget, setUnsubscribeTarget] = useState<Podcast | null>(null)
   const [downloadedOnly, setDownloadedOnly] = useState(false)
   const [episodeHits, setEpisodeHits] = useState<EpisodeSearchHit[]>([])
+  const [folderFilter, setFolderFilter] = useState<FolderFilter>('all')
+  const [folderNameDialog, setFolderNameDialog] = useState<FolderNameDialogState | null>(null)
+  const [deleteFolderTarget, setDeleteFolderTarget] = useState<Folder | null>(null)
+  const [pickFolderPodcast, setPickFolderPodcast] = useState<Podcast | null>(null)
   const { t, i18n } = useTranslation()
   const {
+    folders,
     loading,
     error,
     query,
@@ -60,6 +74,7 @@ export function SubscriptionListView({
     void load()
     const unsubscribe = window.api.subscription.onChanged((podcasts) => {
       useSubscriptionStore.setState({ podcasts, loading: false, error: null })
+      void useSubscriptionStore.getState().loadFolders()
     })
     return unsubscribe
   }, [load])
@@ -86,8 +101,31 @@ export function SubscriptionListView({
   }, [query, downloadedOnly])
 
   const podcasts = visiblePodcasts()
-  const offline = typeof navigator !== 'undefined' && !navigator.onLine
   const searching = query.trim().length > 0
+  const groups = groupPodcastsByFolder(podcasts, folders, folderFilter, searching)
+  const offline = typeof navigator !== 'undefined' && !navigator.onLine
+
+  const applyMove = async (podcastId: string, action: string | null): Promise<void> => {
+    if (!action) return
+    if (action.startsWith('folder:')) {
+      await useSubscriptionStore
+        .getState()
+        .setPodcastFolder(podcastId, action.slice('folder:'.length))
+      return
+    }
+    if (action === 'uncategorized') {
+      await useSubscriptionStore.getState().setPodcastFolder(podcastId, null)
+      return
+    }
+    if (action === 'newFolder') {
+      setFolderNameDialog({ mode: 'create-and-assign', podcastId })
+      return
+    }
+    if (action === 'pickFolder') {
+      const podcast = useSubscriptionStore.getState().podcasts.find((item) => item.id === podcastId)
+      if (podcast) setPickFolderPodcast(podcast)
+    }
+  }
 
   const showPodcastMenu = async (podcast: Podcast, event: React.MouseEvent): Promise<void> => {
     const id = await showContextMenu(
@@ -99,6 +137,7 @@ export function SubscriptionListView({
           id: podcast.isPaused ? 'resume' : 'pause',
           label: podcast.isPaused ? t('subscription.resume') : t('subscription.pause')
         },
+        { id: 'moveTo', label: t('subscription.moveToFolder') },
         { id: 'remove', label: t('subscription.remove'), danger: true }
       ],
       event
@@ -113,8 +152,38 @@ export function SubscriptionListView({
     if (id === 'pause' || id === 'resume') {
       await useSubscriptionStore.getState().setPaused(podcast.id, id === 'pause')
     }
+    if (id === 'moveTo') {
+      const moveId = await showContextMenu(
+        folderMoveMenuItems(useSubscriptionStore.getState().folders, {
+          uncategorized: t('subscription.uncategorized'),
+          newFolder: t('subscription.newFolder'),
+          pickFolder: t('subscription.pickFolder')
+        }),
+        event
+      )
+      await applyMove(podcast.id, moveId)
+    }
     if (id === 'remove') setUnsubscribeTarget(podcast)
   }
+
+  const showFolderMenu = async (folder: Folder, event: React.MouseEvent): Promise<void> => {
+    const id = await showContextMenu(
+      [
+        { id: 'rename', label: t('subscription.renameFolder') },
+        { id: 'delete', label: t('subscription.deleteFolder'), danger: true }
+      ],
+      event
+    )
+    if (id === 'rename') {
+      setFolderNameDialog({ mode: 'rename', folderId: folder.id, name: folder.name })
+    }
+    if (id === 'delete') setDeleteFolderTarget(folder)
+  }
+
+  const folderNameTitle =
+    folderNameDialog?.mode === 'rename'
+      ? t('subscription.renameFolder')
+      : t('subscription.newFolder')
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -166,6 +235,20 @@ export function SubscriptionListView({
             <SelectItem value="title">{t('subscription.sortName')}</SelectItem>
           </SelectContent>
         </Select>
+        <select
+          className="h-10 w-[9.5rem] shrink-0 rounded-md border border-line bg-surface px-3 text-sm text-ink outline-none hover:border-amber-600/60 focus-visible:border-amber-600 focus-visible:ring-[3px] focus-visible:ring-amber-600/15"
+          aria-label={t('subscription.filterFolder')}
+          value={folderFilter}
+          onChange={(event) => setFolderFilter(event.target.value)}
+        >
+          <option value="all">{t('subscription.folderAll')}</option>
+          {folders.map((folder) => (
+            <option key={folder.id} value={folder.id}>
+              {folder.name}
+            </option>
+          ))}
+          <option value="uncategorized">{t('subscription.uncategorized')}</option>
+        </select>
         {searching ? (
           <label className="flex shrink-0 items-center gap-2 text-xs text-muted">
             <input
@@ -178,6 +261,9 @@ export function SubscriptionListView({
           </label>
         ) : null}
         <div className="flex-1" />
+        <Button variant="ghost" onClick={() => setFolderNameDialog({ mode: 'create' })}>
+          {t('subscription.newFolder')}
+        </Button>
         <Button
           variant="ghost"
           size="icon"
@@ -216,18 +302,55 @@ export function SubscriptionListView({
                 <div className="mb-4 text-sm text-muted">
                   {t('subscription.subscriptionCount', { count: podcasts.length })}
                 </div>
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-                  {podcasts.map((podcast) => (
-                    <PodcastCard
-                      key={podcast.id}
-                      podcast={podcast}
-                      onClick={() => onOpenPodcast(podcast.id)}
-                      onContextMenu={(event) => {
-                        event.preventDefault()
-                        void showPodcastMenu(podcast, event)
-                      }}
-                    />
-                  ))}
+                <div className="space-y-6">
+                  {groups.map((group) => {
+                    const folder =
+                      group.folderId === null
+                        ? null
+                        : (folders.find((item) => item.id === group.folderId) ?? null)
+                    return (
+                      <section key={group.key}>
+                        <div className="sticky top-0 z-10 mb-3 flex items-center gap-2 bg-paper/95 py-2 backdrop-blur-sm">
+                          <h2 className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
+                            {group.name ?? t('subscription.uncategorized')}
+                          </h2>
+                          {folder ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7"
+                              aria-label={t('subscription.folderActions')}
+                              onClick={(event) => {
+                                event.preventDefault()
+                                void showFolderMenu(folder, event)
+                              }}
+                            >
+                              <MoreHorizontal className="size-4" />
+                            </Button>
+                          ) : null}
+                        </div>
+                        {group.podcasts.length === 0 ? (
+                          <p className="text-xs text-muted">
+                            {t('subscription.noMatchingPodcasts')}
+                          </p>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+                            {group.podcasts.map((podcast) => (
+                              <PodcastCard
+                                key={podcast.id}
+                                podcast={podcast}
+                                onClick={() => onOpenPodcast(podcast.id)}
+                                onContextMenu={(event) => {
+                                  event.preventDefault()
+                                  void showPodcastMenu(podcast, event)
+                                }}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </section>
+                    )
+                  })}
                 </div>
               </>
             )}
@@ -285,6 +408,59 @@ export function SubscriptionListView({
         onConfirm={async (deleteData) => {
           if (!unsubscribeTarget) return
           await useSubscriptionStore.getState().remove(unsubscribeTarget.id, deleteData)
+        }}
+      />
+      <FolderNameDialog
+        key={
+          folderNameDialog
+            ? `${folderNameDialog.mode}:${folderNameDialog.mode === 'rename' ? folderNameDialog.folderId : folderNameDialog.mode === 'create-and-assign' ? folderNameDialog.podcastId : 'new'}`
+            : 'closed'
+        }
+        open={folderNameDialog !== null}
+        title={folderNameTitle}
+        initialName={folderNameDialog?.mode === 'rename' ? folderNameDialog.name : ''}
+        onOpenChange={(open) => {
+          if (!open) setFolderNameDialog(null)
+        }}
+        onSubmit={async (name) => {
+          if (!folderNameDialog) return
+          if (folderNameDialog.mode === 'rename') {
+            await useSubscriptionStore.getState().renameFolder(folderNameDialog.folderId, name)
+            return
+          }
+          const folder = await useSubscriptionStore.getState().createFolder(name)
+          if (folderNameDialog.mode === 'create-and-assign') {
+            await useSubscriptionStore
+              .getState()
+              .setPodcastFolder(folderNameDialog.podcastId, folder.id)
+          }
+        }}
+      />
+      <DeleteFolderDialog
+        open={deleteFolderTarget !== null}
+        folderName={deleteFolderTarget?.name ?? ''}
+        onOpenChange={(open) => {
+          if (!open) setDeleteFolderTarget(null)
+        }}
+        onConfirm={async () => {
+          if (!deleteFolderTarget) return
+          await useSubscriptionStore.getState().deleteFolder(deleteFolderTarget.id)
+          if (folderFilter === deleteFolderTarget.id) setFolderFilter('all')
+        }}
+      />
+      <PickFolderDialog
+        open={pickFolderPodcast !== null}
+        folders={folders}
+        onOpenChange={(open) => {
+          if (!open) setPickFolderPodcast(null)
+        }}
+        onSelect={(folderId) => {
+          if (!pickFolderPodcast) return
+          void useSubscriptionStore.getState().setPodcastFolder(pickFolderPodcast.id, folderId)
+        }}
+        onCreate={() => {
+          if (!pickFolderPodcast) return
+          setFolderNameDialog({ mode: 'create-and-assign', podcastId: pickFolderPodcast.id })
         }}
       />
     </div>

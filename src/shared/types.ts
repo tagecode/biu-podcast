@@ -23,6 +23,16 @@ export interface Podcast {
   unreadCount?: number
   /** Number of episodes marked as played (dynamically computed with unreadCount). */
   playedCount?: number
+  /** Local folder id; null/undefined means uncategorized. */
+  folderId?: string | null
+  /** Resolved folder name for display. */
+  folderName?: string | null
+}
+
+export interface Folder {
+  id: string
+  name: string
+  createdAt: number
 }
 
 /** Local episode search hit (title/description, no remote catalog). */

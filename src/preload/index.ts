@@ -8,8 +8,10 @@ import type {
   StorageUsage,
   UpdateStatus,
   AddSubscriptionInput,
+  CreateFolderInput,
   CreateNoteInput,
   CreatePlaylistInput,
+  DeleteFolderInput,
   DownloadTaskIdInput,
   DownloadHistoryInput,
   EnqueueDownloadInput,
@@ -35,10 +37,12 @@ import type {
   RefreshSubscriptionInput,
   RegisteredShortcuts,
   RemoveSubscriptionInput,
+  RenameFolderInput,
   RenamePlaylistInput,
   ReorderPlaylistInput,
   SaveQueueInput,
   SetPausedInput,
+  SetPodcastFolderInput,
   SetSettingInput,
   ShortcutConfig,
   ShortcutSetInput,
@@ -55,6 +59,7 @@ import type {
   DownloadTaskStatus,
   Episode,
   EpisodeSearchHit,
+  Folder,
   IpcResult,
   Note,
   PlaybackQueue,
@@ -96,6 +101,16 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.subscription.importOpmlItems, input),
     exportOpml: (): Promise<IpcResult<{ filePath: string } | null>> =>
       ipcRenderer.invoke(IPC_CHANNELS.subscription.exportOpml),
+    listFolders: (): Promise<IpcResult<Folder[]>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.subscription.listFolders),
+    createFolder: (input: CreateFolderInput): Promise<IpcResult<Folder>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.subscription.createFolder, input),
+    renameFolder: (input: RenameFolderInput): Promise<IpcResult<Folder>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.subscription.renameFolder, input),
+    deleteFolder: (input: DeleteFolderInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.subscription.deleteFolder, input),
+    setPodcastFolder: (input: SetPodcastFolderInput): Promise<IpcResult<void>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.subscription.setPodcastFolder, input),
     onChanged: (callback: (podcasts: Podcast[]) => void): (() => void) => {
       const listener = (_event: Electron.IpcRendererEvent, podcasts: Podcast[]): void =>
         callback(podcasts)

@@ -5,6 +5,8 @@ import {
   ChooseDirectoryInputSchema,
   CreateNoteInputSchema,
   CreatePlaylistInputSchema,
+  CreateFolderInputSchema,
+  DeleteFolderInputSchema,
   DownloadTaskIdInputSchema,
   DownloadHistoryInputSchema,
   EnqueueDownloadInputSchema,
@@ -28,8 +30,10 @@ import {
   PlaylistItemInputSchema,
   RefreshSubscriptionInputSchema,
   RemoveSubscriptionInputSchema,
+  RenameFolderInputSchema,
   RenamePlaylistInputSchema,
   ReorderPlaylistInputSchema,
+  SetPodcastFolderInputSchema,
   SetPausedInputSchema,
   SetSettingInputSchema,
   ShortcutSetInputSchema,
@@ -138,6 +142,48 @@ export function registerSubscriptionHandlers(): void {
 
   registerHandler(IPC_CHANNELS.subscription.exportOpml, OpmlActionInputSchema, async () =>
     subscriptionService.exportOpmlToFile()
+  )
+
+  registerNoInputHandler(IPC_CHANNELS.subscription.listFolders, async () =>
+    subscriptionService.listFolders()
+  )
+
+  registerHandler(
+    IPC_CHANNELS.subscription.createFolder,
+    CreateFolderInputSchema,
+    async (_event, input) => {
+      const folder = subscriptionService.createFolder(input.name)
+      broadcast(IPC_CHANNELS.subscription.changed, subscriptionService.list())
+      return folder
+    }
+  )
+
+  registerHandler(
+    IPC_CHANNELS.subscription.renameFolder,
+    RenameFolderInputSchema,
+    async (_event, input) => {
+      const folder = subscriptionService.renameFolder(input.folderId, input.name)
+      broadcast(IPC_CHANNELS.subscription.changed, subscriptionService.list())
+      return folder
+    }
+  )
+
+  registerVoidHandler(
+    IPC_CHANNELS.subscription.deleteFolder,
+    DeleteFolderInputSchema,
+    async (_event, input) => {
+      subscriptionService.deleteFolder(input.folderId)
+      broadcast(IPC_CHANNELS.subscription.changed, subscriptionService.list())
+    }
+  )
+
+  registerVoidHandler(
+    IPC_CHANNELS.subscription.setPodcastFolder,
+    SetPodcastFolderInputSchema,
+    async (_event, input) => {
+      subscriptionService.setPodcastFolder(input.podcastId, input.folderId)
+      broadcast(IPC_CHANNELS.subscription.changed, subscriptionService.list())
+    }
   )
 }
 

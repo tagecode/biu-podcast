@@ -12,6 +12,11 @@ export const IPC_CHANNELS = {
     previewOpmlPath: 'subscription:preview-opml-path',
     importOpmlItems: 'subscription:import-opml-items',
     exportOpml: 'subscription:export-opml',
+    listFolders: 'subscription:list-folders',
+    createFolder: 'subscription:create-folder',
+    renameFolder: 'subscription:rename-folder',
+    deleteFolder: 'subscription:delete-folder',
+    setPodcastFolder: 'subscription:set-podcast-folder',
     changed: 'subscription:changed',
     /** Main → renderer: deep link wants to subscribe to a feed. */
     deepLinkSubscribe: 'subscription:deep-link-subscribe'

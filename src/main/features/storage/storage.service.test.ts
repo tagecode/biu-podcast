@@ -18,6 +18,12 @@ import { SettingsStore } from '../../infra/settings/store'
 
 function createSchema(sqlite: ReturnType<typeof createMemoryDb>['sqlite']): void {
   sqlite.exec(`
+    CREATE TABLE folders (
+      id text PRIMARY KEY NOT NULL,
+      name text NOT NULL,
+      created_at integer NOT NULL
+    );
+    CREATE UNIQUE INDEX folders_name_unique ON folders (name);
     CREATE TABLE podcasts (
       id text PRIMARY KEY NOT NULL,
       feed_url text NOT NULL UNIQUE,
@@ -30,7 +36,9 @@ function createSchema(sqlite: ReturnType<typeof createMemoryDb>['sqlite']): void
       unsubscribed_at integer,
       subscribed_at integer NOT NULL,
       last_fetched_at integer,
-      last_fetch_status text
+      last_fetch_status text,
+      folder_id text,
+      FOREIGN KEY (folder_id) REFERENCES folders(id)
     );
     CREATE TABLE episodes (
       id text PRIMARY KEY NOT NULL,

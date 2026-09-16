@@ -1,4 +1,14 @@
-import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+
+export const folders = sqliteTable(
+  'folders',
+  {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    createdAt: integer('created_at').notNull()
+  },
+  (table) => [uniqueIndex('folders_name_unique').on(table.name)]
+)
 
 export const podcasts = sqliteTable('podcasts', {
   id: text('id').primaryKey(),
@@ -12,7 +22,8 @@ export const podcasts = sqliteTable('podcasts', {
   unsubscribedAt: integer('unsubscribed_at'),
   subscribedAt: integer('subscribed_at').notNull(),
   lastFetchedAt: integer('last_fetched_at'),
-  lastFetchStatus: text('last_fetch_status')
+  lastFetchStatus: text('last_fetch_status'),
+  folderId: text('folder_id').references(() => folders.id, { onDelete: 'set null' })
 })
 
 export const episodes = sqliteTable('episodes', {

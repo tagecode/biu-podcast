@@ -9,11 +9,12 @@ import { settingsStore, SettingsStore } from '../../infra/settings/store'
 import { logError } from '../../infra/logger'
 import { AppError } from '@shared/errors'
 import type { OpmlPreviewItem, OpmlPreviewResult } from '@shared/ipc-contract'
-import type { FetchStatus, Podcast } from '@shared/types'
+import type { FetchStatus, Folder, Podcast } from '@shared/types'
 
 import { fetchAndParseFeed } from './feed-parser'
 import { normalizeFeedUrl, SubscriptionRepository } from './subscription.repository'
 import { buildOpml, folderNameFromCategories, parseOpml } from './opml'
+import { FolderRepository } from './folder.repository'
 import { CoverCache } from './cover-cache'
 
 export interface SubscriptionServiceDeps {
@@ -33,6 +34,7 @@ export class SubscriptionService {
   private readonly settings: SettingsStore
   private readonly subscriptions: SubscriptionRepository
   private readonly episodes: EpisodeRepository
+  private readonly folders: FolderRepository
   private readonly covers: CoverCache
 
   constructor(deps: SubscriptionServiceDeps = {}) {
@@ -40,6 +42,7 @@ export class SubscriptionService {
     this.settings = deps.settings ?? settingsStore
     this.subscriptions = new SubscriptionRepository(this.db)
     this.episodes = new EpisodeRepository(this.db)
+    this.folders = new FolderRepository(this.db)
     this.covers = deps.covers ?? new CoverCache()
   }
 
@@ -273,7 +276,11 @@ export class SubscriptionService {
     const failed: Array<{ title: string; error: string }> = []
     for (const item of items) {
       try {
-        await this.add(item.feedUrl)
+        const podcast = await this.add(item.feedUrl)
+        if (item.folderName) {
+          const folder = this.folders.ensureByName(item.folderName)
+          this.folders.setPodcastFolder(podcast.id, folder.id)
+        }
         added += 1
       } catch (error) {
         if (error instanceof AppError && error.code === 'ALREADY_SUBSCRIBED') skipped += 1
@@ -316,7 +323,11 @@ export class SubscriptionService {
     })
     if (result.canceled || !result.filePath) return null
 
-    const feeds = this.list().map((p) => ({ title: p.title, feedUrl: p.feedUrl }))
+    const feeds = this.list().map((p) => ({
+      title: p.title,
+      feedUrl: p.feedUrl,
+      folderName: p.folderName
+    }))
     const xml = buildOpml(feeds)
     await writeFile(result.filePath, xml, 'utf8')
     return { filePath: result.filePath }
@@ -337,6 +348,26 @@ export class SubscriptionService {
       }
     }
     return results
+  }
+
+  listFolders(): Folder[] {
+    return this.folders.list()
+  }
+
+  createFolder(name: string): Folder {
+    return this.folders.create(name)
+  }
+
+  renameFolder(folderId: string, name: string): Folder {
+    return this.folders.rename(folderId, name)
+  }
+
+  deleteFolder(folderId: string): void {
+    this.folders.delete(folderId)
+  }
+
+  setPodcastFolder(podcastId: string, folderId: string | null): void {
+    this.folders.setPodcastFolder(podcastId, folderId)
   }
 }
 

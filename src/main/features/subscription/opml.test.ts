@@ -66,6 +66,20 @@ describe('buildOpml', () => {
     const xml = buildOpml([{ title: 'A & B <Podcast>', feedUrl: 'https://x/feed.xml' }])
     expect(xml).toContain('A &amp; B &lt;Podcast&gt;')
   })
+
+  it('nests RSS outlines under folder names and round-trips', () => {
+    const xml = buildOpml([
+      { title: '前端周刊', feedUrl: 'https://example.com/fe.xml', folderName: '技术' },
+      { title: '独立播客', feedUrl: 'https://example.com/indie.xml', folderName: null }
+    ])
+    expect(xml).toContain('<outline text="技术">')
+    const parsed = parseOpml(xml)
+    expect(parsed).toHaveLength(2)
+    const nested = parsed.find((item) => item.feedUrl === 'https://example.com/fe.xml')
+    const flat = parsed.find((item) => item.feedUrl === 'https://example.com/indie.xml')
+    expect(folderNameFromCategories(nested?.categories ?? [])).toBe('技术')
+    expect(folderNameFromCategories(flat?.categories ?? [])).toBeNull()
+  })
 })
 
 describe('folderNameFromCategories', () => {

@@ -1,4 +1,4 @@
-import type { IpcResult, Podcast } from '@shared/types'
+import type { Folder, IpcResult, Podcast } from '@shared/types'
 
 export async function listSubscriptions(): Promise<Podcast[]> {
   const result = await window.api.subscription.list()
@@ -40,6 +40,34 @@ export async function setSubscriptionPaused(podcastId: string, paused: boolean):
 
 export async function removeSubscription(podcastId: string, deleteData = false): Promise<void> {
   const result = await window.api.subscription.remove({ podcastId, deleteData })
+  if (!result.ok) throw new Error(result.error.message)
+}
+
+export async function listFolders(): Promise<Folder[]> {
+  const result = await window.api.subscription.listFolders()
+  if (!result.ok) throw new Error(result.error.message)
+  return result.data
+}
+
+export async function createFolder(name: string): Promise<Folder> {
+  const result = await window.api.subscription.createFolder({ name })
+  if (!result.ok) throw new Error(result.error.message)
+  return result.data
+}
+
+export async function renameFolder(folderId: string, name: string): Promise<Folder> {
+  const result = await window.api.subscription.renameFolder({ folderId, name })
+  if (!result.ok) throw new Error(result.error.message)
+  return result.data
+}
+
+export async function deleteFolder(folderId: string): Promise<void> {
+  const result = await window.api.subscription.deleteFolder({ folderId })
+  if (!result.ok) throw new Error(result.error.message)
+}
+
+export async function setPodcastFolder(podcastId: string, folderId: string | null): Promise<void> {
+  const result = await window.api.subscription.setPodcastFolder({ podcastId, folderId })
   if (!result.ok) throw new Error(result.error.message)
 }
 

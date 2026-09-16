@@ -112,7 +112,22 @@ export const en: TranslationSchema = {
     opmlPreviewFolder: 'Folder: {{name}}',
     opmlPreviewConfirm: 'Import selected',
     opmlPreviewEmpty: 'No subscriptions to import',
-    opmlPreviewSelectAll: 'Select all'
+    opmlPreviewSelectAll: 'Select all',
+    newFolder: 'New folder',
+    folderNameLabel: 'Folder name',
+    folderNamePlaceholder: 'e.g. Tech',
+    folderAll: 'All folders',
+    uncategorized: 'Uncategorized',
+    filterFolder: 'Filter by folder',
+    moveToFolder: 'Move to…',
+    pickFolder: 'Choose folder…',
+    folderActions: 'Folder actions',
+    renameFolder: 'Rename folder',
+    deleteFolder: 'Delete folder',
+    deleteFolderConfirm:
+      'Delete folder "{{name}}"? Podcasts move back to Uncategorized; they stay subscribed.',
+    folderNameInvalid: 'Enter a folder name',
+    createFolderFailed: 'Could not create folder'
   },
   episode: {
     play: 'Play',

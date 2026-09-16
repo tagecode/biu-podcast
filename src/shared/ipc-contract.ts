@@ -47,6 +47,28 @@ export const ImportOpmlItemsInputSchema = z.object({
 })
 export type ImportOpmlItemsInput = z.infer<typeof ImportOpmlItemsInputSchema>
 
+export const CreateFolderInputSchema = z.object({
+  name: z.string().trim().min(1).max(80)
+})
+export type CreateFolderInput = z.infer<typeof CreateFolderInputSchema>
+
+export const RenameFolderInputSchema = z.object({
+  folderId: z.string().min(1),
+  name: z.string().trim().min(1).max(80)
+})
+export type RenameFolderInput = z.infer<typeof RenameFolderInputSchema>
+
+export const DeleteFolderInputSchema = z.object({
+  folderId: z.string().min(1)
+})
+export type DeleteFolderInput = z.infer<typeof DeleteFolderInputSchema>
+
+export const SetPodcastFolderInputSchema = z.object({
+  podcastId: z.string().min(1),
+  folderId: z.string().min(1).nullable()
+})
+export type SetPodcastFolderInput = z.infer<typeof SetPodcastFolderInputSchema>
+
 export const ClipboardWriteInputSchema = z.object({
   text: z.string().min(1).max(100_000)
 })

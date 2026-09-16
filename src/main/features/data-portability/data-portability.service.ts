@@ -15,7 +15,7 @@ import { AppError } from '@shared/errors'
 import type { AppSettings } from '@shared/types'
 
 import { getDb, type AppDatabase } from '../../infra/db/client'
-import { downloadTasks, episodes, playbackQueue, podcasts } from '../../infra/db/schema'
+import { downloadTasks, episodes, folders, playbackQueue, podcasts } from '../../infra/db/schema'
 import { settingsStore, SettingsStore } from '../../infra/settings/store'
 import { previewImport } from './preview'
 
@@ -28,6 +28,7 @@ function collectBackupData(db: AppDatabase, settings: SettingsStore): BackupData
   const podcastRows = db.select().from(podcasts).all()
   const episodeRows = db.select().from(episodes).all()
   const taskRows = db.select().from(downloadTasks).all()
+  const folderRows = db.select().from(folders).all()
   const queueRow = db.select().from(playbackQueue).all()[0]
   const settingsData = settings.getAll()
 
@@ -44,7 +45,8 @@ function collectBackupData(db: AppDatabase, settings: SettingsStore): BackupData
       unsubscribedAt: row.unsubscribedAt,
       subscribedAt: row.subscribedAt,
       lastFetchedAt: row.lastFetchedAt,
-      lastFetchStatus: row.lastFetchStatus
+      lastFetchStatus: row.lastFetchStatus,
+      folderId: row.folderId ?? null
     })),
     episodes: episodeRows.map((row) => ({
       id: row.id,
@@ -79,7 +81,12 @@ function collectBackupData(db: AppDatabase, settings: SettingsStore): BackupData
           mode: queueRow.mode,
           currentEpisodeId: queueRow.currentEpisodeId
         }
-      : null
+      : null,
+    folders: folderRows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      createdAt: row.createdAt
+    }))
   }
 }
 
@@ -220,6 +227,23 @@ export class DataPortabilityService {
     const db = this.db
 
     db.transaction((tx) => {
+      for (const folder of bundle.data.folders ?? []) {
+        const exists = tx
+          .select({ id: folders.id })
+          .from(folders)
+          .where(eq(folders.id, folder.id))
+          .get()
+        if (exists && strategy === 'skip') continue
+        if (exists) {
+          tx.update(folders)
+            .set({ name: folder.name, createdAt: folder.createdAt })
+            .where(eq(folders.id, folder.id))
+            .run()
+        } else {
+          tx.insert(folders).values(folder).run()
+        }
+      }
+
       for (const podcast of bundle.data.podcasts) {
         const exists = local.podcastIds.has(podcast.id)
         if (exists && strategy === 'skip') continue
@@ -236,7 +260,8 @@ export class DataPortabilityService {
               unsubscribedAt: podcast.unsubscribedAt,
               subscribedAt: podcast.subscribedAt,
               lastFetchedAt: podcast.lastFetchedAt,
-              lastFetchStatus: podcast.lastFetchStatus
+              lastFetchStatus: podcast.lastFetchStatus,
+              folderId: podcast.folderId ?? null
             })
             .where(eq(podcasts.id, podcast.id))
             .run()

@@ -1,7 +1,7 @@
 import { eq, isNull, sql } from 'drizzle-orm'
 
 import type { AppDatabase } from '../../infra/db/client'
-import { episodes, podcasts } from '../../infra/db/schema'
+import { episodes, folders, podcasts } from '../../infra/db/schema'
 import { htmlToPlainText } from '../../infra/sanitize/html'
 import type { FetchStatus, Podcast } from '@shared/types'
 
@@ -92,8 +92,9 @@ export class SubscriptionRepository {
       .groupBy(podcasts.id)
       .all()
 
+    const folderNames = this.folderNameMap()
     return rows.map(({ podcast, unreadCount, playedCount }) => ({
-      ...this.toPodcast(podcast),
+      ...this.toPodcast(podcast, folderNames),
       unreadCount: Number(unreadCount ?? 0),
       playedCount: Number(playedCount ?? 0)
     }))
@@ -126,7 +127,20 @@ export class SubscriptionRepository {
     this.db.delete(podcasts).where(eq(podcasts.id, id)).run()
   }
 
-  private toPodcast(row: typeof podcasts.$inferSelect): Podcast {
+  private folderNameMap(): Map<string, string> {
+    return new Map(
+      this.db
+        .select()
+        .from(folders)
+        .all()
+        .map((row) => [row.id, row.name])
+    )
+  }
+
+  private toPodcast(
+    row: typeof podcasts.$inferSelect,
+    folderNames = this.folderNameMap()
+  ): Podcast {
     return {
       id: row.id,
       feedUrl: row.feedUrl,
@@ -138,7 +152,9 @@ export class SubscriptionRepository {
       isPaused: row.isPaused,
       subscribedAt: row.subscribedAt,
       lastFetchedAt: row.lastFetchedAt,
-      lastFetchStatus: row.lastFetchStatus as FetchStatus | null
+      lastFetchStatus: row.lastFetchStatus as FetchStatus | null,
+      folderId: row.folderId ?? null,
+      folderName: row.folderId ? (folderNames.get(row.folderId) ?? null) : null
     }
   }
 }

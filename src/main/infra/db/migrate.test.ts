@@ -36,6 +36,7 @@ describe('migrateDatabase', () => {
     expect(applied.map((r) => r.hash)).toContain('0004_playback_queue.sql')
     expect(applied.map((r) => r.hash)).toContain('0005_episode_chapters_url.sql')
     expect(applied.map((r) => r.hash)).toContain('0006_episode_link.sql')
+    expect(applied.map((r) => r.hash)).toContain('0007_folders.sql')
 
     // New tables/columns exist.
     const playbackQueue = sqlite
@@ -63,7 +64,8 @@ describe('migrateDatabase', () => {
       '0003_playlist_note.sql',
       '0004_playback_queue.sql',
       '0005_episode_chapters_url.sql',
-      '0006_episode_link.sql'
+      '0006_episode_link.sql',
+      '0007_folders.sql'
     ]
     expect(count.n).toBe(files.length)
   })
