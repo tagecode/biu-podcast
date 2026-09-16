@@ -8,11 +8,12 @@ import { getDb, type AppDatabase } from '../../infra/db/client'
 import { settingsStore, SettingsStore } from '../../infra/settings/store'
 import { logError } from '../../infra/logger'
 import { AppError } from '@shared/errors'
+import type { OpmlPreviewItem, OpmlPreviewResult } from '@shared/ipc-contract'
 import type { FetchStatus, Podcast } from '@shared/types'
 
 import { fetchAndParseFeed } from './feed-parser'
 import { normalizeFeedUrl, SubscriptionRepository } from './subscription.repository'
-import { buildOpml, parseOpml } from './opml'
+import { buildOpml, folderNameFromCategories, parseOpml } from './opml'
 import { CoverCache } from './cover-cache'
 
 export interface SubscriptionServiceDeps {
@@ -220,20 +221,65 @@ export class SubscriptionService {
     skipped: number
     failed: Array<{ title: string; error: string }>
   }> {
+    const preview = await this.previewOpmlFromPath(filePath)
+    return this.importOpmlItems(preview.items, preview.filePath)
+  }
+
+  private async assertOpmlFile(filePath: string): Promise<void> {
+    if (!/\.(opml|xml)$/i.test(filePath)) {
+      throw new AppError('INVALID_INPUT', '仅支持导入 .opml 或 .xml 文件')
+    }
+    const fileStat = await fsStat(filePath)
+    if (fileStat.size > 5 * 1024 * 1024) {
+      throw new AppError('INVALID_INPUT', 'OPML 文件过大（最大 5MB）')
+    }
+  }
+
+  async previewOpmlFromPath(filePath: string): Promise<OpmlPreviewResult> {
+    await this.assertOpmlFile(filePath)
     const xml = await readFile(filePath, 'utf8')
     const outlines = parseOpml(xml)
+    return {
+      filePath,
+      items: outlines.map((outline) => ({
+        title: (outline.title || outline.feedUrl).slice(0, 200),
+        feedUrl: outline.feedUrl,
+        folderName: folderNameFromCategories(outline.categories)
+      }))
+    }
+  }
+
+  async previewOpmlFromFile(): Promise<OpmlPreviewResult | null> {
+    const result = await dialog.showOpenDialog({
+      title: '导入 OPML 订阅',
+      properties: ['openFile'],
+      filters: [{ name: 'OPML', extensions: ['opml', 'xml'] }]
+    })
+    if (result.canceled || !result.filePaths[0]) return null
+    return this.previewOpmlFromPath(result.filePaths[0])
+  }
+
+  async importOpmlItems(
+    items: OpmlPreviewItem[],
+    filePath = ''
+  ): Promise<{
+    filePath: string
+    added: number
+    skipped: number
+    failed: Array<{ title: string; error: string }>
+  }> {
     let added = 0
     let skipped = 0
     const failed: Array<{ title: string; error: string }> = []
-    for (const outline of outlines) {
+    for (const item of items) {
       try {
-        await this.add(outline.feedUrl)
+        await this.add(item.feedUrl)
         added += 1
       } catch (error) {
         if (error instanceof AppError && error.code === 'ALREADY_SUBSCRIBED') skipped += 1
         else
           failed.push({
-            title: outline.title || outline.feedUrl,
+            title: item.title || item.feedUrl,
             error: error instanceof Error ? error.message : '未知错误'
           })
       }
@@ -247,13 +293,6 @@ export class SubscriptionService {
     skipped: number
     failed: Array<{ title: string; error: string }>
   }> {
-    if (!/\.(opml|xml)$/i.test(filePath)) {
-      throw new AppError('INVALID_INPUT', '仅支持导入 .opml 或 .xml 文件')
-    }
-    const fileStat = await fsStat(filePath)
-    if (fileStat.size > 5 * 1024 * 1024) {
-      throw new AppError('INVALID_INPUT', 'OPML 文件过大（最大 5MB）')
-    }
     return this.importOpmlOutlines(filePath)
   }
 
@@ -263,13 +302,9 @@ export class SubscriptionService {
     skipped: number
     failed: Array<{ title: string; error: string }>
   } | null> {
-    const result = await dialog.showOpenDialog({
-      title: '导入 OPML 订阅',
-      properties: ['openFile'],
-      filters: [{ name: 'OPML', extensions: ['opml', 'xml'] }]
-    })
-    if (result.canceled || !result.filePaths[0]) return null
-    return this.importOpmlFromPath(result.filePaths[0])
+    const preview = await this.previewOpmlFromFile()
+    if (!preview) return null
+    return this.importOpmlItems(preview.items, preview.filePath)
   }
 
   /** Export all active subscriptions to an OPML file (dialog-based). */

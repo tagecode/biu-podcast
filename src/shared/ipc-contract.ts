@@ -29,6 +29,24 @@ export const ImportOpmlPathInputSchema = z.object({
 })
 export type ImportOpmlPathInput = z.infer<typeof ImportOpmlPathInputSchema>
 
+export const OpmlPreviewItemSchema = z.object({
+  title: z.string().max(200),
+  feedUrl: z.string().trim().min(1).max(2048),
+  folderName: z.string().min(1).max(80).nullable()
+})
+export type OpmlPreviewItem = z.infer<typeof OpmlPreviewItemSchema>
+
+export const OpmlPreviewResultSchema = z.object({
+  filePath: z.string().min(1),
+  items: z.array(OpmlPreviewItemSchema).max(2000)
+})
+export type OpmlPreviewResult = z.infer<typeof OpmlPreviewResultSchema>
+
+export const ImportOpmlItemsInputSchema = z.object({
+  items: z.array(OpmlPreviewItemSchema).min(1).max(2000)
+})
+export type ImportOpmlItemsInput = z.infer<typeof ImportOpmlItemsInputSchema>
+
 export const ClipboardWriteInputSchema = z.object({
   text: z.string().min(1).max(100_000)
 })

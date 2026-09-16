@@ -106,7 +106,13 @@ export const en: TranslationSchema = {
     episodes: '{{count}} episodes',
     fallbackInitial: 'B',
     dragImportInvalid: 'Drop a .opml or .xml subscription file',
-    dragImportDone: 'Import done: {{added}} added, {{skipped}} skipped, {{failed}} failed'
+    dragImportDone: 'Import done: {{added}} added, {{skipped}} skipped, {{failed}} failed',
+    opmlPreviewTitle: 'Import preview',
+    opmlPreviewHint: 'Uncheck feeds you do not want; nothing is saved until you confirm',
+    opmlPreviewFolder: 'Folder: {{name}}',
+    opmlPreviewConfirm: 'Import selected',
+    opmlPreviewEmpty: 'No subscriptions to import',
+    opmlPreviewSelectAll: 'Select all'
   },
   episode: {
     play: 'Play',

@@ -3,7 +3,13 @@ import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import type { ImportPreview } from '@shared/backup'
-import type { CleanupPreview, UpdateStatus } from '@shared/ipc-contract'
+import type {
+  CleanupPreview,
+  OpmlPreviewItem,
+  OpmlPreviewResult,
+  UpdateStatus
+} from '@shared/ipc-contract'
+import { OpmlImportPreviewDialog } from '@/features/subscription/components/OpmlImportPreviewDialog'
 import { useSubscriptionStore } from '@/features/subscription/store'
 import { formatFileSize } from '@/lib/format'
 
@@ -64,6 +70,7 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [opmlPreview, setOpmlPreview] = useState<OpmlPreviewResult | null>(null)
   const [autoRefresh, setAutoRefresh] = useState<string>('null')
   const [openFullDefault, setOpenFullDefault] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
@@ -217,18 +224,35 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
     setError(null)
     setMessage(null)
     try {
-      const result = await window.api.subscription.importOpml()
+      const result = await window.api.subscription.previewOpml()
       if (!result.ok) {
         setMessage(t('settings.importCancelled'))
         return
       }
-      const { data } = result
-      if (!data) {
+      if (!result.data) {
         setMessage(t('settings.importCancelled'))
         return
       }
-      const { added, skipped, failed } = data
+      setOpmlPreview(result.data)
+    } catch (importError) {
+      setError(importError instanceof Error ? importError.message : t('settings.opmlImportFailed'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleOpmlConfirm = async (items: OpmlPreviewItem[]): Promise<void> => {
+    setBusy(true)
+    setError(null)
+    try {
+      const result = await window.api.subscription.importOpmlItems({ items })
+      if (!result.ok) {
+        setError(result.error.message)
+        return
+      }
+      const { added, skipped, failed } = result.data
       await loadSubscriptions()
+      setOpmlPreview(null)
       setMessage(
         `${t('settings.importOpmlDone', { added, skipped })}${failed.length ? t('settings.importOpmlFailedCount', { count: failed.length }) : ''}`
       )
@@ -943,6 +967,15 @@ export function SettingsPage({ onBack, onOpenAbout }: SettingsPageProps): React.
           ) : null}
         </section>
       </div>
+      <OpmlImportPreviewDialog
+        key={opmlPreview?.filePath ?? 'opml-closed'}
+        preview={opmlPreview}
+        busy={busy}
+        onOpenChange={(open) => {
+          if (!open) setOpmlPreview(null)
+        }}
+        onConfirm={handleOpmlConfirm}
+      />
     </div>
   )
 }

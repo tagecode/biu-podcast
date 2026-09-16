@@ -100,7 +100,13 @@ export const zh = {
     episodes: '{{count}} 集',
     fallbackInitial: '播',
     dragImportInvalid: '请拖入 .opml 或 .xml 订阅文件',
-    dragImportDone: '导入完成：新增 {{added}} 个，跳过 {{skipped}} 个，失败 {{failed}} 个'
+    dragImportDone: '导入完成：新增 {{added}} 个，跳过 {{skipped}} 个，失败 {{failed}} 个',
+    opmlPreviewTitle: '导入预览',
+    opmlPreviewHint: '取消勾选不需要的订阅，确认后才会写入',
+    opmlPreviewFolder: '分类：{{name}}',
+    opmlPreviewConfirm: '导入选中项',
+    opmlPreviewEmpty: '没有可导入的订阅',
+    opmlPreviewSelectAll: '全选'
   },
   episode: {
     play: '播放',

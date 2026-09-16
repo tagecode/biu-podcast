@@ -20,6 +20,7 @@ import type {
   SearchEpisodesInput,
   GetEpisodeInput,
   ImportBackupInput,
+  ImportOpmlItemsInput,
   ImportOpmlPathInput,
   ListEpisodesInput,
   MarkAllPlayedInput,
@@ -27,6 +28,7 @@ import type {
   MediaSessionUpdateInput,
   NoteIdInput,
   OpmlImportResult,
+  OpmlPreviewResult,
   PlaybackCommand,
   PlaylistIdInput,
   PlaylistItemInput,
@@ -86,10 +88,12 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.subscription.refreshAll),
     setPaused: (input: SetPausedInput): Promise<IpcResult<void>> =>
       ipcRenderer.invoke(IPC_CHANNELS.subscription.setPaused, input),
-    importOpml: (): Promise<IpcResult<OpmlImportResult | null>> =>
-      ipcRenderer.invoke(IPC_CHANNELS.subscription.importOpml),
-    importOpmlPath: (input: ImportOpmlPathInput): Promise<IpcResult<OpmlImportResult>> =>
-      ipcRenderer.invoke(IPC_CHANNELS.subscription.importOpmlPath, input),
+    previewOpml: (): Promise<IpcResult<OpmlPreviewResult | null>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.subscription.previewOpml),
+    previewOpmlPath: (input: ImportOpmlPathInput): Promise<IpcResult<OpmlPreviewResult>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.subscription.previewOpmlPath, input),
+    importOpmlItems: (input: ImportOpmlItemsInput): Promise<IpcResult<OpmlImportResult>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.subscription.importOpmlItems, input),
     exportOpml: (): Promise<IpcResult<{ filePath: string } | null>> =>
       ipcRenderer.invoke(IPC_CHANNELS.subscription.exportOpml),
     onChanged: (callback: (podcasts: Podcast[]) => void): (() => void) => {

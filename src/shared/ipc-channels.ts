@@ -8,6 +8,9 @@ export const IPC_CHANNELS = {
     setPaused: 'subscription:set-paused',
     importOpml: 'subscription:import-opml',
     importOpmlPath: 'subscription:import-opml-path',
+    previewOpml: 'subscription:preview-opml',
+    previewOpmlPath: 'subscription:preview-opml-path',
+    importOpmlItems: 'subscription:import-opml-items',
     exportOpml: 'subscription:export-opml',
     changed: 'subscription:changed',
     /** Main → renderer: deep link wants to subscribe to a feed. */

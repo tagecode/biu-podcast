@@ -19,6 +19,14 @@ describe('auto-launch linux desktop entry', () => {
     expect(entry).toContain('X-GNOME-Autostart-enabled=true')
   })
 
+  it('quotes Exec paths that contain spaces', () => {
+    const entry = buildLinuxDesktopEntry({
+      appName: 'BiuPodcast',
+      execPath: '/opt/Biu Podcast/biu-podcast'
+    })
+    expect(entry).toContain('Exec="/opt/Biu Podcast/biu-podcast"')
+  })
+
   it('resolves the autostart path under the user config dir', () => {
     expect(resolveLinuxAutostartPath('/home/alice', 'biu-podcast')).toBe(
       '/home/alice/.config/autostart/biu-podcast.desktop'

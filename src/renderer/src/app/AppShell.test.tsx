@@ -9,9 +9,16 @@ function stubApi(): Window['api'] {
     files: { getPathForFile: vi.fn(() => '/tmp/feeds.opml') },
     subscription: {
       list: vi.fn(async () => ({ ok: true as const, data: [] })),
-      importOpmlPath: vi.fn(async () => ({
+      previewOpmlPath: vi.fn(async () => ({
         ok: true as const,
-        data: { filePath: '/tmp/feeds.opml', added: 2, skipped: 1, failed: [] }
+        data: {
+          filePath: '/tmp/feeds.opml',
+          items: [{ title: 'A', feedUrl: 'https://example.com/a.xml', folderName: null }]
+        }
+      })),
+      importOpmlItems: vi.fn(async () => ({
+        ok: true as const,
+        data: { filePath: '', added: 2, skipped: 1, failed: [] }
       })),
       onChanged: vi.fn(() => () => {}),
       onDeepLinkSubscribe: vi.fn(() => () => {})
@@ -53,7 +60,7 @@ describe('AppShell OPML drag import', () => {
     cleanup()
   })
 
-  it('imports a dropped OPML file and reloads subscriptions', async () => {
+  it('opens a preview instead of importing a dropped OPML file', async () => {
     const load = vi.fn()
     useSubscriptionStore.setState({ podcasts: [], loading: false, load } as never)
 
@@ -62,10 +69,29 @@ describe('AppShell OPML drag import', () => {
     fireEvent.drop(screen.getByTestId('app-shell'), { dataTransfer: { files: [file] } })
 
     await waitFor(() =>
-      expect(window.api.subscription.importOpmlPath).toHaveBeenCalledWith({
+      expect(window.api.subscription.previewOpmlPath).toHaveBeenCalledWith({
         filePath: '/tmp/feeds.opml'
       })
     )
+    expect(window.api.subscription.importOpmlItems).not.toHaveBeenCalled()
+    expect(await screen.findByText('导入预览')).toBeInTheDocument()
+  })
+
+  it('imports after confirming the OPML preview', async () => {
+    const load = vi.fn()
+    useSubscriptionStore.setState({ podcasts: [], loading: false, load } as never)
+
+    render(<AppShell />)
+    await waitFor(() => expect(load).toHaveBeenCalled())
+    load.mockClear()
+
+    const file = new File(['<opml />'], 'feeds.opml', { type: 'text/xml' })
+    fireEvent.drop(screen.getByTestId('app-shell'), { dataTransfer: { files: [file] } })
+
+    expect(await screen.findByText('导入预览')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '导入选中项' }))
+
+    await waitFor(() => expect(window.api.subscription.importOpmlItems).toHaveBeenCalled())
     expect(load).toHaveBeenCalled()
   })
 
@@ -75,7 +101,8 @@ describe('AppShell OPML drag import', () => {
     fireEvent.drop(screen.getByTestId('app-shell'), { dataTransfer: { files: [file] } })
 
     expect(await screen.findByText('请拖入 .opml 或 .xml 订阅文件')).toBeInTheDocument()
-    expect(window.api.subscription.importOpmlPath).not.toHaveBeenCalled()
+    expect(window.api.subscription.previewOpmlPath).not.toHaveBeenCalled()
+    expect(window.api.subscription.importOpmlItems).not.toHaveBeenCalled()
   })
 })
 

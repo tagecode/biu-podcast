@@ -15,9 +15,11 @@ import { NotesPage } from '@/features/playlist/pages/NotesPage'
 import { PlaylistsPage } from '@/features/playlist/pages/PlaylistsPage'
 import { SettingsPage } from '@/features/settings/pages/SettingsPage'
 import { AboutPage } from '@/features/settings/pages/AboutPage'
+import { OpmlImportPreviewDialog } from '@/features/subscription/components/OpmlImportPreviewDialog'
 import { SubscriptionListView } from '@/features/subscription/components/SubscriptionListView'
 import { useSubscriptionStore } from '@/features/subscription/store'
 import { isEditableContextTarget, showContextMenu } from '@/lib/context-menu'
+import type { OpmlPreviewItem, OpmlPreviewResult } from '@shared/ipc-contract'
 
 declare module 'react' {
   interface CSSProperties {
@@ -42,6 +44,8 @@ export function AppShell(): React.JSX.Element {
   const { t } = useTranslation()
   const [route, setRoute] = useState<Route>({ name: 'subscriptions' })
   const [dropMessage, setDropMessage] = useState<string | null>(null)
+  const [opmlPreview, setOpmlPreview] = useState<OpmlPreviewResult | null>(null)
+  const [opmlBusy, setOpmlBusy] = useState(false)
   const loadSubscriptions = useSubscriptionStore((state) => state.load)
   const playbackView = usePlaybackStore((state) => state.view)
   const panelOpen = useDownloadStore((state) => state.panelOpen)
@@ -149,19 +153,34 @@ export function AppShell(): React.JSX.Element {
       return
     }
     const filePath = window.api.files.getPathForFile(file)
-    const result = await window.api.subscription.importOpmlPath({ filePath })
+    const result = await window.api.subscription.previewOpmlPath({ filePath })
     if (!result.ok) {
       setDropMessage(result.error.message)
       return
     }
-    await loadSubscriptions()
-    setDropMessage(
-      t('subscription.dragImportDone', {
-        added: result.data.added,
-        skipped: result.data.skipped,
-        failed: result.data.failed.length
-      })
-    )
+    setOpmlPreview(result.data)
+  }
+
+  const handleOpmlConfirm = async (items: OpmlPreviewItem[]): Promise<void> => {
+    setOpmlBusy(true)
+    try {
+      const result = await window.api.subscription.importOpmlItems({ items })
+      if (!result.ok) {
+        setDropMessage(result.error.message)
+        return
+      }
+      await loadSubscriptions()
+      setOpmlPreview(null)
+      setDropMessage(
+        t('subscription.dragImportDone', {
+          added: result.data.added,
+          skipped: result.data.skipped,
+          failed: result.data.failed.length
+        })
+      )
+    } finally {
+      setOpmlBusy(false)
+    }
   }
 
   return (
@@ -276,6 +295,15 @@ export function AppShell(): React.JSX.Element {
           space). */}
       {playbackView === 'mini' && route.name !== 'settings' ? <MiniPlayer /> : null}
       <CopiedToast />
+      <OpmlImportPreviewDialog
+        key={opmlPreview?.filePath ?? 'opml-closed'}
+        preview={opmlPreview}
+        busy={opmlBusy}
+        onOpenChange={(open) => {
+          if (!open) setOpmlPreview(null)
+        }}
+        onConfirm={handleOpmlConfirm}
+      />
     </div>
   )
 }

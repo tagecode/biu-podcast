@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildOpml, parseOpml } from './opml'
+import { buildOpml, folderNameFromCategories, parseOpml } from './opml'
 
 const SAMPLE_OPML = `<?xml version="1.0" encoding="UTF-8"?>
 <opml version="2.0">
@@ -65,5 +65,13 @@ describe('buildOpml', () => {
   it('escapes XML special characters in titles', () => {
     const xml = buildOpml([{ title: 'A & B <Podcast>', feedUrl: 'https://x/feed.xml' }])
     expect(xml).toContain('A &amp; B &lt;Podcast&gt;')
+  })
+})
+
+describe('folderNameFromCategories', () => {
+  it('joins the full path', () => {
+    expect(folderNameFromCategories(['技术', '前端'])).toBe('技术 / 前端')
+    expect(folderNameFromCategories([])).toBeNull()
+    expect(folderNameFromCategories(['  '])).toBeNull()
   })
 })

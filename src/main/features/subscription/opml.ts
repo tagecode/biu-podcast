@@ -1,5 +1,13 @@
 import { XMLParser } from 'fast-xml-parser'
 
+export const FOLDER_NAME_MAX = 80
+
+export function folderNameFromCategories(categories: string[]): string | null {
+  const parts = categories.map((part) => part.trim()).filter(Boolean)
+  if (parts.length === 0) return null
+  return parts.join(' / ').slice(0, FOLDER_NAME_MAX)
+}
+
 /** A single subscription entry parsed from OPML. */
 export interface OpmlOutline {
   title: string

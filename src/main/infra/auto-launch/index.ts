@@ -13,12 +13,17 @@ export function resolveLinuxAutostartPath(homeDir: string, appId: string): strin
   return posix.join(homeDir, '.config', 'autostart', `${appId}.desktop`)
 }
 
+export function quoteDesktopExec(execPath: string): string {
+  if (!/[\s"]/.test(execPath)) return execPath
+  return `"${execPath.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
+}
+
 export function buildLinuxDesktopEntry(input: { appName: string; execPath: string }): string {
   return [
     '[Desktop Entry]',
     'Type=Application',
     `Name=${input.appName}`,
-    `Exec=${input.execPath}`,
+    `Exec=${quoteDesktopExec(input.execPath)}`,
     'Terminal=false',
     'X-GNOME-Autostart-enabled=true',
     ''

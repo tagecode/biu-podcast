@@ -17,6 +17,7 @@ import type {
   SearchEpisodesInput,
   GetEpisodeInput,
   ImportBackupInput,
+  ImportOpmlItemsInput,
   ImportOpmlPathInput,
   ListEpisodesInput,
   MarkAllPlayedInput,
@@ -24,6 +25,7 @@ import type {
   MediaSessionUpdateInput,
   NoteIdInput,
   OpmlImportResult,
+  OpmlPreviewResult,
   PlaybackCommand,
   PlaylistIdInput,
   PlaylistItemInput,
@@ -80,8 +82,9 @@ declare global {
         ) => Promise<IpcResult<{ addedCount: number; podcast: Podcast }>>
         refreshAll: () => Promise<IpcResult<Array<{ podcastId: string; addedCount: number }>>>
         setPaused: (input: SetPausedInput) => Promise<IpcResult<void>>
-        importOpml: () => Promise<IpcResult<OpmlImportResult | null>>
-        importOpmlPath: (input: ImportOpmlPathInput) => Promise<IpcResult<OpmlImportResult>>
+        previewOpml: () => Promise<IpcResult<OpmlPreviewResult | null>>
+        previewOpmlPath: (input: ImportOpmlPathInput) => Promise<IpcResult<OpmlPreviewResult>>
+        importOpmlItems: (input: ImportOpmlItemsInput) => Promise<IpcResult<OpmlImportResult>>
         exportOpml: () => Promise<IpcResult<{ filePath: string } | null>>
         onChanged: (callback: (podcasts: Podcast[]) => void) => () => void
         onDeepLinkSubscribe: (callback: (feedUrl: string) => void) => () => void
