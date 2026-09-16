@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Episode, Podcast } from '@shared/types'
+import { CopiedToast } from '../components/CopiedToast'
 import { PodcastDetailPage } from './PodcastDetailPage'
 import { usePlaybackStore } from '@/features/playback/store'
 import { useSubscriptionStore } from '@/features/subscription/store'
@@ -72,13 +73,43 @@ describe('PodcastDetailPage copy link', () => {
   })
 
   it('copies the podcast feed URL', async () => {
-    render(<PodcastDetailPage podcastId="pod-1" onBack={() => {}} />)
+    render(
+      <>
+        <CopiedToast />
+        <PodcastDetailPage podcastId="pod-1" onBack={() => {}} />
+      </>
+    )
 
     fireEvent.click(await screen.findByRole('button', { name: '复制链接' }))
     await waitFor(() => {
       expect(window.api.clipboard.writeText).toHaveBeenCalledWith('https://example.com/feed.xml')
     })
-    expect(await screen.findByRole('status')).toHaveTextContent('已复制')
+    expect(await screen.findAllByText('已复制')).toHaveLength(1)
+    expect(screen.getByText('已复制').className).toMatch(/\babsolute\b/)
+    expect(screen.getByText('已复制').className).not.toMatch(/\bfixed\b/)
+  })
+
+  it('shows a single copied toast from the episode context menu', async () => {
+    const episode = makeEpisode()
+    window.api.episode.listByPodcast = vi.fn(async () => ({
+      ok: true as const,
+      data: { items: [episode], total: 1, unreadCount: 1, offset: 0, limit: 50, hasMore: false }
+    }))
+    window.api.contextMenu.show = vi.fn(async () => ({ ok: true as const, data: 'copyLink' }))
+
+    render(
+      <>
+        <CopiedToast />
+        <PodcastDetailPage podcastId="pod-1" onBack={() => {}} />
+      </>
+    )
+
+    fireEvent.contextMenu(await screen.findByText('AI 周报'))
+    await waitFor(() => {
+      expect(window.api.clipboard.writeText).toHaveBeenCalledWith('https://example.com/ep.mp3')
+    })
+    expect(screen.getAllByText('已复制')).toHaveLength(1)
+    expect(screen.getByText('已复制').className).toMatch(/\bfixed\b/)
   })
 
   it('adds an episode to the queue from the native context menu', async () => {

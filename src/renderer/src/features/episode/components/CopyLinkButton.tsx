@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
-import { COPIED_MS, subscribeCopied } from '@/lib/copied-feedback'
+import { COPIED_MS } from '@/lib/copied-feedback'
 
 import { copyShareUrl } from '../lib/share-link'
 
@@ -17,20 +17,14 @@ export function CopyLinkButton({ url, label }: CopyLinkButtonProps): React.JSX.E
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | null = null
-    const stop = subscribeCopied(() => {
-      setCopied(true)
-      if (timer) clearTimeout(timer)
-      timer = setTimeout(() => setCopied(false), COPIED_MS)
-    })
-    return () => {
-      stop()
-      if (timer) clearTimeout(timer)
-    }
-  }, [])
+    if (!copied) return
+    const timer = window.setTimeout(() => setCopied(false), COPIED_MS)
+    return () => window.clearTimeout(timer)
+  }, [copied])
 
   const handleClick = async (): Promise<void> => {
-    await copyShareUrl(url)
+    await copyShareUrl(url, { notify: false })
+    setCopied(true)
   }
 
   return (

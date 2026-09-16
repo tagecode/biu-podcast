@@ -14,8 +14,11 @@ export function episodeShareUrl(episode: Episode): string {
   return episode.audioUrl
 }
 
-export async function copyShareUrl(text: string): Promise<void> {
+export async function copyShareUrl(
+  text: string,
+  options: { notify?: boolean } = {}
+): Promise<void> {
   const result = await window.api.clipboard.writeText(text)
   if (!result.ok) throw new Error(result.error.message)
-  notifyCopied()
+  if (options.notify !== false) notifyCopied()
 }
