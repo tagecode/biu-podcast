@@ -33,14 +33,17 @@ export class EpisodeRepository {
 
     const existing = this.db
       .select({
+        id: episodes.id,
         guid: episodes.guid,
-        audioUrl: episodes.audioUrl
+        audioUrl: episodes.audioUrl,
+        link: episodes.link,
+        chaptersUrl: episodes.chaptersUrl
       })
       .from(episodes)
       .where(eq(episodes.podcastId, podcastId))
       .all()
 
-    const known = new Set(existing.map((row) => episodeKey(row.guid, row.audioUrl)))
+    const known = new Map(existing.map((row) => [episodeKey(row.guid, row.audioUrl), row]))
 
     const rows: Array<{
       id: string
@@ -58,10 +61,26 @@ export class EpisodeRepository {
       chaptersUrl: string | null
       link: string | null
     }> = []
+    const backfills: Array<{ id: string; link?: string; chaptersUrl?: string }> = []
     for (const item of items) {
       const key = episodeKey(item.guid, item.audioUrl)
-      if (known.has(key)) continue
-      known.add(key)
+      const existingRow = known.get(key)
+      if (existingRow) {
+        const patch: { link?: string; chaptersUrl?: string } = {}
+        if (!existingRow.link && item.link) patch.link = item.link
+        if (!existingRow.chaptersUrl && item.chaptersUrl) patch.chaptersUrl = item.chaptersUrl
+        if (patch.link || patch.chaptersUrl) {
+          backfills.push({ id: existingRow.id, ...patch })
+        }
+        continue
+      }
+      known.set(key, {
+        id: '',
+        guid: item.guid,
+        audioUrl: item.audioUrl,
+        link: item.link ?? null,
+        chaptersUrl: item.chaptersUrl ?? null
+      })
       rows.push({
         id: ulid(),
         podcastId,
@@ -80,7 +99,7 @@ export class EpisodeRepository {
       })
     }
 
-    if (rows.length === 0) return 0
+    if (rows.length === 0 && backfills.length === 0) return 0
 
     this.db.transaction((tx) => {
       for (let i = 0; i < rows.length; i += INSERT_CHUNK_SIZE) {
@@ -88,6 +107,15 @@ export class EpisodeRepository {
         for (const row of chunk) {
           tx.insert(episodes).values(row).run()
         }
+      }
+      for (const row of backfills) {
+        tx.update(episodes)
+          .set({
+            ...(row.link ? { link: row.link } : {}),
+            ...(row.chaptersUrl ? { chaptersUrl: row.chaptersUrl } : {})
+          })
+          .where(eq(episodes.id, row.id))
+          .run()
       }
     })
 

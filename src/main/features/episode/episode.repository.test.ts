@@ -122,6 +122,100 @@ describe('EpisodeRepository.insertMany', () => {
   })
 })
 
+describe('EpisodeRepository.insertMany backfill', () => {
+  it('fills empty link and chaptersUrl on existing episodes without touching playback state', () => {
+    const { db, sqlite } = createTestDb()
+    insertPodcast(db, 'pod-a', 'Tech')
+    const repo = new EpisodeRepository(db)
+
+    repo.insertMany('pod-a', [
+      {
+        title: 'Old',
+        descriptionHtml: null,
+        publishedAt: 1_700_000_000_000,
+        audioUrl: 'https://cdn.example/a.mp3',
+        durationSec: 60,
+        fileSizeBytes: 1,
+        guid: 'guid-a',
+        link: null,
+        chaptersUrl: null
+      }
+    ])
+
+    sqlite
+      .prepare(
+        `UPDATE episodes SET is_played = 1, playback_position_sec = 12.5 WHERE guid = 'guid-a'`
+      )
+      .run()
+
+    const added = repo.insertMany('pod-a', [
+      {
+        title: 'Old renamed in feed (must not apply)',
+        descriptionHtml: '<p>x</p>',
+        publishedAt: 1_700_000_000_000,
+        audioUrl: 'https://cdn.example/a.mp3',
+        durationSec: 60,
+        fileSizeBytes: 1,
+        guid: 'guid-a',
+        link: 'https://show.example/ep/a',
+        chaptersUrl: 'https://show.example/a/chapters.json'
+      }
+    ])
+
+    expect(added).toBe(0)
+    const row = sqlite.prepare(`SELECT * FROM episodes WHERE guid = 'guid-a'`).get() as {
+      title: string
+      link: string | null
+      chapters_url: string | null
+      is_played: number
+      playback_position_sec: number
+    }
+    expect(row.link).toBe('https://show.example/ep/a')
+    expect(row.chapters_url).toBe('https://show.example/a/chapters.json')
+    expect(row.is_played).toBe(1)
+    expect(row.playback_position_sec).toBe(12.5)
+    expect(row.title).toBe('Old')
+    sqlite.close()
+  })
+
+  it('does not overwrite a non-empty link', () => {
+    const { db, sqlite } = createTestDb()
+    insertPodcast(db, 'pod-a', 'Tech')
+    const repo = new EpisodeRepository(db)
+    repo.insertMany('pod-a', [
+      {
+        title: 'Ep',
+        descriptionHtml: null,
+        publishedAt: 1,
+        audioUrl: 'https://cdn.example/b.mp3',
+        durationSec: 1,
+        fileSizeBytes: 1,
+        guid: 'guid-b',
+        link: 'https://original.example/b',
+        chaptersUrl: null
+      }
+    ])
+    repo.insertMany('pod-a', [
+      {
+        title: 'Ep',
+        descriptionHtml: null,
+        publishedAt: 1,
+        audioUrl: 'https://cdn.example/b.mp3',
+        durationSec: 1,
+        fileSizeBytes: 1,
+        guid: 'guid-b',
+        link: 'https://new.example/b',
+        chaptersUrl: null
+      }
+    ])
+    const row = sqlite.prepare(`SELECT link FROM episodes WHERE guid = 'guid-b'`).get() as {
+      link: string
+    }
+    expect(row.link).toBe('https://original.example/b')
+    sqlite.close()
+  })
+})
+
 describe('EpisodeRepository.search', () => {
   it('matches title and description across subscribed podcasts', () => {
     const { db } = createTestDb()
