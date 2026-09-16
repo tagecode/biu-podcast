@@ -8,6 +8,7 @@ import { WindowControls } from '@/app/WindowControls'
 import { DownloadPanel } from '@/features/download/components/DownloadPanel'
 import { useDownloadStore } from '@/features/download/store'
 import { PodcastDetailPage } from '@/features/episode/pages/PodcastDetailPage'
+import { CopiedToast } from '@/features/episode/components/CopiedToast'
 import { FullScreenPlayer, MiniPlayer } from '@/features/playback/components/PlayerShell'
 import { loadPlaybackPrefs, restoreQueue, usePlaybackStore } from '@/features/playback/store'
 import { NotesPage } from '@/features/playlist/pages/NotesPage'
@@ -274,6 +275,7 @@ export function AppShell(): React.JSX.Element {
           page (it's a config page; a persistent player there just eats
           space). */}
       {playbackView === 'mini' && route.name !== 'settings' ? <MiniPlayer /> : null}
+      <CopiedToast />
     </div>
   )
 }

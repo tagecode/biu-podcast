@@ -1,5 +1,7 @@
 import type { Episode, Podcast } from '@shared/types'
 
+import { notifyCopied } from '@/lib/copied-feedback'
+
 export function podcastShareUrl(podcast: Podcast): string {
   return podcast.feedUrl
 }
@@ -15,4 +17,5 @@ export function episodeShareUrl(episode: Episode): string {
 export async function copyShareUrl(text: string): Promise<void> {
   const result = await window.api.clipboard.writeText(text)
   if (!result.ok) throw new Error(result.error.message)
+  notifyCopied()
 }

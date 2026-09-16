@@ -1,8 +1,9 @@
 import { Check, Link2 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
+import { COPIED_MS, subscribeCopied } from '@/lib/copied-feedback'
 
 import { copyShareUrl } from '../lib/share-link'
 
@@ -11,24 +12,25 @@ interface CopyLinkButtonProps {
   label: string
 }
 
-const COPIED_MS = 2000
-
 export function CopyLinkButton({ url, label }: CopyLinkButtonProps): React.JSX.Element {
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const stop = subscribeCopied(() => {
+      setCopied(true)
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(() => setCopied(false), COPIED_MS)
+    })
     return () => {
-      if (timer.current) clearTimeout(timer.current)
+      stop()
+      if (timer) clearTimeout(timer)
     }
   }, [])
 
   const handleClick = async (): Promise<void> => {
     await copyShareUrl(url)
-    setCopied(true)
-    if (timer.current) clearTimeout(timer.current)
-    timer.current = setTimeout(() => setCopied(false), COPIED_MS)
   }
 
   return (

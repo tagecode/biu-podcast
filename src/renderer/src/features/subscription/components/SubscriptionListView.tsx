@@ -14,6 +14,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { showContextMenu } from '@/lib/context-menu'
 import { formatDate } from '@/lib/format'
+import { notifyCopied } from '@/lib/copied-feedback'
 import { cn } from '@/lib/utils'
 import type { EpisodeSearchHit, Podcast } from '@shared/types'
 
@@ -107,6 +108,7 @@ export function SubscriptionListView({
     if (id === 'copyLink') {
       const result = await window.api.clipboard.writeText(podcast.feedUrl)
       if (!result.ok) throw new Error(result.error.message)
+      notifyCopied()
     }
     if (id === 'pause' || id === 'resume') {
       await useSubscriptionStore.getState().setPaused(podcast.id, id === 'pause')
