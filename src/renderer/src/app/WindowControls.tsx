@@ -14,9 +14,9 @@ declare module 'react' {
 const noDragRegion: CSSProperties = { WebkitAppRegion: 'no-drag' }
 
 /**
- * Window controls (minimize / maximize / close) for the frameless window.
- * Placed inline with the app header actions; marked no-drag so clicks land on
- * the buttons.
+ * Window controls (minimize / maximize / close) for the frameless window
+ * on Windows/Linux. macOS uses native traffic lights instead, so this is
+ * not rendered there.
  */
 export function WindowControls(): React.JSX.Element {
   const { t } = useTranslation()

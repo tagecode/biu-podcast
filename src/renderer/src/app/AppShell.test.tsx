@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AppShell } from './AppShell'
 import { useSubscriptionStore } from '@/features/subscription/store'
+import { MACOS_TRAFFIC_LIGHT_INSET_PX } from '@shared/window-chrome'
 
 function stubApi(): Window['api'] {
   return {
@@ -46,7 +47,8 @@ function stubApi(): Window['api'] {
     },
     contextMenu: {
       show: vi.fn(async () => ({ ok: true as const, data: null }))
-    }
+    },
+    platform: 'win32'
   } as unknown as Window['api']
 }
 
@@ -133,5 +135,38 @@ describe('AppShell editable context menu', () => {
     } finally {
       input.remove()
     }
+  })
+})
+
+describe('AppShell macOS traffic-light inset', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('offsets the brand from native traffic lights and hides custom window controls on macOS', () => {
+    window.api = { ...stubApi(), platform: 'darwin' }
+    render(<AppShell />)
+
+    expect(screen.getByTestId('app-titlebar')).toHaveStyle({
+      paddingLeft: `${MACOS_TRAFFIC_LIGHT_INSET_PX}px`
+    })
+    expect(screen.getByTestId('macos-traffic-light-spacer')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '最小化' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '最大化' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '关闭' })).not.toBeInTheDocument()
+    expect(screen.getByText('博播')).toBeInTheDocument()
+    expect(screen.getByText('BiuPodcast')).toBeInTheDocument()
+  })
+
+  it('keeps custom window controls and default padding on Windows', () => {
+    window.api = stubApi()
+    render(<AppShell />)
+
+    expect(screen.getByTestId('app-titlebar')).not.toHaveStyle({
+      paddingLeft: `${MACOS_TRAFFIC_LIGHT_INSET_PX}px`
+    })
+    expect(screen.queryByTestId('macos-traffic-light-spacer')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '最小化' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '关闭' })).toBeInTheDocument()
   })
 })

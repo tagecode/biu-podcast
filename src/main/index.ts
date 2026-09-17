@@ -21,6 +21,7 @@ import { installApplicationMenu } from './infra/menu'
 import { applyContentSecurityPolicy } from './infra/security/csp'
 import { createMainWindowWebPreferences } from './infra/security/web-preferences'
 import { ensureSingleInstance } from './infra/window/single-instance'
+import { createWindowChromeOptions } from './infra/window/window-chrome'
 import { loadWindowState, trackWindowState } from './infra/window/window-state-store'
 
 protocol.registerSchemesAsPrivileged([
@@ -50,7 +51,6 @@ if (
 } else {
   function createWindow(): BrowserWindow {
     const state = loadWindowState()
-    const isMac = process.platform === 'darwin'
     const mainWindow = new BrowserWindow({
       x: state.x,
       y: state.y,
@@ -63,9 +63,7 @@ if (
       backgroundColor: '#FAF7F2',
       // Custom title bar: frameless on Windows/Linux, hiddenInset on macOS
       // (keeps the traffic-light buttons but removes the native bar).
-      ...(isMac
-        ? { titleBarStyle: 'hiddenInset' as const }
-        : { frame: false, autoHideMenuBar: true }),
+      ...createWindowChromeOptions(process.platform),
       ...(process.platform === 'linux' ? { icon } : {}),
       webPreferences: createMainWindowWebPreferences(join(__dirname, '../preload/index.js'))
     })

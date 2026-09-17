@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { WindowControls } from '@/app/WindowControls'
+import { MACOS_TRAFFIC_LIGHT_INSET_PX } from '@shared/window-chrome'
 import { DownloadPanel } from '@/features/download/components/DownloadPanel'
 import { useDownloadStore } from '@/features/download/store'
 import { PodcastDetailPage } from '@/features/episode/pages/PodcastDetailPage'
@@ -42,6 +43,7 @@ type Route =
 
 export function AppShell(): React.JSX.Element {
   const { t } = useTranslation()
+  const isMac = window.api.platform === 'darwin'
   const [route, setRoute] = useState<Route>({ name: 'subscriptions' })
   const [dropMessage, setDropMessage] = useState<string | null>(null)
   const [opmlPreview, setOpmlPreview] = useState<OpmlPreviewResult | null>(null)
@@ -191,9 +193,21 @@ export function AppShell(): React.JSX.Element {
       onDrop={(event) => void handleDrop(event)}
     >
       <header
-        className="flex h-12 shrink-0 select-none items-center gap-3 border-b border-line bg-surface px-3"
-        style={dragRegion}
+        className="relative flex h-12 shrink-0 select-none items-center gap-3 border-b border-line bg-surface px-3"
+        data-testid="app-titlebar"
+        style={{
+          ...dragRegion,
+          ...(isMac ? { paddingLeft: MACOS_TRAFFIC_LIGHT_INSET_PX } : {})
+        }}
       >
+        {isMac ? (
+          <div
+            aria-hidden
+            data-testid="macos-traffic-light-spacer"
+            className="absolute inset-y-0 left-0"
+            style={{ width: MACOS_TRAFFIC_LIGHT_INSET_PX, ...noDragRegion }}
+          />
+        ) : null}
         <button
           type="button"
           className="flex items-center gap-2"
@@ -243,8 +257,12 @@ export function AppShell(): React.JSX.Element {
               <span className="absolute top-1 right-1 size-1.5 rounded-full bg-amber-600" />
             ) : null}
           </Button>
-          <div className="mx-1 h-4 w-px bg-line" />
-          <WindowControls />
+          {isMac ? null : (
+            <>
+              <div className="mx-1 h-4 w-px bg-line" />
+              <WindowControls />
+            </>
+          )}
         </div>
       </header>
 

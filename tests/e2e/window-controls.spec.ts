@@ -21,10 +21,17 @@ test('window controls are wired and round-trip through IPC', async () => {
   const window = await app.firstWindow()
   await window.waitForLoadState('domcontentloaded')
 
-  // The three controls render.
-  await expect(window.getByRole('button', { name: '最小化' })).toBeVisible()
-  await expect(window.getByRole('button', { name: '最大化' })).toBeVisible()
-  await expect(window.getByRole('button', { name: '关闭' })).toBeVisible()
+  const platform = await window.evaluate(() => window.api.platform)
+  if (platform === 'darwin') {
+    // macOS uses native traffic lights; custom controls must not overlap them.
+    await expect(window.getByRole('button', { name: '最小化' })).toHaveCount(0)
+    await expect(window.getByRole('button', { name: '最大化' })).toHaveCount(0)
+    await expect(window.getByRole('button', { name: '关闭' })).toHaveCount(0)
+  } else {
+    await expect(window.getByRole('button', { name: '最小化' })).toBeVisible()
+    await expect(window.getByRole('button', { name: '最大化' })).toBeVisible()
+    await expect(window.getByRole('button', { name: '关闭' })).toBeVisible()
+  }
 
   // The window API domain works end-to-end. isMaximized is side-effect free;
   // it exercises the exact preload+schema+handler path that broke.

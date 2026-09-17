@@ -78,6 +78,8 @@ type DownloadProgressPayload = {
 declare global {
   interface Window {
     api: {
+      /** process.platform from the sandbox preload (darwin / win32 / linux). */
+      platform: string
       subscription: {
         add: (input: AddSubscriptionInput) => Promise<IpcResult<Podcast>>
         list: () => Promise<IpcResult<Podcast[]>>

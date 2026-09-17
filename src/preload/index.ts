@@ -79,6 +79,8 @@ export type DownloadProgressPayload = {
 }
 
 const api = {
+  /** Sandbox preload can read process.platform; exposed sync so the title bar can inset immediately. */
+  platform: process.platform,
   subscription: {
     add: (input: AddSubscriptionInput): Promise<IpcResult<Podcast>> =>
       ipcRenderer.invoke(IPC_CHANNELS.subscription.add, input),
