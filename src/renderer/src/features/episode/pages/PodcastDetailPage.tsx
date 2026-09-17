@@ -333,7 +333,6 @@ export function PodcastDetailPage({
                 <EpisodeListItem
                   key={episode.id}
                   episode={episode}
-                  active={currentEpisodeId === episode.id}
                   isCurrentPlaying={currentEpisodeId === episode.id && isPlaying}
                   selected={selectedEpisode?.id === episode.id}
                   onPlay={() => {

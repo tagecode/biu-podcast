@@ -196,4 +196,42 @@ describe('PodcastDetailPage copy link', () => {
     expect(button.querySelector('svg')).not.toHaveClass('animate-spin')
     expect(button).not.toHaveAttribute('aria-busy', 'true')
   })
+
+  it('highlights only the episode whose detail is open', async () => {
+    const playing = makeEpisode({ id: 'ep-1', title: '正在播放', guid: 'g1' })
+    const other = makeEpisode({ id: 'ep-2', title: '另一集', guid: 'g2' })
+    window.api.episode.listByPodcast = vi.fn(async () => ({
+      ok: true as const,
+      data: {
+        items: [playing, other],
+        total: 2,
+        unreadCount: 2,
+        offset: 0,
+        limit: 50,
+        hasMore: false
+      }
+    }))
+    window.api.episode.getById = vi.fn(async ({ episodeId }: { episodeId: string }) => ({
+      ok: true as const,
+      data: episodeId === other.id ? other : playing
+    }))
+    window.api.episode.getChapters = vi.fn(async () => ({ ok: true as const, data: [] }))
+    window.api.playlist = {
+      list: vi.fn(async () => ({ ok: true as const, data: [] }))
+    } as unknown as Window['api']['playlist']
+    window.api.note = {
+      listByEpisode: vi.fn(async () => ({ ok: true as const, data: [] }))
+    } as unknown as Window['api']['note']
+    window.api.contextMenu.show = vi.fn(async () => ({ ok: true as const, data: 'openDetail' }))
+    usePlaybackStore.setState({ currentEpisode: playing, isPlaying: true })
+
+    render(<PodcastDetailPage podcastId="pod-1" onBack={() => {}} />)
+
+    fireEvent.contextMenu(await screen.findByText('另一集'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('episode-row-ep-2')).toHaveClass('bg-amber-100')
+    })
+    expect(screen.getByTestId('episode-row-ep-1')).not.toHaveClass('bg-amber-100')
+  })
 })

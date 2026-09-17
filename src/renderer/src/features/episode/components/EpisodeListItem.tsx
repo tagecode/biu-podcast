@@ -9,7 +9,6 @@ import { formatDate, formatDuration, formatFileSize } from '@/lib/format'
 
 interface EpisodeListItemProps {
   episode: Episode
-  active?: boolean
   selected?: boolean
   /** This episode is the current track AND audio is playing — show a pause button. */
   isCurrentPlaying?: boolean
@@ -21,7 +20,6 @@ interface EpisodeListItemProps {
 
 export function EpisodeListItem({
   episode,
-  active,
   selected,
   isCurrentPlaying,
   onPlay,
@@ -32,9 +30,10 @@ export function EpisodeListItem({
   const { t, i18n } = useTranslation()
   return (
     <div
+      data-testid={`episode-row-${episode.id}`}
       className={cn(
         'flex items-center gap-3 rounded-md border px-4 py-3 transition-colors',
-        active || selected
+        selected
           ? 'border-amber-600 bg-amber-100'
           : 'border-transparent bg-surface hover:border-line hover:shadow-sm'
       )}
