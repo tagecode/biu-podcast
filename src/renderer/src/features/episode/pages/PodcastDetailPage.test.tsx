@@ -140,4 +140,60 @@ describe('PodcastDetailPage copy link', () => {
       })
     )
   })
+
+  it('spins the refresh icon while the podcast feed is updating', async () => {
+    let resolveRefresh: () => void = () => undefined
+    const refresh = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveRefresh = resolve
+        })
+    )
+    useSubscriptionStore.setState({ refresh } as never)
+
+    render(<PodcastDetailPage podcastId="pod-1" onBack={() => {}} />)
+
+    const button = await screen.findByRole('button', { name: '刷新' })
+    fireEvent.click(button)
+
+    expect(refresh).toHaveBeenCalledWith('pod-1')
+    expect(button).toHaveAttribute('aria-busy', 'true')
+    expect(button).toBeDisabled()
+    expect(button.querySelector('svg')).toHaveClass('animate-spin')
+
+    resolveRefresh()
+
+    await waitFor(() => {
+      expect(button).toBeEnabled()
+    })
+    expect(button).not.toHaveAttribute('aria-busy', 'true')
+    expect(button.querySelector('svg')).not.toHaveClass('animate-spin')
+  })
+
+  it('stops spinning if refresh fails', async () => {
+    let rejectRefresh: (error: Error) => void = () => undefined
+    const refresh = vi.fn(
+      () =>
+        new Promise<void>((_resolve, reject) => {
+          rejectRefresh = reject
+        })
+    )
+    useSubscriptionStore.setState({ refresh } as never)
+
+    render(<PodcastDetailPage podcastId="pod-1" onBack={() => {}} />)
+
+    const button = await screen.findByRole('button', { name: '刷新' })
+    fireEvent.click(button)
+
+    expect(button).toHaveAttribute('aria-busy', 'true')
+    expect(button.querySelector('svg')).toHaveClass('animate-spin')
+
+    rejectRefresh(new Error('network'))
+
+    await waitFor(() => {
+      expect(button).toBeEnabled()
+    })
+    expect(button.querySelector('svg')).not.toHaveClass('animate-spin')
+    expect(button).not.toHaveAttribute('aria-busy', 'true')
+  })
 })

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 import type { Episode, Podcast } from '@shared/types'
 import { EPISODE_PAGE_SIZE } from '@shared/episode-list'
 import { showContextMenu } from '@/lib/context-menu'
@@ -45,6 +46,7 @@ export function PodcastDetailPage({
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
   const [unsubscribeOpen, setUnsubscribeOpen] = useState(false)
   const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
@@ -73,6 +75,19 @@ export function PodcastDetailPage({
       setLoading(false)
     }
   }, [podcastId, t])
+
+  const handleRefresh = useCallback(async (): Promise<void> => {
+    if (refreshing) return
+    setRefreshing(true)
+    try {
+      await refreshSubscription(podcastId)
+      await loadFirstPage()
+    } catch {
+      // The subscription store already records the mapped error.
+    } finally {
+      setRefreshing(false)
+    }
+  }, [loadFirstPage, podcastId, refreshSubscription, refreshing])
 
   const loadMore = useCallback(async (): Promise<void> => {
     if (loadingMore || !hasMore) return
@@ -219,9 +234,11 @@ export function PodcastDetailPage({
             variant="ghost"
             size="icon"
             aria-label={t('subscription.refresh')}
-            onClick={() => void refreshSubscription(podcastId).then(loadFirstPage)}
+            aria-busy={refreshing}
+            disabled={refreshing}
+            onClick={() => void handleRefresh()}
           >
-            <RefreshCw className="size-4" />
+            <RefreshCw className={cn('size-4', refreshing && 'animate-spin')} />
           </Button>
           <Button
             variant="secondary"
