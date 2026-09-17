@@ -213,9 +213,14 @@ export function AppShell(): React.JSX.Element {
           className="flex items-center gap-2"
           onClick={() => setRoute({ name: 'subscriptions' })}
         >
-          <div className="flex size-7 items-center justify-center rounded-md bg-amber-600">
-            <Play className="size-3.5 text-ink" strokeWidth={1.75} />
-          </div>
+          {isMac ? null : (
+            <div
+              data-testid="app-brand-icon"
+              className="flex size-7 items-center justify-center rounded-md bg-amber-600"
+            >
+              <Play className="size-3.5 text-ink" strokeWidth={1.75} />
+            </div>
+          )}
           <span className="text-base font-semibold">{t('app.title')}</span>
         </button>
         <span className="text-sm text-muted">{t('app.subtitle')}</span>
